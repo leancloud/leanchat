@@ -1,0 +1,21 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  svg {
+    vertical-align: baseline;
+  }
+}
+
+body {
+  @apply antialiased;
+  font-family: sans-serif;
+  letter-spacing: -0.24px;
+}
+
+/* twemoji */
+img.emoji {
+  display: inline;
+  vertical-align: baseline;
+}

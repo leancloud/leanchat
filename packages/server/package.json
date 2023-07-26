@@ -1,0 +1,24 @@
+{
+  "name": "server",
+  "private": true,
+  "version": "0.0.0",
+  "type": "module",
+  "scripts": {
+    "dev": "tsx watch src",
+    "build": "tsc"
+  },
+  "dependencies": {
+    "dotenv": "^16.3.1",
+    "koa-compose": "^4.1.0",
+    "lodash": "^4.17.21",
+    "lokijs": "^1.5.12",
+    "nanoid": "^4.0.2",
+    "zod": "^3.21.4"
+  },
+  "devDependencies": {
+    "@types/koa-compose": "^3.2.5",
+    "@types/lodash": "^4.14.195",
+    "@types/lokijs": "^1.5.8",
+    "tsx": "^3.12.7"
+  }
+}
