@@ -1,9 +1,9 @@
 import AV from 'leancloud-storage';
 import { z } from 'zod';
 
-import { RpcError, SocketRpc } from './socket-rpc';
-import { zodValidation } from './middleware';
-import { Cache, MemoryStore } from './cache';
+import { RpcError, SocketRpc } from './socket-rpc.js';
+import { zodValidation } from './middleware.js';
+import { Cache, MemoryStore } from './cache.js';
 
 export interface Conversation {
   id: string;

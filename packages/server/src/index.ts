@@ -1,12 +1,15 @@
 import http from 'node:http';
 import AV from 'leancloud-storage';
+import Koa from 'koa';
+import serve from 'koa-static';
+import send from 'koa-send';
 import { Server } from 'socket.io';
 import { z } from 'zod';
 import 'dotenv/config';
 
-import { SocketRpc } from './socket-rpc';
-import { registerConversationRpc } from './conversation';
-import { registerMessageRpc } from './message';
+import { SocketRpc } from './socket-rpc.js';
+import { registerConversationRpc } from './conversation.js';
+import { registerMessageRpc } from './message.js';
 
 AV.init({
   appId: process.env.LEANCLOUD_APP_ID!,
@@ -17,9 +20,15 @@ AV.init({
 
 (AV as any)._config.disableCurrentUser = true;
 
-const httpServer = http.createServer();
+const app = new Koa();
+const httpServer = http.createServer(app.callback());
 const io = new Server(httpServer);
 const rpc = new SocketRpc(io);
+
+app.use(serve('public'));
+app.use(async (ctx) => {
+  await send(ctx, 'index.html', { root: 'public' });
+});
 
 const ioAuthSchema = z.object({
   type: z.enum(['operator']).optional(),

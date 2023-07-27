@@ -1,6 +1,6 @@
 import { ZodSchema } from 'zod';
 
-import { RpcError, RpcMiddleware } from './socket-rpc';
+import { RpcError, RpcMiddleware } from './socket-rpc.js';
 
 export function zodValidation(schema: ZodSchema): RpcMiddleware {
   return (ctx, next) => {
