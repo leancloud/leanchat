@@ -10,4 +10,4 @@ const content = envNames
   .map(([name, value]) => `${name}=${value}`)
   .join('\n');
 
-fs.writeFileSync('.env.prod', content);
+fs.writeFileSync('.env.production', content);
