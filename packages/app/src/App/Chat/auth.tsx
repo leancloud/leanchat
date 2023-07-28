@@ -1,10 +1,10 @@
 import { ReactNode, createContext, useContext, useEffect, useRef } from 'react';
-import AV from '@/leancloud';
 import { useLocalStorage } from 'react-use';
+import { useMutation } from '@tanstack/react-query';
+import axios from 'axios';
 
 interface User {
   id: string;
-  sessionToken: string;
 }
 
 export const AuthContext = createContext<User | undefined>(undefined);
@@ -15,20 +15,24 @@ interface AuthProviderProps {
 }
 
 export function AuthProvider({ children, fallback }: AuthProviderProps) {
-  const [user, setUser] = useLocalStorage<User | undefined>('LeanChat/visitor');
+  const [user, setUser] = useLocalStorage<User>('LeanChat/customer');
 
-  const loading = useRef(false);
+  const { mutate } = useMutation({
+    mutationFn: async () => {
+      const res = await axios.post<User>(`/api/v1/customers`);
+      return res.data;
+    },
+    onSuccess: (user) => {
+      setUser(user);
+    },
+  });
+
+  const inited = useRef(false);
   useEffect(() => {
-    if (user || loading.current) {
-      return;
+    if (!user && !inited.current) {
+      mutate();
+      inited.current = true;
     }
-    loading.current = true;
-    AV.User.loginAnonymously().then((user) =>
-      setUser({
-        id: user.id!,
-        sessionToken: user.getSessionToken(),
-      })
-    );
   }, []);
 
   if (!user) {

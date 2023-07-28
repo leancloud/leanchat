@@ -1,15 +1,8 @@
 import { Controller, useForm } from 'react-hook-form';
 import { Navigate } from 'react-router-dom';
 import { Button, Form, Input } from 'antd';
-import AV from 'leancloud-storage';
 
 import { useAuth } from './auth';
-
-AV.init({
-  appId: import.meta.env.VITE_LEANCLOUD_APP_ID,
-  appKey: import.meta.env.VITE_LEANCLOUD_APP_KEY,
-  serverURL: import.meta.env.VITE_LEANCLOUD_API_SERVER,
-});
 
 interface LoginData {
   email: string;
@@ -18,12 +11,10 @@ interface LoginData {
 
 export default function Login() {
   const { user, setUser } = useAuth();
-  const { control, handleSubmit, setError } = useForm<LoginData>();
+  const { control, handleSubmit } = useForm<LoginData>();
 
   const _handleSubmit = ({ email, password }: LoginData) => {
-    AV.User.loginWithEmail(email, password)
-      .then((user) => setUser({ id: user.id!, sessionToken: user.getSessionToken() }))
-      .catch((error: Error) => setError('password', { message: error.message }));
+    setUser({ id: email + password });
   };
 
   if (user) {

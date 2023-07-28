@@ -23,7 +23,7 @@ export default function Chat() {
     <AuthProvider>
       <AuthContext.Consumer>
         {(user) => (
-          <SocketProvider auth={{ sessionToken: user!.sessionToken }}>
+          <SocketProvider auth={{ type: 'customer', id: user!.id }}>
             <ChatBox />
           </SocketProvider>
         )}

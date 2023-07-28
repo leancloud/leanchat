@@ -37,7 +37,7 @@ function Entry() {
 
   return (
     <SocketProvider
-      auth={{ type: 'operator', sessionToken: user.sessionToken }}
+      auth={{ type: 'operator', sessionToken: user.id }}
       fallback={<Center>Connecting...</Center>}
     >
       <Layout navs={navs}>

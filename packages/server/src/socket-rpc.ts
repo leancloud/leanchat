@@ -1,4 +1,4 @@
-import { Namespace, Server, Socket } from 'socket.io';
+import { Server, Socket } from 'socket.io';
 import compose, { ComposedMiddleware } from 'koa-compose';
 
 export interface RpcContext {
@@ -35,10 +35,21 @@ async function errorMiddleware(_ctx: RpcContext, next: RpcNext): Promise<RpcResp
   }
 }
 
+interface SocketRpcOptions {
+  io: Server;
+  prefix?: string;
+}
+
 export class SocketRpc {
+  readonly io: Server;
+  readonly prefix: string;
+
   private endpoints = new Map<string, ComposedMiddleware<RpcContext>>();
 
-  constructor(readonly io: Server | Namespace, readonly prefix = '') {
+  constructor({ io, prefix }: SocketRpcOptions) {
+    this.io = io;
+    this.prefix = prefix || '';
+
     io.on('connection', (socket) => {
       this.endpoints.forEach((handler, name) => {
         socket.on(name, async (...args) => {

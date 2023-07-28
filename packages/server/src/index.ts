@@ -3,13 +3,16 @@ import AV from 'leancloud-storage';
 import Koa from 'koa';
 import serve from 'koa-static';
 import send from 'koa-send';
+import Router from 'koa-router';
 import { Server } from 'socket.io';
-import { z } from 'zod';
+import { pino } from 'pino';
 import 'dotenv/config';
 
 import { SocketRpc } from './socket-rpc.js';
 import { registerConversationRpc } from './conversation.js';
 import { registerMessageRpc } from './message.js';
+import { Gateway } from './gateway.js';
+import { UserManager } from './user-manager.js';
 
 AV.init({
   appId: process.env.LEANCLOUD_APP_ID!,
@@ -20,51 +23,32 @@ AV.init({
 
 (AV as any)._config.disableCurrentUser = true;
 
+const logger = pino({
+  level: 'debug',
+});
+
 const app = new Koa();
 const httpServer = http.createServer(app.callback());
 const io = new Server(httpServer);
-const rpc = new SocketRpc(io);
+const userManager = new UserManager();
+const gateway = new Gateway({ io, logger, userManager });
+const rpc = new SocketRpc({ io });
 
+const router = new Router({ prefix: '/api/v1' });
+
+app.use(router.routes());
 app.use(serve('public'));
 app.use(async (ctx) => {
   await send(ctx, 'index.html', { root: 'public' });
 });
 
-const ioAuthSchema = z.object({
-  type: z.enum(['operator']).optional(),
-  sessionToken: z.string(),
-});
-
-io.use(async (socket, next) => {
-  const parseResult = ioAuthSchema.safeParse(socket.handshake.auth);
-  if (!parseResult.success) {
-    return next(new Error('invalid auth'));
-  }
-
-  const auth = parseResult.data;
-
-  try {
-    const user = await AV.User.become(auth.sessionToken);
-    socket.data = {
-      type: auth.type,
-      uid: user.id,
-    };
-  } catch (error) {
-    console.error(error);
-    return next(new Error('login falied'));
-  }
-
-  next();
-});
-
-io.on('connection', (socket) => {
-  if (socket.data.type === 'operator') {
-    socket.join('operator');
-  }
-});
-
 registerConversationRpc(rpc);
 registerMessageRpc(rpc);
+
+router.post('/customers', async (ctx) => {
+  const customer = await userManager.createCustomer();
+  ctx.body = customer;
+});
 
 httpServer.listen(3000, () => {
   rpc.getEndpoints().forEach((endpoint) => {

@@ -3,7 +3,6 @@ import { useLocalStorage } from 'react-use';
 
 interface User {
   id: string;
-  sessionToken: string;
 }
 
 interface AuthContextValue {
@@ -14,7 +13,7 @@ interface AuthContextValue {
 const AuthContext = createContext<AuthContextValue | undefined>(undefined);
 
 export function AuthProvider({ children }: PropsWithChildren) {
-  const [user, setUser] = useLocalStorage<User>('LeanChat/user');
+  const [user, setUser] = useLocalStorage<User>('LeanChat/operator');
   return <AuthContext.Provider value={{ user, setUser }}>{children}</AuthContext.Provider>;
 }
 
