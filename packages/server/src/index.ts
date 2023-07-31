@@ -1,4 +1,5 @@
 import http from 'node:http';
+import { EventEmitter } from 'node:events';
 import AV from 'leancloud-storage';
 import Koa from 'koa';
 import serve from 'koa-static';
@@ -8,11 +9,13 @@ import { Server } from 'socket.io';
 import { pino } from 'pino';
 import 'dotenv/config';
 
-import { SocketRpc } from './socket-rpc.js';
-import { registerConversationRpc } from './conversation.js';
-import { registerMessageRpc } from './message.js';
-import { Gateway } from './gateway.js';
-import { UserManager } from './user-manager.js';
+import { CustomerManager } from './customer-manager.js';
+import { ConversationManager } from './conversation-manager.js';
+import { OperatorGateway } from './operator-gateway.js';
+import { operatorRpcFactory } from './operator-rpc.js';
+import { OperatorManager } from './operator-manager.js';
+import { CustomerGateway } from './customer-gateway.js';
+import { CustomerChannelWs } from './customer-channel-ws.js';
 
 AV.init({
   appId: process.env.LEANCLOUD_APP_ID!,
@@ -30,9 +33,25 @@ const logger = pino({
 const app = new Koa();
 const httpServer = http.createServer(app.callback());
 const io = new Server(httpServer);
-const userManager = new UserManager();
-const gateway = new Gateway({ io, logger, userManager });
-const rpc = new SocketRpc({ io });
+
+const events = new EventEmitter();
+
+const customerManager = new CustomerManager();
+const operatorManager = new OperatorManager();
+const conversationManager = new ConversationManager();
+
+const customerNamespace = io.of('/customers');
+const customerGateway = new CustomerGateway(events, conversationManager, logger);
+const customerChannelWs = new CustomerChannelWs(
+  customerNamespace,
+  events,
+  customerManager,
+  customerGateway,
+  logger
+);
+
+const operatorNamespace = io.of('/operators');
+const operatorGateway = new OperatorGateway(operatorNamespace, operatorManager, logger);
 
 const router = new Router({ prefix: '/api/v1' });
 
@@ -42,17 +61,14 @@ app.use(async (ctx) => {
   await send(ctx, 'index.html', { root: 'public' });
 });
 
-registerConversationRpc(rpc);
-registerMessageRpc(rpc);
+const operatorRpc = operatorRpcFactory({ conversationManager });
+operatorGateway.use(operatorRpc.middleware());
 
 router.post('/customers', async (ctx) => {
-  const customer = await userManager.createCustomer();
+  const customer = await customerManager.createCustomer();
   ctx.body = customer;
 });
 
 httpServer.listen(3000, () => {
-  rpc.getEndpoints().forEach((endpoint) => {
-    console.log(`[Socket RPC] ${endpoint}`);
-  });
   console.log('Server launched');
 });

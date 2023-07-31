@@ -1,23 +1,24 @@
 import { Server, Socket } from 'socket.io';
 import { Logger } from 'pino';
 
-import { UserManager } from './user-manager.js';
+import { CustomerManager } from './customer-manager.js';
 
 interface Session {
   uid: string;
   socket: Socket;
+  data?: any;
 }
 
 interface GatewayOptions {
   io: Server;
   logger: Logger;
-  userManager: UserManager;
+  userManager: CustomerManager;
 }
 
 export class Gateway {
   readonly io: Server;
   readonly logger: Logger;
-  private userManager: UserManager;
+  private userManager: CustomerManager;
 
   private clients = new Map<string, Session>();
 
@@ -51,10 +52,5 @@ export class Gateway {
       socket,
     });
     this.logger.debug('user online %s', user.id);
-
-    // TODO: remove this -.-
-    if (user.id.startsWith('operator_')) {
-      socket.join('operator');
-    }
   }
 }
