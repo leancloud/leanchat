@@ -6,9 +6,10 @@ import { AppService } from './app.service';
 import { OperatorController } from './operator/operator.controller';
 import { OperatorService } from './operator/operator.service';
 import { SessionController } from './session/session.controller';
+import { RedisModule } from './redis/redis.module';
 
 @Module({
-  imports: [],
+  imports: [RedisModule],
   controllers: [AppController, OperatorController, SessionController],
   providers: [
     AppService,

@@ -2,11 +2,11 @@ import { NestFactory } from '@nestjs/core';
 import { NestExpressApplication } from '@nestjs/platform-express';
 import session from 'express-session';
 import RedisStore from 'connect-redis';
-import Redis from 'ioredis';
 import AV from 'leancloud-storage';
 import 'dotenv/config';
 
 import { AppModule } from './app.module';
+import { REDIS } from './redis/constants';
 
 AV.init({
   appId: process.env.LEANCLOUD_APP_ID!,
@@ -16,17 +16,15 @@ AV.init({
 });
 
 async function bootstrap() {
-  const sessionStore = new RedisStore({
-    client: new Redis(),
-    prefix: 'chat_session:',
-  });
-
   const app = await NestFactory.create<NestExpressApplication>(AppModule);
   app.disable('x-powered-by');
   app.setGlobalPrefix('api');
   app.use(
     session({
-      store: sessionStore,
+      store: new RedisStore({
+        client: app.get(REDIS),
+        prefix: 'chat_session:',
+      }),
       name: 'sid',
       secret: process.env.LEANCLOUD_APP_MASTER_KEY!,
       resave: false,
