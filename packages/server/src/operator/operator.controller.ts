@@ -4,8 +4,10 @@ import { Response } from 'express';
 
 import { IPagination } from 'src/interfaces';
 import { AuthGuard } from 'src/auth/auth.guard';
+import { CurrentOperator } from 'src/common/decorators';
 import { ICreateOperator } from './interfaces';
 import { OperatorService } from './operator.service';
+import { Operator } from './operator.entity';
 
 @Controller('operators')
 @UseGuards(AuthGuard)
@@ -27,5 +29,10 @@ export class OperatorController {
     );
     res.set('x-total-count', count.toString());
     return operators;
+  }
+
+  @Get('me')
+  getCurrentOperator(@CurrentOperator() operator: Operator) {
+    return operator;
   }
 }

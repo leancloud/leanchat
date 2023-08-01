@@ -1,6 +1,8 @@
-import { ConflictException, Injectable } from '@nestjs/common';
+import { ConflictException, Inject, Injectable } from '@nestjs/common';
+import { CACHE_MANAGER } from '@nestjs/cache-manager';
 import { hash, verify } from '@node-rs/argon2';
 import AV from 'leancloud-storage';
+import { Cache } from 'cache-manager';
 
 import { IPagination } from 'src/interfaces';
 import { ICreateOperator } from './interfaces';
@@ -8,6 +10,9 @@ import { Operator } from './operator.entity';
 
 @Injectable()
 export class OperatorService {
+  @Inject(CACHE_MANAGER)
+  private cache: Cache;
+
   async createOperator(data: ICreateOperator) {
     const existOperator = await this.getOperatorByUsername(data.username);
     if (existOperator) {
@@ -26,13 +31,28 @@ export class OperatorService {
     return Operator.fromAVObject(obj);
   }
 
+  async getOperator(id: string) {
+    const cacheKey = `operator:${id}`;
+    const cacheValue = await this.cache.get<Operator>(cacheKey);
+    if (cacheValue) {
+      return cacheValue;
+    }
+
+    const query = new AV.Query('ChatOperator');
+    query.equalTo('objectId', id);
+    const obj = await query.first({ useMasterKey: true });
+    if (obj) {
+      const operator = Operator.fromAVObject(obj as AV.Object);
+      await this.cache.set(cacheKey, operator);
+      return operator;
+    }
+  }
+
   async getOperatorByUsername(username: string) {
     const query = new AV.Query('ChatOperator');
     query.equalTo('username', username);
     const obj = await query.first({ useMasterKey: true });
-    if (obj) {
-      return Operator.fromAVObject(obj as AV.Object);
-    }
+    return obj && Operator.fromAVObject(obj as AV.Object);
   }
 
   comparePassword(hashedPassword: string, password: string) {
