@@ -19,10 +19,11 @@ export function useEvent(socket: Socket, event: string, listener: (...args: any)
 interface SocketProviderProps {
   children?: ReactNode;
   fallback?: ReactNode;
+  uri?: string;
   auth: Record<string, any>;
 }
 
-export function SocketProvider({ children, fallback, auth }: SocketProviderProps) {
+export function SocketProvider({ children, fallback, uri, auth }: SocketProviderProps) {
   const socketRef = useRef<Socket>();
   const [connected, setConnected] = useState(false);
 
@@ -30,7 +31,7 @@ export function SocketProvider({ children, fallback, auth }: SocketProviderProps
     if (socketRef.current) {
       return;
     }
-    const socket = io({
+    const socket = io(uri || '/', {
       transports: ['websocket'],
       auth,
     });

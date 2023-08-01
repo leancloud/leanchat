@@ -5,6 +5,7 @@ import axios from 'axios';
 
 interface User {
   id: string;
+  customerId: string;
 }
 
 export const AuthContext = createContext<User | undefined>(undefined);

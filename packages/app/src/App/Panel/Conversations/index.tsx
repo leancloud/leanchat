@@ -40,9 +40,9 @@ export default function Conversations() {
   const getConvOptions = useMemo(() => {
     switch (stream) {
       case 'unassigned':
-        return { assigneeId: null };
+        return { operatorId: null };
       case 'myOpen':
-        return { assigneeId: user!.id };
+        return { operatorId: user!.id };
       case 'solved':
         return { isSolved: true };
     }
@@ -50,7 +50,7 @@ export default function Conversations() {
 
   const { data: conversations } = useQuery<Conversation[]>({
     queryKey: ['Conversations', getConvOptions],
-    queryFn: () => callRpc(socket, 'getConversations', getConvOptions),
+    queryFn: () => callRpc(socket, 'listConversation', getConvOptions),
   });
 
   const [currentConv, setCurrentConv] = useState<Conversation>();

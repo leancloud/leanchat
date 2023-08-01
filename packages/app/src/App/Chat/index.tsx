@@ -1,15 +1,14 @@
 import { CSSProperties, useCallback, useEffect, useLayoutEffect, useRef, useState } from 'react';
-import { useInfiniteQuery, useMutation } from '@tanstack/react-query';
-import { useLocalStorage } from 'react-use';
+import { useInfiniteQuery } from '@tanstack/react-query';
+
 import { Input } from 'antd';
 import twemoji from 'twemoji';
 import cx from 'classnames';
 import _ from 'lodash';
 
-import { SocketProvider, callRpc, useEvent, useSocket, useSubscribeConversation } from '@/socket';
-import style from './index.module.css';
-import { Conversation } from './types';
+import { SocketProvider, useEvent, useSocket } from '@/socket';
 import { AuthContext, AuthProvider, useCurrentUser } from './auth';
+import style from './index.module.css';
 
 interface MessageData {
   id: string;
@@ -23,7 +22,7 @@ export default function Chat() {
     <AuthProvider>
       <AuthContext.Consumer>
         {(user) => (
-          <SocketProvider auth={{ type: 'customer', id: user!.id }}>
+          <SocketProvider auth={{ id: user!.id }}>
             <ChatBox />
           </SocketProvider>
         )}
@@ -46,19 +45,11 @@ function useScrollToBottom() {
 function ChatBox() {
   const socket = useSocket();
 
-  const [cid, setCid] = useLocalStorage<string>('LeanChat/cid');
-
-  useSubscribeConversation(cid);
-
   const { data: historyMessages } = useInfiniteQuery({
-    enabled: !!cid,
-    queryKey: ['Messages', cid],
+    enabled: false,
+    queryKey: ['Messages', 'cid'],
     queryFn: () => {
-      return callRpc(socket, 'getTimeline', {
-        cid,
-        type: ['message'],
-        desc: true,
-      });
+      return [];
     },
   });
 
@@ -75,26 +66,10 @@ function ChatBox() {
     setMessages((msgs) => msgs.concat(msg));
   });
 
-  const createConversation = useMutation<Conversation>({
-    mutationFn: () => callRpc(socket, 'createConversation'),
-    onSuccess: (conv) => {
-      setCid(conv.id);
-    },
-  });
-
-  const convInited = useRef(false);
-  useEffect(() => {
-    if (!cid && !convInited.current) {
-      createConversation.mutate();
-      convInited.current = true;
-    }
-  }, []);
-
   const handleNewMessage = (content: string) => {
-    if (!cid) return;
-    callRpc(socket, 'sendMessage', { cid, text: content }).then((msg) =>
-      setMessages((msgs) => msgs.concat(msg))
-    );
+    socket.emit('message', { text: content }, 1, 2, (res: any) => {
+      console.log('message response:', res);
+    });
   };
 
   const { containerRef, scrollToBottom } = useScrollToBottom();
