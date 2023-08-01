@@ -1,7 +1,7 @@
 import { Injectable, NestMiddleware } from '@nestjs/common';
 import { NextFunction, Request, Response } from 'express';
 
-import { OperatorService } from 'src/operator/operator.service';
+import { OperatorService } from './operator.service';
 
 @Injectable()
 export class CurrentOperatorMiddleware implements NestMiddleware {

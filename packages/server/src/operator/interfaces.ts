@@ -26,3 +26,8 @@ export interface ICreateOperator {
    */
   maxCustomerCount: number;
 }
+
+export interface ICreateSession {
+  username: string;
+  password: string;
+}

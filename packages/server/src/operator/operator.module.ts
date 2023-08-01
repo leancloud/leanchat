@@ -4,6 +4,7 @@ import { CacheModule } from '@nestjs/cache-manager';
 import { OperatorService } from './operator.service';
 import { OperatorController } from './operator.controller';
 import { CurrentOperatorMiddleware } from './current-operator.middleware';
+import { SessionController } from './session.controller';
 
 @Module({
   imports: [
@@ -13,7 +14,7 @@ import { CurrentOperatorMiddleware } from './current-operator.middleware';
     }),
   ],
   providers: [OperatorService],
-  controllers: [OperatorController],
+  controllers: [OperatorController, SessionController],
   exports: [OperatorService],
 })
 export class OperatorModule implements NestModule {
