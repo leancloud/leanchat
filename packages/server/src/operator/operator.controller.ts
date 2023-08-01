@@ -4,7 +4,7 @@ import { Response } from 'express';
 
 import { IPagination } from 'src/interfaces';
 import { AuthGuard } from 'src/auth/auth.guard';
-import { CurrentOperator } from 'src/common/decorators';
+import { CurrentOperator } from './decorators';
 import { ICreateOperator } from './interfaces';
 import { OperatorService } from './operator.service';
 import { Operator } from './operator.entity';

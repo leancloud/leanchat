@@ -1,8 +1,9 @@
-import { Module } from '@nestjs/common';
+import { MiddlewareConsumer, Module, NestModule } from '@nestjs/common';
+import { CacheModule } from '@nestjs/cache-manager';
 
 import { OperatorService } from './operator.service';
 import { OperatorController } from './operator.controller';
-import { CacheModule } from '@nestjs/cache-manager';
+import { CurrentOperatorMiddleware } from './current-operator.middleware';
 
 @Module({
   imports: [
@@ -15,4 +16,8 @@ import { CacheModule } from '@nestjs/cache-manager';
   controllers: [OperatorController],
   exports: [OperatorService],
 })
-export class OperatorModule {}
+export class OperatorModule implements NestModule {
+  configure(consumer: MiddlewareConsumer) {
+    consumer.apply(CurrentOperatorMiddleware).forRoutes(OperatorController);
+  }
+}
