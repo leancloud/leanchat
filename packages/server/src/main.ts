@@ -31,6 +31,9 @@ async function bootstrap() {
       secret: process.env.LEANCLOUD_APP_MASTER_KEY!,
       resave: false,
       saveUninitialized: false,
+      cookie: {
+        secure: !!process.env.LEANCLOUD_APP_ENV,
+      },
     }),
   );
   await app.listen(3000);
