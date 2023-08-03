@@ -22,14 +22,14 @@ export class SessionController {
       data.username,
     );
     if (!operator) {
-      throw new UnauthorizedException(`operator ${data.username} not exists`);
+      throw new UnauthorizedException(`客服 ${data.username} 不存在`);
     }
     const passwordMatch = await this.operatorService.comparePassword(
       operator.password,
       data.password,
     );
     if (!passwordMatch) {
-      throw new UnauthorizedException('username and password mismatch');
+      throw new UnauthorizedException('用户名密码不匹配');
     }
 
     await promisify(req.session.regenerate).call(req.session);
