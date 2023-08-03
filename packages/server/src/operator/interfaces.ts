@@ -24,8 +24,10 @@ export interface ICreateOperator {
   /**
    * @type uint
    */
-  maxCustomerCount: number;
+  concurrency: number;
 }
+
+export type IUpdateOperator = Partial<Omit<ICreateOperator, 'username'>>;
 
 export interface ICreateSession {
   username: string;

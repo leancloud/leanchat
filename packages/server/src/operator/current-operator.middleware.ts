@@ -10,7 +10,7 @@ export class CurrentOperatorMiddleware implements NestMiddleware {
   async use(req: Request, res: Response, next: NextFunction) {
     const uid = req.session.uid;
     if (uid) {
-      const operator = this.operatorService.getOperator(uid);
+      const operator = await this.operatorService.getOperator(uid);
       (req as any).operator = operator;
     }
     next();

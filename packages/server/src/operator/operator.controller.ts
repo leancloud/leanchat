@@ -1,11 +1,19 @@
-import { Controller, Get, Post, Res, UseGuards } from '@nestjs/common';
+import {
+  Controller,
+  Get,
+  Param,
+  Patch,
+  Post,
+  Res,
+  UseGuards,
+} from '@nestjs/common';
 import { TypedBody, TypedQuery } from '@nestia/core';
 import { Response } from 'express';
 
 import { IPagination } from 'src/interfaces';
 import { AuthGuard } from 'src/auth/auth.guard';
 import { CurrentOperator } from './decorators';
-import { ICreateOperator } from './interfaces';
+import { ICreateOperator, IUpdateOperator } from './interfaces';
 import { OperatorService } from './operator.service';
 import { Operator } from './operator.entity';
 
@@ -34,5 +42,10 @@ export class OperatorController {
   @Get('me')
   getCurrentOperator(@CurrentOperator() operator: Operator) {
     return operator;
+  }
+
+  @Patch(':id')
+  updateOperator(@Param('id') id: string, @TypedBody() data: IUpdateOperator) {
+    return this.operatorService.updateOperator(id, data);
   }
 }

@@ -13,7 +13,7 @@ export class Operator {
 
   internalName: string;
 
-  maxCustomerCount: number;
+  concurrency: number;
 
   static fromAVObject(obj: AV.Object) {
     const json = obj.toJSON();
@@ -23,7 +23,7 @@ export class Operator {
     operator.password = json.password;
     operator.internalName = json.internalName;
     operator.externalName = json.externalName;
-    operator.maxCustomerCount = json.maxCustomerCount;
+    operator.concurrency = json.concurrency;
     return operator;
   }
 }

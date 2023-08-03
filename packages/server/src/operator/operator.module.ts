@@ -19,6 +19,6 @@ import { SessionController } from './session.controller';
 })
 export class OperatorModule implements NestModule {
   configure(consumer: MiddlewareConsumer) {
-    consumer.apply(CurrentOperatorMiddleware).forRoutes(OperatorController);
+    consumer.apply(CurrentOperatorMiddleware).forRoutes('operators');
   }
 }
