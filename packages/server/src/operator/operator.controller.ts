@@ -1,6 +1,7 @@
 import {
   Controller,
   Get,
+  NotFoundException,
   Param,
   Patch,
   Post,
@@ -41,6 +42,15 @@ export class OperatorController {
 
   @Get('me')
   getCurrentOperator(@CurrentOperator() operator: Operator) {
+    return operator;
+  }
+
+  @Get(':id')
+  async getOperator(@Param('id') id: string) {
+    const operator = await this.operatorService.getOperator(id);
+    if (!operator) {
+      throw new NotFoundException(`客服 ${id} 不存在`);
+    }
     return operator;
   }
 

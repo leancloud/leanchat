@@ -22,7 +22,7 @@ export class OperatorService {
   async createOperator(data: ICreateOperator) {
     const existOperator = await this.getOperatorByUsername(data.username);
     if (existOperator) {
-      throw new ConflictException(`operator ${data.username} exists`);
+      throw new ConflictException(`已存在用户名为 ${data.username} 的客服`);
     }
 
     const hashedPassword = await hash(data.password);
