@@ -1,16 +1,15 @@
 install:
   - require:
-    - packages/server/package.json
     - packages/app/package.json
+    - packages/server/package.json
     - package.json
     - pnpm-lock.yaml
     - pnpm-workspace.yaml
   - pnpm install
 
-exposeEnvironmentsOnBuild: true
 build:
+  - (cd packages/app && pnpm build)
   - (cd packages/server && pnpm build)
-  - (cd packages/app && pnpm genenv && pnpm build)
-  - mv packages/app/dist public
+  - cp -r packages/app/dist packages/server/dist/public
 
-run: node packages/server/dist
+run: node packages/server/dist/main.js

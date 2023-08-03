@@ -1,33 +1,23 @@
-import { CSSProperties, useCallback, useEffect, useLayoutEffect, useRef, useState } from 'react';
-import { useInfiniteQuery } from '@tanstack/react-query';
-
+import { CSSProperties, useCallback, useLayoutEffect, useRef, useState } from 'react';
 import { Input } from 'antd';
 import twemoji from 'twemoji';
 import cx from 'classnames';
 import _ from 'lodash';
+import { nanoid } from 'nanoid';
+import { useLocalStorage } from 'react-use';
 
-import { SocketProvider, useEvent, useSocket } from '@/socket';
-import { AuthContext, AuthProvider, useCurrentUser } from './auth';
+import { SocketProvider, useSocket } from '@/socket';
 import style from './index.module.css';
 
-interface MessageData {
-  id: string;
-  cid: string;
-  uid: string;
-  text: string;
-}
+const VISITOR_ID = nanoid();
 
 export default function Chat() {
+  const [visitorId] = useLocalStorage('LeanChat/visitorId', VISITOR_ID);
+
   return (
-    <AuthProvider>
-      <AuthContext.Consumer>
-        {(user) => (
-          <SocketProvider auth={{ id: user!.id }}>
-            <ChatBox />
-          </SocketProvider>
-        )}
-      </AuthContext.Consumer>
-    </AuthProvider>
+    <SocketProvider auth={{ id: visitorId }}>
+      <ChatBox />
+    </SocketProvider>
   );
 }
 
@@ -45,29 +35,10 @@ function useScrollToBottom() {
 function ChatBox() {
   const socket = useSocket();
 
-  const { data: historyMessages } = useInfiniteQuery({
-    enabled: false,
-    queryKey: ['Messages', 'cid'],
-    queryFn: () => {
-      return [];
-    },
-  });
-
-  const [messages, setMessages] = useState<MessageData[]>([]);
-
-  useEffect(() => {
-    if (historyMessages) {
-      const messages = historyMessages.pages.flat().reverse();
-      setMessages((prev) => _.uniqBy([...messages, ...prev], (msg) => msg.id));
-    }
-  }, [historyMessages]);
-
-  useEvent(socket, 'message', (msg: MessageData) => {
-    setMessages((msgs) => msgs.concat(msg));
-  });
+  const [messages] = useState<any[]>([]);
 
   const handleNewMessage = (content: string) => {
-    socket.emit('message', { text: content }, 1, 2, (res: any) => {
+    socket.emit('message', { content }, (res: any) => {
       console.log('message response:', res);
     });
   };
@@ -179,16 +150,14 @@ function Footer({ onMessage }: FooterProps) {
 }
 
 interface MessagesProps {
-  messages: MessageData[];
+  messages: any[];
 }
 
 function Messages({ messages }: MessagesProps) {
-  const user = useCurrentUser();
-
   return (
     <div className="w-full float-left">
       {messages.map((msg, key) => (
-        <Message key={key} content={msg.text} visitor={msg.uid === user.id} />
+        <Message key={key} content={msg.text} visitor={true} />
       ))}
     </div>
   );

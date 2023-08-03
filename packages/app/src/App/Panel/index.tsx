@@ -8,9 +8,9 @@ import { MdSettings } from 'react-icons/md';
 import { BiSolidInbox } from 'react-icons/bi';
 import axios from 'axios';
 
-import { SocketProvider } from '@/socket';
+// import { SocketProvider } from '@/socket';
 import { AuthProvider, useAuth } from './auth';
-import Conversations from './Conversations';
+// import Conversations from './Conversations';
 import { Layout } from './Layout';
 import { Compose } from './compose';
 
