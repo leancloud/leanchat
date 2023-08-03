@@ -28,7 +28,7 @@ export function Layout({ navs, children }: LayoutProps) {
           <div id={CUSTOM_SIDER_ID}></div>
         </div>
         <div className="grow bg-[#eff2f6] flex flex-col overflow-hidden">
-          <div className="shrink-0 h-[60px] bg-white shadow"></div>
+          <div className="shrink-0 h-[60px] bg-white shadow z-10"></div>
           <div className="grow overflow-x-hidden overflow-y-auto">{children}</div>
         </div>
       </div>
@@ -41,7 +41,7 @@ export function CustomSider({ children }: PropsWithChildren) {
   return container && createPortal(children, container);
 }
 
-function Nav({ to, icon: Icon }: Nav) {
+function Nav({ icon: Icon, to }: Nav) {
   return (
     <NavLink
       to={to}
@@ -52,7 +52,7 @@ function Nav({ to, icon: Icon }: Nav) {
         })
       }
     >
-      <Icon className="text-[24px] m-auto" />
+      <Icon className="m-auto w-[22px] h-[22px]" />
     </NavLink>
   );
 }

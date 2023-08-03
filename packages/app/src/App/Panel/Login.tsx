@@ -1,64 +1,87 @@
 import { Controller, useForm } from 'react-hook-form';
-import { Navigate } from 'react-router-dom';
-import { Button, Form, Input } from 'antd';
+import { Navigate, useNavigate } from 'react-router-dom';
+import { Alert, Button, Form, Input } from 'antd';
+import { useMutation } from '@tanstack/react-query';
 
 import { useAuth } from './auth';
+import { createSession } from './api/session';
 
 interface LoginData {
-  email: string;
+  username: string;
   password: string;
 }
 
 export default function Login() {
   const { user, setUser } = useAuth();
   const { control, handleSubmit } = useForm<LoginData>();
+  const navigate = useNavigate();
 
-  const _handleSubmit = ({ email, password }: LoginData) => {
-    setUser({ id: email + password });
-  };
+  const {
+    mutate: login,
+    error,
+    isLoading,
+  } = useMutation({
+    mutationFn: ({ username, password }: LoginData) => {
+      return createSession(username, password);
+    },
+    onSuccess: (user) => {
+      setUser(user);
+      navigate('..');
+    },
+  });
 
   if (user) {
     return <Navigate to=".." />;
   }
 
   return (
-    <div className="h-screen flex">
-      <div className="m-auto w-[280px]">
-        <div className="text-primary text-4xl text-center font-bold mb-5">LeanChat</div>
-        <Form onFinish={handleSubmit(_handleSubmit)}>
-          <Controller
-            control={control}
-            name="email"
-            rules={{ required: true }}
-            render={({ field, fieldState: { error } }) => (
-              <Form.Item validateStatus={error ? 'error' : undefined} help={error?.message}>
-                <Input {...field} size="large" placeholder="Email" autoFocus />
-              </Form.Item>
-            )}
-          />
-          <Controller
-            control={control}
-            name="password"
-            rules={{ required: true }}
-            render={({ field, fieldState: { error } }) => (
-              <Form.Item validateStatus={error ? 'error' : undefined} help={error?.message}>
-                <Input.Password {...field} size="large" placeholder="Password" />
-              </Form.Item>
-            )}
-          />
-          <div className="flex items-center">
-            <button
-              className="text-gray-400 mr-auto"
-              type="button"
-              onClick={() => alert('hahahaha')}
+    <div className="h-screen flex bg-gray-100">
+      <div className="m-auto bg-white p-8 rounded-md shadow-md">
+        <div className="w-[280px]">
+          <div className="text-primary text-4xl text-center font-bold mb-8">LeanChat</div>
+
+          {(error as Error | null) && (
+            <Alert
+              type="error"
+              message={(error as Error).message}
+              showIcon
+              style={{ marginBottom: 24 }}
+            />
+          )}
+
+          <Form onFinish={handleSubmit((data) => login(data))}>
+            <Controller
+              control={control}
+              name="username"
+              rules={{ required: true }}
+              render={({ field, fieldState: { error } }) => (
+                <Form.Item validateStatus={error ? 'error' : undefined} help={error?.message}>
+                  <Input {...field} size="large" placeholder="用户名" autoFocus />
+                </Form.Item>
+              )}
+            />
+            <Controller
+              control={control}
+              name="password"
+              rules={{ required: true }}
+              render={({ field, fieldState: { error } }) => (
+                <Form.Item validateStatus={error ? 'error' : undefined} help={error?.message}>
+                  <Input.Password {...field} size="large" placeholder="密码" />
+                </Form.Item>
+              )}
+            />
+
+            <Button
+              className="w-full"
+              size="large"
+              type="primary"
+              htmlType="submit"
+              loading={isLoading}
             >
-              Forgot password?
-            </button>
-            <Button type="primary" htmlType="submit">
-              Login
+              登录
             </Button>
-          </div>
-        </Form>
+          </Form>
+        </div>
       </div>
     </div>
   );

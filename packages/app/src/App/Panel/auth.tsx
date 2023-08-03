@@ -1,20 +1,28 @@
-import { PropsWithChildren, createContext, useContext } from 'react';
-import { useLocalStorage } from 'react-use';
+import { PropsWithChildren, createContext, useContext, useState } from 'react';
+import { useQuery } from '@tanstack/react-query';
 
-interface User {
-  id: string;
-}
+import { Operator, getOperator } from './api/operator';
 
 interface AuthContextValue {
-  user?: User;
-  setUser: (user: User) => void;
+  user?: Operator;
+  setUser: (user: Operator) => void;
 }
 
 const AuthContext = createContext<AuthContextValue | undefined>(undefined);
 
 export function AuthProvider({ children }: PropsWithChildren) {
-  const [user, setUser] = useLocalStorage<User>('LeanChat/operator');
-  return <AuthContext.Provider value={{ user, setUser }}>{children}</AuthContext.Provider>;
+  const [user, setUser] = useState<Operator>();
+
+  const { data } = useQuery({
+    queryKey: ['Operator', 'me'],
+    queryFn: () => getOperator('me'),
+    suspense: true,
+    useErrorBoundary: false,
+  });
+
+  return (
+    <AuthContext.Provider value={{ user: user || data, setUser }}>{children}</AuthContext.Provider>
+  );
 }
 
 export function useAuth() {
