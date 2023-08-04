@@ -6,6 +6,6 @@ import { REDIS } from './constants';
 export const redisProvider: FactoryProvider = {
   provide: REDIS,
   useFactory: () => {
-    return new Redis();
+    return new Redis(process.env.REDIS_URL_CACHE!);
   },
 };

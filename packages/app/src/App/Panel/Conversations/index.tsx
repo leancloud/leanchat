@@ -1,41 +1,52 @@
-import { ReactNode, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
-import { useInfiniteQuery, useQuery } from '@tanstack/react-query';
+import {
+  ReactNode,
+  useCallback,
+  useEffect,
+  useLayoutEffect,
+  useMemo,
+  useRef,
+  useState,
+} from 'react';
+import { useInfiniteQuery, useMutation, useQuery } from '@tanstack/react-query';
 import { Avatar, Badge, Button, Divider, Input } from 'antd';
 import { UserOutlined } from '@ant-design/icons';
 import dayjs from 'dayjs';
 import cx from 'classnames';
 import _ from 'lodash';
 
-import { Conversation } from '@/api/conversation';
-import { Message } from '@/api/message';
-import { callRpc, useEvent, useSocket, useSubscribeConversation } from '@/socket';
+import { callRpc, useEvent, useSocket } from '@/socket';
 import { useAuth } from '../auth';
 import { CustomSider } from '../Layout';
 import { diffTime } from './utils';
-import { useUnassignedCount } from './states';
-import { NavButton, NavMenu } from '../components/NavMenu';
-
-interface MessageGroup {
-  date: Date;
-  messages: Message[];
-}
+import { NavMenu } from '../components/NavMenu';
+import {
+  Conversation,
+  Message,
+  getConversationMessages,
+  getConversations,
+  joinConversation,
+} from '../api/conversation';
 
 export default function Conversations() {
   const { user } = useAuth();
-  const socket = useSocket();
 
   const [stream, setStream] = useState('myOpen');
 
   const getConvOptions = useMemo(() => {
     switch (stream) {
       case 'unassigned':
-        return { operatorId: null };
+        return { status: 'queued' };
       case 'myOpen':
-        return { operatorId: user!.id };
+        return { operatorId: user?.id };
       case 'solved':
-        return { isSolved: true };
+        return { status: 'solved' };
     }
   }, [stream, user]);
+
+  const { data: conversations } = useQuery({
+    queryKey: ['Conversations', getConvOptions],
+    queryFn: () => getConversations(getConvOptions),
+  });
 
   const [currentConv, setCurrentConv] = useState<Conversation>();
 
@@ -43,12 +54,18 @@ export default function Conversations() {
     setCurrentConv(conv);
   };
 
-  const handleJoinCurrentConversation = async () => {
-    if (!currentConv) return;
-    const conv = await callRpc(socket, 'joinConversation', currentConv.id);
-    setStream('myOpen');
-    setCurrentConv(conv);
-  };
+  const { mutate: join } = useMutation({
+    mutationFn: joinConversation,
+    onSuccess: (_data, id) => {
+      setStream('myOpen');
+      setCurrentConv((conv) => {
+        if (conv && conv.id === id) {
+          return { ...conv, operatorId: user?.id };
+        }
+        return conv;
+      });
+    },
+  });
 
   return (
     <>
@@ -56,7 +73,7 @@ export default function Conversations() {
         <Sider
           stream={stream}
           onChangeStream={setStream}
-          conversations={[]}
+          conversations={conversations}
           onClickConversation={handleChangeConversation}
           activeConversationId={currentConv?.id}
         />
@@ -64,10 +81,10 @@ export default function Conversations() {
 
       {currentConv && (
         <ChatBox
-          conversation={currentConv}
+          convId={currentConv.id}
           mask={
             currentConv &&
-            !currentConv.assignee && <JoinConversationMask onJoin={handleJoinCurrentConversation} />
+            !currentConv.operatorId && <JoinConversationMask onJoin={() => join(currentConv.id)} />
           }
         />
       )}
@@ -90,8 +107,6 @@ function Sider({
   activeConversationId,
   onClickConversation,
 }: SiderProps) {
-  const [unassignedCount] = useUnassignedCount();
-
   const contentByStream = useMemo<Record<string, ReactNode>>(
     () => ({
       unassigned: (
@@ -180,13 +195,13 @@ function ConversationList({ data, onClick, activeId }: ConversationListProps) {
       onClick={() => onClick?.(conv)}
     >
       <div className="flex items-center">
-        <Avatar className="shrink-0">{conv.creator.id.slice(0, 1)}</Avatar>
+        <Avatar className="shrink-0">{conv.id.slice(0, 1)}</Avatar>
         <div className="ml-[10px] grow overflow-hidden">
           <div className="flex items-center">
-            <div className="text-sm font-medium truncate">{conv.creator.id}</div>
+            <div className="text-sm font-medium truncate">{conv.id}</div>
             {conv.recentMessage && (
               <div className="text-xs ml-auto shrink-0">
-                {diffTime(now, conv.recentMessage.createTime)}
+                {diffTime(now, conv.recentMessage.createdAt)}
               </div>
             )}
           </div>
@@ -194,57 +209,107 @@ function ConversationList({ data, onClick, activeId }: ConversationListProps) {
         </div>
       </div>
       <div className="mt-2 flex items-center">
-        <div className="text-sm mr-auto">{conv.recentMessage?.text}</div>
-        {conv.assignee && <Avatar size={18} icon={<UserOutlined />} />}
+        <div className="text-sm mr-auto">{conv.recentMessage?.data.content}</div>
+        {conv.operatorId && <Avatar size={18} icon={<UserOutlined />} />}
       </div>
     </div>
   ));
 }
 
+interface MessageGroup {
+  date: dayjs.Dayjs;
+  messages: Message[];
+}
+
+function groupMessages(messages: Message[]) {
+  const groups: MessageGroup[] = [];
+  for (const message of messages) {
+    const date = dayjs(message.createdAt).startOf('day');
+    const group = _.last(groups);
+    if (group && group.date.isSame(date)) {
+      group.messages.push(message);
+    } else {
+      groups.push({ date, messages: [message] });
+    }
+  }
+  return groups;
+}
+
+function useMessageGroups() {
+  const [groups, setGroups] = useState<MessageGroup[]>([]);
+
+  const reset = useCallback(() => setGroups([]), []);
+
+  const setHistoryMessages = useCallback((historyMessages: Message[]) => {
+    setGroups((groups) => {
+      const messages = _(groups)
+        .flatMap((group) => group.messages)
+        .concat(historyMessages)
+        .uniqBy((message) => message.id)
+        .value();
+      return groupMessages(messages);
+    });
+  }, []);
+
+  const push = useCallback((message: Message) => {
+    const date = dayjs(message.createdAt).startOf('day');
+    setGroups((groups) => {
+      const group = _.last(groups);
+      if (group && group.date.isSame(date)) {
+        return [
+          ...groups.slice(0, groups.length - 1),
+          {
+            ...group,
+            messages: [...group.messages, message],
+          },
+        ];
+      }
+      return [
+        ...groups,
+        {
+          date,
+          messages: [message],
+        },
+      ];
+    });
+  }, []);
+
+  return { groups, setHistoryMessages, push, reset };
+}
+
 interface ChatBoxProps {
-  conversation: Conversation;
+  convId: string;
   mask?: ReactNode;
 }
 
-function ChatBox({ conversation, mask }: ChatBoxProps) {
+function ChatBox({ convId, mask }: ChatBoxProps) {
   const { user } = useAuth();
   const socket = useSocket();
 
-  useSubscribeConversation(conversation.id);
+  const { groups, setHistoryMessages, push, reset } = useMessageGroups();
+
+  useEffect(() => {
+    socket.emit('subscribeConversation', convId);
+    reset();
+    return () => {
+      socket.emit('unsubscribeConversation', convId);
+    };
+  }, [convId]);
 
   const { data: historyMessages } = useInfiniteQuery<Message[]>({
-    queryKey: ['Messages', conversation.id],
-    queryFn: () => {
-      return callRpc(socket, 'getTimeline', {
-        cid: conversation.id,
-        type: ['message'],
-      });
-    },
+    queryKey: ['Messages', convId],
+    queryFn: () => getConversationMessages(convId),
   });
 
-  const historyMessageGroups = useMemo(() => {
-    const groups: MessageGroup[] = [];
-    historyMessages?.pages.forEach((messages) => {
-      messages.forEach((msg) => {
-        const msgDate = dayjs(msg.createTime).startOf('day');
-        const currentGroup = _.last(groups);
-        if (currentGroup) {
-          if (dayjs(currentGroup.date).isSame(msgDate)) {
-            currentGroup.messages.push(msg);
-          } else {
-            groups.push({ date: msgDate.toDate(), messages: [msg] });
-          }
-        } else {
-          groups.push({ date: msgDate.toDate(), messages: [msg] });
-        }
-      });
-    });
-    return groups;
+  useEffect(() => {
+    if (historyMessages) {
+      setHistoryMessages(historyMessages.pages.flat());
+    }
   }, [historyMessages]);
 
+  useEvent(socket, 'message', push);
+
   const [content, setContent] = useState('');
-  const [messages, setMessages] = useState<Message[]>([]);
-  useEffect(() => setMessages([]), [conversation]);
 
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const messageContainerRef = useRef<HTMLDivElement>(null);
@@ -253,7 +318,7 @@ function ChatBox({ conversation, mask }: ChatBoxProps) {
     if (messageContainerRef.current) {
       messageContainerRef.current.scrollTop = messageContainerRef.current.scrollHeight;
     }
-  }, [historyMessageGroups, messages]);
+  }, [groups]);
 
   const handleCreateMessage = async () => {
     const trimedContent = content.trim();
@@ -261,45 +326,18 @@ function ChatBox({ conversation, mask }: ChatBoxProps) {
       return;
     }
     const msg = await callRpc(socket, 'sendMessage', {
-      cid: conversation.id,
+      cid: convId,
       text: trimedContent,
     });
-    setMessages((msgs) => msgs.concat(msg));
     setContent('');
     textareaRef.current?.focus();
   };
 
-  const convId = useRef(conversation.id);
-  convId.current = conversation.id;
-
-  useEffect(() => {
-    const onMessage = (msg: Message) => {
-      if (msg.cid !== convId.current) {
-        return;
-      }
-      setMessages((msgs) => msgs.concat(msg));
-    };
-    socket.on('message', onMessage);
-    return () => {
-      socket.off('message', onMessage);
-    };
-  }, []);
-
-  const messageDivider = useMemo(() => {
-    if (historyMessageGroups.length && messages.length) {
-      const lastGroup = _.last(historyMessageGroups)!;
-      const firstMessageDate = dayjs(messages[0].createTime).startOf('day');
-      if (!firstMessageDate.isSame(lastGroup.date)) {
-        return firstMessageDate.format('MMM DD, YYYY');
-      }
-    }
-  }, [historyMessageGroups, messages]);
-
   return (
     <div className="h-full flex flex-col overflow-hidden">
       <div ref={messageContainerRef} className="mt-auto overflow-y-auto">
-        {historyMessageGroups.map(({ date, messages }) => (
-          <div key={date.getTime()}>
+        {groups.map(({ date, messages }) => (
+          <div key={date.unix()}>
             <Divider style={{ margin: '10px 20px', fontSize: 14 }}>
               {dayjs(date).format('MMM DD, YYYY')}
             </Divider>
@@ -307,26 +345,12 @@ function ChatBox({ conversation, mask }: ChatBoxProps) {
               <TextMessage
                 key={msg.id}
                 avatar={<Avatar icon={<UserOutlined />} />}
-                username={msg.uid === user!.id ? 'You' : msg.uid}
-                createTime={msg.createTime}
-                message={msg.text}
+                username={msg.from === user!.id ? 'You' : msg.from}
+                createTime={msg.createdAt}
+                message={msg.data.content}
               />
             ))}
           </div>
-        ))}
-
-        {messageDivider && (
-          <Divider style={{ margin: '10px 20px', fontSize: 14 }}>{messageDivider}</Divider>
-        )}
-
-        {messages.map((msg) => (
-          <TextMessage
-            key={msg.id}
-            avatar={<Avatar icon={<UserOutlined />} />}
-            username={msg.uid === user!.id ? 'You' : msg.uid}
-            createTime={msg.createTime}
-            message={msg.text}
-          />
         ))}
       </div>
       <div className="border-t-[3px] border-primary bg-white relative">
@@ -412,7 +436,7 @@ function JoinConversationMask({ onJoin }: JoinConversationMaskProps) {
   return (
     <div className="text-center">
       <Button type="primary" onClick={onJoin}>
-        Join conversation
+        加入会话
       </Button>
       <div className="mt-3 text-sm">
         or press

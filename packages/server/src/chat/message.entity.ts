@@ -1,23 +1,27 @@
-import { IMessage } from './interfaces';
+import AV from 'leancloud-storage';
 
 export class Message {
   id: string;
 
-  conversation: string;
-
-  from: IMessage['from'];
+  visitorId: string;
 
   type: string;
 
-  data: IMessage['data'];
+  from: string;
 
-  static fromJSON(json: Record<string, any>) {
+  data: any;
+
+  createdAt: string;
+
+  static fromAVObject(obj: AV.Object) {
+    const json = obj.toJSON();
     const message = new Message();
     message.id = json.objectId;
-    message.conversation = json.conversation;
-    message.from = json.from;
+    message.visitorId = json.visitorId;
     message.type = json.type;
+    message.from = json.from;
     message.data = json.data;
+    message.createdAt = json.createdAt;
     return message;
   }
 }

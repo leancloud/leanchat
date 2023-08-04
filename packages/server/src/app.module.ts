@@ -2,6 +2,7 @@ import path from 'node:path';
 import { APP_INTERCEPTOR } from '@nestjs/core';
 import { ClassSerializerInterceptor, Module } from '@nestjs/common';
 import { ServeStaticModule } from '@nestjs/serve-static';
+import { EventEmitterModule } from '@nestjs/event-emitter';
 
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
@@ -15,6 +16,7 @@ import { ChatModule } from './chat/chat.module';
     ServeStaticModule.forRoot({
       rootPath: path.join(__dirname, 'public'),
     }),
+    EventEmitterModule.forRoot(),
     RedisModule,
     OperatorModule,
     VisitorModule,
