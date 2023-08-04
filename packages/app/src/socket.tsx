@@ -20,7 +20,7 @@ interface SocketProviderProps {
   children?: ReactNode;
   fallback?: ReactNode;
   uri?: string;
-  auth: Record<string, any>;
+  auth?: Record<string, any>;
 }
 
 export function SocketProvider({ children, fallback, uri, auth }: SocketProviderProps) {

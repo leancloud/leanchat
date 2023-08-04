@@ -1,4 +1,10 @@
-import { JSXElementConstructor, PropsWithChildren, ReactNode } from 'react';
+import {
+  JSXElementConstructor,
+  PropsWithChildren,
+  ReactNode,
+  useLayoutEffect,
+  useState,
+} from 'react';
 import { createPortal } from 'react-dom';
 import { NavLink } from 'react-router-dom';
 import cx from 'classnames';
@@ -37,7 +43,13 @@ export function Layout({ navs, children }: LayoutProps) {
 }
 
 export function CustomSider({ children }: PropsWithChildren) {
+  const [, forceUpdate] = useState({});
   const container = document.getElementById(CUSTOM_SIDER_ID);
+  useLayoutEffect(() => {
+    if (!container) {
+      forceUpdate({});
+    }
+  }, []);
   return container && createPortal(children, container);
 }
 

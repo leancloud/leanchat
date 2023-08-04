@@ -8,9 +8,9 @@ import { MdSettings } from 'react-icons/md';
 import { BiSolidInbox } from 'react-icons/bi';
 import axios from 'axios';
 
-// import { SocketProvider } from '@/socket';
+import { SocketProvider } from '@/socket';
 import { AuthProvider, useAuth } from './auth';
-// import Conversations from './Conversations';
+import Conversations from './Conversations';
 import { Layout } from './Layout';
 import { Compose } from './compose';
 
@@ -28,10 +28,12 @@ const navs = [
   },
 ];
 
-function Center({ children }: PropsWithChildren) {
+function Fallback() {
   return (
-    <div className="h-screen flex">
-      <div className="m-auto">{children}</div>
+    <div className="h-full flex">
+      <div className="m-auto">
+        <Spin />
+      </div>
     </div>
   );
 }
@@ -44,11 +46,13 @@ function Entry() {
   }
 
   return (
-    <Layout navs={navs}>
-      <Suspense fallback={<Center children={<Spin />} />}>
-        <Outlet />
-      </Suspense>
-    </Layout>
+    <SocketProvider uri="/o">
+      <Layout navs={navs}>
+        <Suspense fallback={<Fallback />}>
+          <Outlet />
+        </Suspense>
+      </Layout>
+    </SocketProvider>
   );
 }
 
@@ -91,12 +95,12 @@ const Root = new Compose()
 export default function Panel() {
   return (
     <Root>
-      <Suspense fallback={<Center children={<Spin />} />}>
+      <Suspense fallback={<Fallback />}>
         <AuthProvider>
           <Routes>
             <Route path="login" element={<Login />} />
             <Route path="*" element={<Entry />}>
-              {/* <Route path="conversations" element={<Conversations />} /> */}
+              <Route path="conversations" element={<Conversations />} />
               <Route path="settings/*" element={<Settings />} />
             </Route>
           </Routes>

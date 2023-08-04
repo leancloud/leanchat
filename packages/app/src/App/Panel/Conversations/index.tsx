@@ -13,6 +13,7 @@ import { useAuth } from '../auth';
 import { CustomSider } from '../Layout';
 import { diffTime } from './utils';
 import { useUnassignedCount } from './states';
+import { NavButton, NavMenu } from '../components/NavMenu';
 
 interface MessageGroup {
   date: Date;
@@ -22,18 +23,6 @@ interface MessageGroup {
 export default function Conversations() {
   const { user } = useAuth();
   const socket = useSocket();
-
-  const [, setUnassignedCount] = useUnassignedCount();
-
-  useEffect(() => {
-    callRpc(socket, 'subscribeUnassignedCount').then((count: number) => {
-      setUnassignedCount(count);
-    });
-  }, []);
-
-  useEvent(socket, 'unassignedCountChanged', (count) => {
-    setUnassignedCount(count);
-  });
 
   const [stream, setStream] = useState('myOpen');
 
@@ -47,11 +36,6 @@ export default function Conversations() {
         return { isSolved: true };
     }
   }, [stream, user]);
-
-  const { data: conversations } = useQuery<Conversation[]>({
-    queryKey: ['Conversations', getConvOptions],
-    queryFn: () => callRpc(socket, 'listConversation', getConvOptions),
-  });
 
   const [currentConv, setCurrentConv] = useState<Conversation>();
 
@@ -72,7 +56,7 @@ export default function Conversations() {
         <Sider
           stream={stream}
           onChangeStream={setStream}
-          conversations={conversations}
+          conversations={[]}
           onClickConversation={handleChangeConversation}
           activeConversationId={currentConv?.id}
         />
@@ -113,19 +97,19 @@ function Sider({
       unassigned: (
         <>
           <span className="mr-3">👋</span>
-          <span>Unassigned</span>
+          <span>未分配</span>
         </>
       ),
       myOpen: (
         <>
           <span className="mr-3">📬</span>
-          <span>My open</span>
+          <span>分配给我的</span>
         </>
       ),
       solved: (
         <>
           <span className="mr-3">✅</span>
-          <span>Solved</span>
+          <span>已解决</span>
         </>
       ),
     }),
@@ -136,22 +120,30 @@ function Sider({
     <div className="flex h-full">
       <div className="w-[232px] bg-[#21324e]">
         <div className="h-[60px] border-b border-[#1c2b45] flex items-center px-[20px]">
-          <div className="text-white text-[20px] font-medium">Inbox</div>
+          <div className="text-white text-[20px] font-medium">收件箱</div>
         </div>
         <div className="p-2">
-          <SiderButton
-            active={stream === 'unassigned'}
-            onClick={() => onChangeStream('unassigned')}
-            count={unassignedCount}
-          >
-            {contentByStream['unassigned']}
-          </SiderButton>
-          <SiderButton active={stream === 'myOpen'} onClick={() => onChangeStream('myOpen')}>
-            {contentByStream['myOpen']}
-          </SiderButton>
-          <SiderButton active={stream === 'solved'} onClick={() => onChangeStream('solved')}>
-            {contentByStream['solved']}
-          </SiderButton>
+          <NavMenu
+            inverted
+            label="实时对话"
+            items={[
+              {
+                key: 'unassigned',
+                label: contentByStream['unassigned'],
+                badge: <Badge count={5} size="small" />,
+              },
+              {
+                key: 'myOpen',
+                label: contentByStream['myOpen'],
+              },
+              {
+                key: 'solved',
+                label: contentByStream['solved'],
+              },
+            ]}
+            activeKey={stream}
+            onChange={onChangeStream}
+          />
         </div>
       </div>
       <div className="w-[280px] shadow-md flex flex-col">
@@ -167,32 +159,6 @@ function Sider({
         </div>
       </div>
     </div>
-  );
-}
-
-interface SiderButtonProps {
-  children: ReactNode;
-  active?: boolean;
-  onClick?: () => void;
-  count?: number;
-}
-
-function SiderButton({ children, active, onClick, count }: SiderButtonProps) {
-  return (
-    <button
-      className={cx(
-        'h-[36px] w-full rounded text-left pl-[20px] pr-3 py-2 cursor-pointer text-sm flex items-center',
-        {
-          'bg-transparent hover:bg-[#354869]': !active,
-          'text-[#acb8cb] hover:text-white': !active,
-          'bg-[#354869] text-white': active,
-        }
-      )}
-      onClick={onClick}
-    >
-      <span className="mr-auto">{children}</span>
-      <Badge count={count} size="small" />
-    </button>
   );
 }
 

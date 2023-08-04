@@ -1,5 +1,4 @@
-import { PropsWithChildren, createContext, useContext, useState } from 'react';
-import { useQuery } from '@tanstack/react-query';
+import { PropsWithChildren, createContext, useContext, useEffect, useState } from 'react';
 
 import { Operator, getOperator } from './api/operator';
 
@@ -12,17 +11,17 @@ const AuthContext = createContext<AuthContextValue | undefined>(undefined);
 
 export function AuthProvider({ children }: PropsWithChildren) {
   const [user, setUser] = useState<Operator>();
+  const [error, setError] = useState<Error>();
 
-  const { data } = useQuery({
-    queryKey: ['Operator', 'me'],
-    queryFn: () => getOperator('me'),
-    suspense: true,
-    useErrorBoundary: false,
-  });
+  useEffect(() => {
+    getOperator('me').then(setUser).catch(setError);
+  }, []);
 
-  return (
-    <AuthContext.Provider value={{ user: user || data, setUser }}>{children}</AuthContext.Provider>
-  );
+  if (!user && !error) {
+    return null;
+  }
+
+  return <AuthContext.Provider value={{ user, setUser }}>{children}</AuthContext.Provider>;
 }
 
 export function useAuth() {
