@@ -9,7 +9,7 @@ import { AppService } from './app.service';
 import { RedisModule } from './redis/redis.module';
 import { OperatorModule } from './operator/operator.module';
 import { VisitorModule } from './visitor/visitor.module';
-import { ChatModule } from './chat/chat.module';
+import { MessageModule } from './message/message.module';
 
 @Module({
   imports: [
@@ -20,7 +20,7 @@ import { ChatModule } from './chat/chat.module';
     RedisModule,
     OperatorModule,
     VisitorModule,
-    ChatModule,
+    MessageModule,
   ],
   controllers: [AppController],
   providers: [

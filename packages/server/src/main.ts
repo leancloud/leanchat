@@ -46,6 +46,8 @@ async function bootstrap() {
   wsAdapter.use(sessionMiddleware);
   app.useWebSocketAdapter(wsAdapter);
 
+  app.enableShutdownHooks();
+
   await app.listen(3000);
 }
 bootstrap();

@@ -1,4 +1,5 @@
 import {
+  Fragment,
   ReactNode,
   useCallback,
   useEffect,
@@ -22,6 +23,7 @@ import { NavMenu } from '../components/NavMenu';
 import {
   Conversation,
   Message,
+  closeConversation,
   getConversationMessages,
   getConversations,
   joinConversation,
@@ -32,20 +34,9 @@ export default function Conversations() {
 
   const [stream, setStream] = useState('myOpen');
 
-  const getConvOptions = useMemo(() => {
-    switch (stream) {
-      case 'unassigned':
-        return { status: 'queued' };
-      case 'myOpen':
-        return { operatorId: user?.id };
-      case 'solved':
-        return { status: 'solved' };
-    }
-  }, [stream, user]);
-
-  const { data: conversations } = useQuery({
-    queryKey: ['Conversations', getConvOptions],
-    queryFn: () => getConversations(getConvOptions),
+  const { data: conversations, refetch } = useQuery({
+    queryKey: ['Conversations', stream],
+    queryFn: () => getConversations(stream),
   });
 
   const [currentConv, setCurrentConv] = useState<Conversation>();
@@ -64,6 +55,14 @@ export default function Conversations() {
         }
         return conv;
       });
+    },
+  });
+
+  const { mutate: close } = useMutation({
+    mutationFn: closeConversation,
+    onSuccess: () => {
+      setCurrentConv(undefined);
+      refetch();
     },
   });
 
@@ -86,6 +85,7 @@ export default function Conversations() {
             currentConv &&
             !currentConv.operatorId && <JoinConversationMask onJoin={() => join(currentConv.id)} />
           }
+          onClose={close}
         />
       )}
     </>
@@ -161,7 +161,7 @@ function Sider({
           />
         </div>
       </div>
-      <div className="w-[280px] shadow-md flex flex-col">
+      <div className="w-[320px] shadow-md flex flex-col">
         <div className="px-5 py-4 border-[#eff2f6] border-b">
           <h2 className="font-medium text-[20px] leading-7">{contentByStream[stream]}</h2>
         </div>
@@ -216,34 +216,53 @@ function ConversationList({ data, onClick, activeId }: ConversationListProps) {
   ));
 }
 
-interface MessageGroup {
+interface DateGroup {
   date: dayjs.Dayjs;
+  users: UserGroup[];
+}
+
+interface UserGroup {
+  userId: string;
   messages: Message[];
 }
 
 function groupMessages(messages: Message[]) {
-  const groups: MessageGroup[] = [];
+  const groups: DateGroup[] = [];
   for (const message of messages) {
     const date = dayjs(message.createdAt).startOf('day');
     const group = _.last(groups);
     if (group && group.date.isSame(date)) {
-      group.messages.push(message);
+      const userGroup = _.last(group.users);
+      if (userGroup && userGroup.userId === message.from) {
+        userGroup.messages.push(message);
+      } else {
+        group.users.push({ userId: message.from, messages: [message] });
+      }
     } else {
-      groups.push({ date, messages: [message] });
+      groups.push({
+        date,
+        users: [
+          {
+            userId: message.from,
+            messages: [message],
+          },
+        ],
+      });
     }
   }
   return groups;
 }
 
 function useMessageGroups() {
-  const [groups, setGroups] = useState<MessageGroup[]>([]);
+  const [groups, setGroups] = useState<DateGroup[]>([]);
 
   const reset = useCallback(() => setGroups([]), []);
 
   const setHistoryMessages = useCallback((historyMessages: Message[]) => {
     setGroups((groups) => {
       const messages = _(groups)
-        .flatMap((group) => group.messages)
+        .flatMap((group) => group.users)
+        .flatMap((user) => user.messages)
         .concat(historyMessages)
         .uniqBy((message) => message.id)
         .value();
@@ -256,19 +275,47 @@ function useMessageGroups() {
     setGroups((groups) => {
       const group = _.last(groups);
       if (group && group.date.isSame(date)) {
-        return [
-          ...groups.slice(0, groups.length - 1),
-          {
-            ...group,
-            messages: [...group.messages, message],
-          },
-        ];
+        const userGroup = _.last(group.users);
+        if (userGroup && userGroup.userId === message.from) {
+          return [
+            ...groups.slice(0, groups.length - 1),
+            {
+              ...group,
+              users: [
+                ...group.users.slice(0, group.users.length - 1),
+                {
+                  ...userGroup,
+                  messages: [...userGroup.messages, message],
+                },
+              ],
+            },
+          ];
+        } else {
+          return [
+            ...groups.slice(0, groups.length - 1),
+            {
+              ...group,
+              users: [
+                ...group.users,
+                {
+                  userId: message.from,
+                  messages: [message],
+                },
+              ],
+            },
+          ];
+        }
       }
       return [
         ...groups,
         {
           date,
-          messages: [message],
+          users: [
+            {
+              userId: message.from,
+              messages: [message],
+            },
+          ],
         },
       ];
     });
@@ -280,9 +327,10 @@ function useMessageGroups() {
 interface ChatBoxProps {
   convId: string;
   mask?: ReactNode;
+  onClose: (convId: string) => void;
 }
 
-function ChatBox({ convId, mask }: ChatBoxProps) {
+function ChatBox({ convId, mask, onClose }: ChatBoxProps) {
   const { user } = useAuth();
   const socket = useSocket();
 
@@ -325,10 +373,11 @@ function ChatBox({ convId, mask }: ChatBoxProps) {
     if (!trimedContent) {
       return;
     }
-    const msg = await callRpc(socket, 'sendMessage', {
-      cid: convId,
-      text: trimedContent,
+    const message = await callRpc(socket, 'message', {
+      visitorId: convId,
+      content: trimedContent,
     });
+    push(message);
     setContent('');
     textareaRef.current?.focus();
   };
@@ -336,24 +385,34 @@ function ChatBox({ convId, mask }: ChatBoxProps) {
   return (
     <div className="h-full flex flex-col overflow-hidden">
       <div ref={messageContainerRef} className="mt-auto overflow-y-auto">
-        {groups.map(({ date, messages }) => (
+        {groups.map(({ date, users }) => (
           <div key={date.unix()}>
             <Divider style={{ margin: '10px 20px', fontSize: 14 }}>
               {dayjs(date).format('MMM DD, YYYY')}
             </Divider>
-            {messages.map((msg) => (
-              <TextMessage
-                key={msg.id}
-                avatar={<Avatar icon={<UserOutlined />} />}
-                username={msg.from === user!.id ? 'You' : msg.from}
-                createTime={msg.createdAt}
-                message={msg.data.content}
-              />
+            {users.map(({ userId, messages }) => (
+              <Fragment key={`${userId}.${messages[0].id}`}>
+                {messages.map((msg, i) => (
+                  <TextMessage
+                    key={msg.id}
+                    avatar={i === 0 && <Avatar icon={<UserOutlined />} />}
+                    username={msg.from === user!.id ? 'You' : msg.from}
+                    createTime={msg.createdAt}
+                    message={msg.data.content}
+                    showHeader={i === 0}
+                  />
+                ))}
+              </Fragment>
             ))}
           </div>
         ))}
       </div>
       <div className="border-t-[3px] border-primary bg-white relative">
+        <div className="px-2 py-1 border-b">
+          <Button size="small" onClick={() => onClose(convId)}>
+            结束会话
+          </Button>
+        </div>
         <div>
           <Input.TextArea
             ref={textareaRef}
@@ -407,21 +466,31 @@ interface TextMessageProps {
   username: string;
   createTime: number | string | Date;
   message: string;
+  showHeader?: boolean;
 }
 
-function TextMessage({ avatar, username, createTime, message }: TextMessageProps) {
+function TextMessage({ avatar, username, createTime, message, showHeader }: TextMessageProps) {
   return (
-    <div className="flex px-[20px] my-[10px] hover:bg-[#f7f8fc]">
-      <div className="pt-1">
-        {avatar || <Avatar className="text-lg">{username.slice(0, 1)}</Avatar>}
-      </div>
-      <div className="ml-[14px]">
-        <div className="flex items-center align-middle">
-          <div className="text-sm font-medium">{username}</div>
-          <div className="text-xs ml-[10px] text-[#647491]">
-            {dayjs(createTime).format('h:mm A')}
+    <div className="flex px-[20px] my-[10px] group hover:bg-[#f7f8fc]">
+      <div className="pt-1">{avatar}</div>
+      <div
+        className={cx({
+          'ml-[14px]': showHeader,
+          'flex items-center': !showHeader,
+        })}
+      >
+        {showHeader ? (
+          <div className="flex items-center align-middle">
+            <div className="text-sm font-medium">{username}</div>
+            <div className="text-xs ml-[10px] text-[#647491]">
+              {dayjs(createTime).format('HH:mm')}
+            </div>
           </div>
-        </div>
+        ) : (
+          <div className="text-xs text-[#647491] w-[46px] group-hover:visible invisible">
+            {dayjs(createTime).format('HH:mm')}
+          </div>
+        )}
         <div className="text-sm whitespace-pre">{message}</div>
       </div>
     </div>

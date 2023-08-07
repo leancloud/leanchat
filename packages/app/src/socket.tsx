@@ -56,11 +56,11 @@ export function useSocket() {
 
 export type RpcResponse =
   | {
-      ok: true;
+      success: true;
       result: any;
     }
   | {
-      ok: false;
+      success: false;
       error: string;
     };
 
@@ -70,7 +70,7 @@ export function callRpc(socket: Socket, name: string, param?: any) {
       if (err) {
         return reject(err);
       }
-      if (res.ok) {
+      if (res.success) {
         resolve(res.result);
       } else {
         reject(new Error(res.error));

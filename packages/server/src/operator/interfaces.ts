@@ -33,8 +33,3 @@ export interface ICreateSession {
   username: string;
   password: string;
 }
-
-export interface IGetConversationsDto {
-  status?: string;
-  operatorId?: string | null;
-}

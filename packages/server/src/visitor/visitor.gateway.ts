@@ -1,4 +1,4 @@
-import { OnModuleInit, UsePipes } from '@nestjs/common';
+import { OnModuleInit, UseInterceptors, UsePipes } from '@nestjs/common';
 import {
   ConnectedSocket,
   MessageBody,
@@ -6,6 +6,7 @@ import {
   SubscribeMessage,
   WebSocketGateway,
   WebSocketServer,
+  WsException,
 } from '@nestjs/websockets';
 import { OnEvent } from '@nestjs/event-emitter';
 import { Server, Socket } from 'socket.io';
@@ -13,21 +14,23 @@ import { EventEmitter2 } from 'eventemitter2';
 import { ZodValidationPipe } from 'nestjs-zod';
 import _ from 'lodash';
 
-import { ChatService } from 'src/chat';
+import { MessageService } from 'src/message';
 import { MessageCreatedEvent } from 'src/common/events';
 import { VisitorService } from './visitor.service';
 import { CreateMessageDto } from './dtos/create-message.dto';
 import { IUpdateVisitorDto } from './interfaces';
+import { WsInterceptor } from 'src/common/interceptors';
 
 @WebSocketGateway()
 @UsePipes(ZodValidationPipe)
+@UseInterceptors(WsInterceptor)
 export class VisitorGateway implements OnModuleInit, OnGatewayConnection {
   @WebSocketServer()
   private server: Server;
 
   constructor(
     private visitorService: VisitorService,
-    private chatService: ChatService,
+    private messageService: MessageService,
     private events: EventEmitter2,
   ) {}
 
@@ -57,7 +60,12 @@ export class VisitorGateway implements OnModuleInit, OnGatewayConnection {
     @MessageBody() data: CreateMessageDto,
   ) {
     const visitorId = socket.data.id;
-    const message = await this.chatService.createMessage({
+    const visitor = await this.visitorService.getVisitor(visitorId);
+    if (!visitor) {
+      throw new WsException('账户已被停用');
+    }
+
+    const message = await this.messageService.createMessage({
       visitorId,
       type: 'visitor',
       from: visitorId,
@@ -68,9 +76,9 @@ export class VisitorGateway implements OnModuleInit, OnGatewayConnection {
       recentMessage: message,
     };
 
-    if (!socket.data.status) {
-      socket.data.status = 'queued';
+    if (!visitor.status || visitor.status === 'solved') {
       updateData.status = 'queued';
+      updateData.queuedAt = new Date();
     }
 
     await this.visitorService.updateVisitor(visitorId, updateData);
@@ -82,6 +90,15 @@ export class VisitorGateway implements OnModuleInit, OnGatewayConnection {
     });
 
     return message;
+  }
+
+  @SubscribeMessage('getHistory')
+  handleGetHistory(@ConnectedSocket() socket: Socket) {
+    const visitorId = socket.data.id;
+    return this.messageService.getMessages({
+      visitorId,
+      types: ['visitor', 'operator'],
+    });
   }
 
   @OnEvent('message.created', { async: true })

@@ -1,83 +1,111 @@
-import { TypedQuery } from '@nestia/core';
 import {
   Controller,
   ForbiddenException,
   Get,
+  Inject,
   NotFoundException,
   Param,
   Post,
+  Query,
   UseGuards,
 } from '@nestjs/common';
-import AV from 'leancloud-storage';
+import { Redis } from 'ioredis';
 
-import { IGetConversationsDto } from './interfaces';
 import { AuthGuard } from 'src/auth/auth.guard';
+import { VisitorService } from 'src/visitor';
+import { MessageService } from 'src/message';
+import { REDIS } from 'src/redis';
 import { CurrentOperator } from './decorators';
 import { Operator } from './operator.entity';
 
 @Controller('conversations')
 @UseGuards(AuthGuard)
 export class ConversationController {
+  @Inject(REDIS)
+  private redis: Redis;
+
+  constructor(
+    private visitorService: VisitorService,
+    private messageService: MessageService,
+  ) {}
+
   @Get()
-  async getConversations(
-    @TypedQuery() { status, operatorId }: IGetConversationsDto,
+  getConversations(
+    @CurrentOperator() operator: Operator,
+    @Query('type') type: string | undefined,
   ) {
-    const query = new AV.Query('ChatVisitor');
-    if (status) {
-      query.equalTo('status', status);
+    switch (type) {
+      case 'unassigned':
+        return this.visitorService.getVisitors({
+          conditions: {
+            status: 'queued',
+          },
+          orderBy: 'queuedAt',
+        });
+      case 'myOpen':
+        return this.visitorService.getVisitors({
+          conditions: {
+            operatorId: operator.id,
+          },
+          orderBy: 'createdAt',
+        });
+      case 'solved':
+        return this.visitorService.getVisitors({
+          conditions: {
+            status: 'solved',
+          },
+          orderBy: 'createdAt',
+        });
+      default:
+        return this.visitorService.getVisitors({
+          conditions: {},
+          orderBy: 'createdAt',
+        });
     }
-    if (operatorId) {
-      query.equalTo('operatorId', operatorId);
-    }
-    if (operatorId === null) {
-      query.doesNotExist('operatorId');
-    }
-    query.addDescending('createdAt');
-    const objs = await query.find({ useMasterKey: true });
-    return objs.map((obj) => {
-      return {
-        id: obj.id,
-        channel: obj.get('channel'),
-        recentMessage: obj.get('recentMessage'),
-        status: obj.get('status'),
-      };
-    });
   }
 
   @Get(':id/messages')
-  async getMessages(@Param('id') id: string) {
-    const query = new AV.Query('ChatMessage');
-    query.equalTo('visitorId', id);
-    const objs = await query.find({ useMasterKey: true });
-    return objs.map((obj) => {
-      return {
-        id: obj.id,
-        type: obj.get('type'),
-        from: obj.get('from'),
-        data: obj.get('data'),
-        createdAt: obj.createdAt,
-      };
+  getMessages(@Param('id') id: string) {
+    return this.messageService.getMessages({
+      visitorId: id,
     });
   }
 
   @Post(':id/join')
-  async updateConversation(
-    @Param('id') id: string,
+  async joinConversation(
     @CurrentOperator() operator: Operator,
+    @Param('id') id: string,
   ) {
-    const query = new AV.Query('ChatVisitor');
-    query.equalTo('objectId', id);
-    const obj = (await query.first({ useMasterKey: true })) as
-      | AV.Object
-      | undefined;
-    if (!obj) {
+    const visitor = await this.visitorService.getVisitor(id);
+    if (!visitor) {
       throw new NotFoundException(`会话 ${id} 不存在`);
     }
-    if (obj.has('operatorId')) {
+    if (visitor.operatorId) {
       throw new ForbiddenException(`会话 ${id} 已被分配`);
     }
-    obj.set('operatorId', operator.id);
-    obj.set('status', 'inProgress');
-    await obj.save(null, { useMasterKey: true });
+    await this.visitorService.updateVisitor(id, {
+      operatorId: operator.id,
+      status: 'inProgress',
+    });
+    await this.redis.hincrby('operator_concurrency', operator.id, 1);
+  }
+
+  @Post(':id/close')
+  async closeConversation(
+    @CurrentOperator() operator: Operator,
+    @Param('id') id: string,
+  ) {
+    const visitor = await this.visitorService.getVisitor(id);
+    if (!visitor) {
+      throw new NotFoundException(`会话 ${id} 不存在`);
+    }
+    if (visitor.operatorId !== operator.id) {
+      throw new ForbiddenException(`会话 ${id} 不属于您`);
+    }
+    await this.visitorService.updateVisitor(id, {
+      operatorId: null,
+      status: 'solved',
+    });
+    await this.redis.hincrby('operator_concurrency', operator.id, -1);
   }
 }

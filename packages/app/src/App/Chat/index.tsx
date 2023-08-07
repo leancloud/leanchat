@@ -1,4 +1,4 @@
-import { CSSProperties, useCallback, useLayoutEffect, useRef, useState } from 'react';
+import { CSSProperties, useCallback, useEffect, useLayoutEffect, useRef, useState } from 'react';
 import { Input } from 'antd';
 import twemoji from 'twemoji';
 import cx from 'classnames';
@@ -6,8 +6,18 @@ import _ from 'lodash';
 import { nanoid } from 'nanoid';
 import { useLocalStorage } from 'react-use';
 
-import { SocketProvider, useSocket } from '@/socket';
+import { SocketProvider, useEvent, useSocket } from '@/socket';
 import style from './index.module.css';
+
+interface Message {
+  id: string;
+  type: string;
+  from: string;
+  data: {
+    content: string;
+  };
+  createdAt: string;
+}
 
 const VISITOR_ID = nanoid();
 
@@ -35,11 +45,27 @@ function useScrollToBottom() {
 function ChatBox() {
   const socket = useSocket();
 
-  const [messages] = useState<any[]>([]);
+  const [messages, setMessages] = useState<Message[]>([]);
+
+  useEffect(() => {
+    socket.emit('getHistory', (res: { result?: Message[] }) => {
+      const messages = res.result;
+      if (messages) {
+        setMessages(messages);
+      }
+    });
+  }, []);
+
+  useEvent(socket, 'message', (message: Message) => {
+    setMessages((prev) => [...prev, message]);
+  });
 
   const handleNewMessage = (content: string) => {
-    socket.emit('message', { content }, (res: any) => {
-      console.log('message response:', res);
+    socket.emit('message', { content }, (res: { result?: Message }) => {
+      const message = res.result;
+      if (message) {
+        setMessages((prev) => [...prev, message]);
+      }
     });
   };
 
@@ -150,14 +176,14 @@ function Footer({ onMessage }: FooterProps) {
 }
 
 interface MessagesProps {
-  messages: any[];
+  messages: Message[];
 }
 
 function Messages({ messages }: MessagesProps) {
   return (
     <div className="w-full float-left">
       {messages.map((msg, key) => (
-        <Message key={key} content={msg.text} visitor={true} />
+        <Message key={key} content={msg.data.content} visitor={msg.type === 'visitor'} />
       ))}
     </div>
   );

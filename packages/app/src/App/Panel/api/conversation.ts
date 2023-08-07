@@ -18,14 +18,9 @@ export interface Message {
   createdAt: string;
 }
 
-interface GetConversationsOptions {
-  status?: string;
-  operatorId?: string | null;
-}
-
-export async function getConversations(options?: GetConversationsOptions) {
+export async function getConversations(type: string) {
   const res = await client.get<Conversation[]>('/conversations', {
-    params: options,
+    params: { type },
   });
   return res.data;
 }
@@ -37,4 +32,8 @@ export async function getConversationMessages(id: string) {
 
 export async function joinConversation(id: string) {
   await client.post(`/conversations/${id}/join`);
+}
+
+export async function closeConversation(id: string) {
+  await client.post(`/conversations/${id}/close`);
 }
