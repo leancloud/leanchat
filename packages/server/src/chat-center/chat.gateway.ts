@@ -1,6 +1,6 @@
 import {
-  Inject,
   OnModuleInit,
+  UseFilters,
   UseInterceptors,
   UsePipes,
 } from '@nestjs/common';
@@ -19,17 +19,20 @@ import { Namespace, Socket } from 'socket.io';
 import { EventEmitter2 } from 'eventemitter2';
 import { OnEvent } from '@nestjs/event-emitter';
 import { ZodValidationPipe } from 'nestjs-zod';
-import { Redis } from 'ioredis';
 import { z } from 'nestjs-zod/z';
 
+import { WsFilter } from 'src/common/filters';
 import { MessageCreatedEvent } from 'src/common/events';
 import { WsInterceptor } from 'src/common/interceptors';
-import { REDIS } from 'src/redis';
 import { VisitorService } from 'src/visitor';
 import { MessageService } from 'src/message';
 import { CreateMessageDto } from './dtos/create-message.dto';
+import { ChatService } from './chat.service';
+import { ConversationQueuedEvent } from './events';
+import { ConversationService } from './conversation.service';
 
 @WebSocketGateway({ namespace: 'o' })
+@UseFilters(WsFilter)
 @UsePipes(ZodValidationPipe)
 @UseInterceptors(WsInterceptor)
 export class ChatGateway
@@ -38,13 +41,12 @@ export class ChatGateway
   @WebSocketServer()
   private server: Namespace;
 
-  @Inject(REDIS)
-  private redis: Redis;
-
   constructor(
     private events: EventEmitter2,
     private visitorService: VisitorService,
     private messageService: MessageService,
+    private chatService: ChatService,
+    private conversationService: ConversationService,
   ) {}
 
   onModuleInit() {
@@ -60,6 +62,8 @@ export class ChatGateway
 
   async handleConnection(socket: Socket) {
     console.log('operator online', socket.data.id);
+    const queueSize = await this.conversationService.getConversationQueueSize();
+    socket.emit('queuedConversationCount', queueSize);
   }
 
   handleDisconnect(socket: Socket) {
@@ -73,30 +77,31 @@ export class ChatGateway
     status: string,
   ) {
     const operatorId = socket.data.id;
-    const pp = this.redis.pipeline();
-    pp.hset('operator_status', operatorId, status);
     if (status === 'ready') {
-      const visitorCount = await this.visitorService.getVisitorCountForOperator(
-        operatorId,
-      );
-      pp.hset('operator_concurrency', operatorId, visitorCount);
+      await this.chatService.setOperatorReady(operatorId);
+    } else {
+      await this.chatService.setOperatorStatus(operatorId, status);
     }
-    await pp.exec();
   }
 
   @SubscribeMessage('getStatus')
-  async handleGetStatus(@ConnectedSocket() socket: Socket) {
-    const status = await this.redis.hget('operator_status', socket.data.id);
-    return status || 'leave';
+  handleGetStatus(@ConnectedSocket() socket: Socket) {
+    return this.chatService.getOperatorStatus(socket.data.id);
   }
 
   @SubscribeMessage('subscribeConversation')
-  handleSubscribeConversation(socket: Socket, id: string) {
+  handleSubscribeConversation(
+    @ConnectedSocket() socket: Socket,
+    @MessageBody(new ZodValidationPipe(z.string())) id: string,
+  ) {
     socket.join(id);
   }
 
   @SubscribeMessage('unsubscribeConversation')
-  handleUnsubscribeConversation(socket: Socket, id: string) {
+  handleUnsubscribeConversation(
+    @ConnectedSocket() socket: Socket,
+    @MessageBody(new ZodValidationPipe(z.string())) id: string,
+  ) {
     socket.leave(id);
   }
 
@@ -144,5 +149,12 @@ export class ChatGateway
       op = op.except(payload.socketId);
     }
     op.emit('message', payload.message);
+  }
+
+  @OnEvent('conversation.queued')
+  dispatchConversationQueued(payload: ConversationQueuedEvent) {
+    this.server.emit('conversationQueued', {
+      id: payload.visitorId,
+    });
   }
 }

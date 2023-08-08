@@ -19,17 +19,14 @@ import { Server, Socket } from 'socket.io';
 import { EventEmitter2 } from 'eventemitter2';
 import { ZodValidationPipe } from 'nestjs-zod';
 import { Redis } from 'ioredis';
-import { InjectQueue } from '@nestjs/bull';
-import { Queue } from 'bull';
 
 import { MessageService } from 'src/message';
 import { MessageCreatedEvent } from 'src/common/events';
 import { REDIS } from 'src/redis';
-import { VisitorService } from './visitor.service';
-import { CreateMessageDto } from './dtos/create-message.dto';
-import { IUpdateVisitorDto } from './interfaces';
+import { IUpdateVisitorDto, VisitorService } from 'src/visitor';
 import { WsInterceptor } from 'src/common/interceptors';
-import { IAssignVisitorJobData } from 'src/common/interfaces';
+import { CreateMessageDto } from './dtos/create-message.dto';
+import { AssignService } from 'src/chat-center';
 
 @WebSocketGateway()
 @UsePipes(ZodValidationPipe)
@@ -47,9 +44,7 @@ export class VisitorGateway implements OnModuleInit, OnGatewayConnection {
     private visitorService: VisitorService,
     private messageService: MessageService,
     private events: EventEmitter2,
-
-    @InjectQueue('assign_visitor')
-    private assignVisitorQueue: Queue,
+    private assignService: AssignService,
   ) {}
 
   onModuleInit() {
@@ -95,24 +90,14 @@ export class VisitorGateway implements OnModuleInit, OnGatewayConnection {
     };
 
     if (visitor.status === 'new' || visitor.status === 'solved') {
-      const now = new Date();
-      const queued = await this.redis.zadd(
-        'visitor_queue',
-        'NX',
-        now.getTime(),
-        visitor.id,
-      );
-      if (queued) {
-        this.logger.debug('visitor start a new conversation', { visitorId });
-        await this.assignVisitorQueue.add({
-          visitorId,
-        } satisfies IAssignVisitorJobData);
+      const queuedAt = await this.assignService.assignVisitor(visitor);
+      if (queuedAt) {
         updateData.status = 'queued';
-        updateData.queuedAt = now;
+        updateData.queuedAt = queuedAt;
       }
     }
 
-    await this.visitorService.updateVisitor(visitorId, updateData);
+    await this.visitorService.updateVisitor(visitor, updateData);
 
     this.events.emit('message.created', {
       message,

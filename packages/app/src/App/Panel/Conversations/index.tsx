@@ -28,6 +28,7 @@ import {
   getConversations,
   joinConversation,
 } from '../api/conversation';
+import { useQueuedConversationCount } from '../states/conversation';
 
 export default function Conversations() {
   const { user } = useAuth();
@@ -37,6 +38,7 @@ export default function Conversations() {
   const { data: conversations, refetch } = useQuery({
     queryKey: ['Conversations', stream],
     queryFn: () => getConversations(stream),
+    staleTime: 1000 * 60,
   });
 
   const [currentConv, setCurrentConv] = useState<Conversation>();
@@ -131,6 +133,8 @@ function Sider({
     []
   );
 
+  const [queueSize] = useQueuedConversationCount();
+
   return (
     <div className="flex h-full">
       <div className="w-[232px] bg-[#21324e]">
@@ -145,7 +149,7 @@ function Sider({
               {
                 key: 'unassigned',
                 label: contentByStream['unassigned'],
-                badge: <Badge count={5} size="small" />,
+                badge: <Badge count={queueSize} size="small" />,
               },
               {
                 key: 'myOpen',

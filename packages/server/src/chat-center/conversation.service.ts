@@ -1,9 +1,11 @@
 import { BadRequestException, Inject, Injectable } from '@nestjs/common';
 import { Redis } from 'ioredis';
+import EventEmitter2 from 'eventemitter2';
 
 import { REDIS } from 'src/redis';
 import { Visitor, VisitorService } from 'src/visitor';
-import { Operator, OperatorService } from 'src/operator';
+import { Operator } from 'src/operator';
+import { ConversationAssignedEvent, ConversationClosedEvent } from './events';
 
 @Injectable()
 export class ConversationService {
@@ -13,7 +15,7 @@ export class ConversationService {
 
     private visitorService: VisitorService,
 
-    private operatorService: OperatorService,
+    private events: EventEmitter2,
   ) {}
 
   getOperatorStatus(operatorId: string) {
@@ -27,7 +29,7 @@ export class ConversationService {
     }
 
     await this.visitorService.updateVisitor(visitor, {
-      status: 'in_progress',
+      status: 'inProgress',
       operatorId: operator.id,
     });
 
@@ -36,6 +38,11 @@ export class ConversationService {
       .zrem('visitor_queue', visitor.id)
       .hincrby('operator_concurrency', operator.id, 1)
       .exec();
+
+    this.events.emit('conversation.assigned', {
+      visitor,
+      operator,
+    } satisfies ConversationAssignedEvent);
   }
 
   async closeConversation(visitor: Visitor) {
@@ -49,5 +56,18 @@ export class ConversationService {
     if (operatorId) {
       await this.redis.hincrby('operator_concurrency', operatorId, -1);
     }
+
+    this.events.emit('conversation.closed', {
+      visitor,
+    } satisfies ConversationClosedEvent);
+  }
+
+  async conversationQueued(conversationId: string) {
+    const score = await this.redis.zscore('visitor_queue', conversationId);
+    return score !== null;
+  }
+
+  getConversationQueueSize() {
+    return this.redis.zcard('visitor_queue');
   }
 }

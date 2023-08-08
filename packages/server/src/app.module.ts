@@ -12,6 +12,7 @@ import { OperatorModule } from './operator/operator.module';
 import { VisitorModule } from './visitor/visitor.module';
 import { MessageModule } from './message/message.module';
 import { ChatCenterModule } from './chat-center/chat-center.module';
+import { VisitorChannelModule } from './visitor-channel/visitor-channel.module';
 
 @Module({
   imports: [
@@ -32,6 +33,7 @@ import { ChatCenterModule } from './chat-center/chat-center.module';
     VisitorModule,
     MessageModule,
     ChatCenterModule,
+    VisitorChannelModule,
   ],
   controllers: [AppController],
   providers: [

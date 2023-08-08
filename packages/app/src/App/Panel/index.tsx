@@ -8,11 +8,12 @@ import { MdSettings } from 'react-icons/md';
 import { BiSolidInbox } from 'react-icons/bi';
 import axios from 'axios';
 
-import { SocketProvider } from '@/socket';
+import { SocketProvider, useEvent, useSocket } from '@/socket';
 import { AuthProvider, useAuth } from './auth';
 import Conversations from './Conversations';
 import { Layout } from './Layout';
 import { Compose } from './compose';
+import { useQueuedConversationCount } from './states/conversation';
 
 const Login = lazy(() => import('./Login'));
 const Settings = lazy(() => import('./Settings'));
@@ -38,6 +39,19 @@ function Fallback() {
   );
 }
 
+function QueueSizeDetector() {
+  const [, setQueueSize] = useQueuedConversationCount();
+
+  const socket = useSocket();
+
+  useEvent(socket, 'queuedConversationCount', setQueueSize);
+  useEvent(socket, 'conversation.queued', (e: { queueSize: number }) => {
+    setQueueSize(e.queueSize);
+  });
+
+  return null;
+}
+
 function Entry() {
   const { user } = useAuth();
 
@@ -49,6 +63,7 @@ function Entry() {
     <SocketProvider uri="/o">
       <Layout navs={navs}>
         <Suspense fallback={<Fallback />}>
+          <QueueSizeDetector />
           <Outlet />
         </Suspense>
       </Layout>

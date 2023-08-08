@@ -16,11 +16,16 @@ import { Operator, OperatorService } from 'src/operator';
 import { AuthGuard } from './guards/auth.guard';
 import { CurrentOperator } from './decorators/current-operator.decorator';
 import { ICreateOperator, IUpdateOperator } from './interfaces/operator';
+import { ChatService } from './chat.service';
+import { OperatorDto } from './dtos/operator.dto';
 
 @Controller('operators')
 @UseGuards(AuthGuard)
 export class OperatorController {
-  constructor(private operatorService: OperatorService) {}
+  constructor(
+    private operatorService: OperatorService,
+    private chatService: ChatService,
+  ) {}
 
   @Post()
   createOperator(@TypedBody() data: ICreateOperator) {
@@ -40,8 +45,10 @@ export class OperatorController {
   }
 
   @Get('me')
-  getCurrentOperator(@CurrentOperator() operator: Operator) {
-    return operator;
+  async getCurrentOperator(@CurrentOperator() operator: Operator) {
+    const dto = OperatorDto.fromEntity(operator);
+    dto.status = await this.chatService.getOperatorStatus(operator.id);
+    return dto;
   }
 
   @Get(':id')

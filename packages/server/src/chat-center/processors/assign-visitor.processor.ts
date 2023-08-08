@@ -1,30 +1,31 @@
-import { Inject, Logger } from '@nestjs/common';
+import { Inject } from '@nestjs/common';
 import { Process, Processor } from '@nestjs/bull';
 import { Job } from 'bull';
 import { Redis } from 'ioredis';
+import EventEmitter2 from 'eventemitter2';
 import _ from 'lodash';
 
-import { IAssignVisitorJobData } from 'src/common/interfaces';
 import { REDIS } from 'src/redis';
 import { VisitorService } from 'src/visitor';
 import { OperatorService } from 'src/operator';
 import { ConversationService } from '../conversation.service';
+import { AssignVisitorJobData } from '../interfaces/assign-job';
+import { ConversationQueuedEvent } from '../events';
 
 @Processor('assign_visitor')
 export class AssignVisitorProcessor {
   @Inject(REDIS)
   private redis: Redis;
 
-  private readonly logger = new Logger(AssignVisitorProcessor.name);
-
   constructor(
+    private events: EventEmitter2,
     private visitorService: VisitorService,
     private operatorService: OperatorService,
     private conversationService: ConversationService,
   ) {}
 
-  @Process()
-  async assign(job: Job<IAssignVisitorJobData>) {
+  @Process('assign')
+  async assign(job: Job<AssignVisitorJobData>) {
     const visitor = await this.visitorService.getVisitor(job.data.visitorId);
     if (!visitor) {
       return;
@@ -36,6 +37,17 @@ export class AssignVisitorProcessor {
     }
 
     await this.conversationService.assignOperator(visitor, operator);
+  }
+
+  @Process('check')
+  async check(job: Job<AssignVisitorJobData>) {
+    const { visitorId } = job.data;
+    const queued = await this.conversationService.conversationQueued(visitorId);
+    if (queued) {
+      this.events.emit('conversation.queued', {
+        visitorId,
+      } satisfies ConversationQueuedEvent);
+    }
   }
 
   async selectOperator() {
