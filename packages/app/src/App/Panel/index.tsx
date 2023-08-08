@@ -45,8 +45,8 @@ function QueueSizeDetector() {
   const socket = useSocket();
 
   useEvent(socket, 'queuedConversationCount', setQueueSize);
-  useEvent(socket, 'conversation.queued', (e: { queueSize: number }) => {
-    setQueueSize(e.queueSize);
+  useEvent(socket, 'conversation.queued', () => {
+    // TODO: refresh queued count
   });
 
   return null;

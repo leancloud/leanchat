@@ -90,5 +90,6 @@ export class VisitorService {
       obj.set('queuedAt', data.queuedAt);
     }
     await obj.save(null, { useMasterKey: true });
+    this.visitorCache.delete(visitor.id);
   }
 }
