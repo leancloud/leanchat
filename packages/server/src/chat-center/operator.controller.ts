@@ -12,11 +12,10 @@ import { TypedBody, TypedQuery } from '@nestia/core';
 import { Response } from 'express';
 
 import { IPagination } from 'src/interfaces';
-import { AuthGuard } from 'src/auth/auth.guard';
-import { CurrentOperator } from './decorators';
-import { ICreateOperator, IUpdateOperator } from './interfaces';
-import { OperatorService } from './operator.service';
-import { Operator } from './operator.entity';
+import { Operator, OperatorService } from 'src/operator';
+import { AuthGuard } from './guards/auth.guard';
+import { CurrentOperator } from './decorators/current-operator.decorator';
+import { ICreateOperator, IUpdateOperator } from './interfaces/operator';
 
 @Controller('operators')
 @UseGuards(AuthGuard)

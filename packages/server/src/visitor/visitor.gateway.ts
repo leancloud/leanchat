@@ -1,4 +1,10 @@
-import { OnModuleInit, UseInterceptors, UsePipes } from '@nestjs/common';
+import {
+  Inject,
+  Logger,
+  OnModuleInit,
+  UseInterceptors,
+  UsePipes,
+} from '@nestjs/common';
 import {
   ConnectedSocket,
   MessageBody,
@@ -12,14 +18,18 @@ import { OnEvent } from '@nestjs/event-emitter';
 import { Server, Socket } from 'socket.io';
 import { EventEmitter2 } from 'eventemitter2';
 import { ZodValidationPipe } from 'nestjs-zod';
-import _ from 'lodash';
+import { Redis } from 'ioredis';
+import { InjectQueue } from '@nestjs/bull';
+import { Queue } from 'bull';
 
 import { MessageService } from 'src/message';
 import { MessageCreatedEvent } from 'src/common/events';
+import { REDIS } from 'src/redis';
 import { VisitorService } from './visitor.service';
 import { CreateMessageDto } from './dtos/create-message.dto';
 import { IUpdateVisitorDto } from './interfaces';
 import { WsInterceptor } from 'src/common/interceptors';
+import { IAssignVisitorJobData } from 'src/common/interfaces';
 
 @WebSocketGateway()
 @UsePipes(ZodValidationPipe)
@@ -28,10 +38,18 @@ export class VisitorGateway implements OnModuleInit, OnGatewayConnection {
   @WebSocketServer()
   private server: Server;
 
+  @Inject(REDIS)
+  private redis: Redis;
+
+  private readonly logger = new Logger(VisitorGateway.name);
+
   constructor(
     private visitorService: VisitorService,
     private messageService: MessageService,
     private events: EventEmitter2,
+
+    @InjectQueue('assign_visitor')
+    private assignVisitorQueue: Queue,
   ) {}
 
   onModuleInit() {
@@ -44,7 +62,7 @@ export class VisitorGateway implements OnModuleInit, OnGatewayConnection {
       const visitor = await this.visitorService.registerVisitorFromChatChannel(
         id,
       );
-      socket.data = _.pick(visitor, ['id', 'status']);
+      socket.data.id = visitor.id;
       next();
     });
   }
@@ -76,9 +94,22 @@ export class VisitorGateway implements OnModuleInit, OnGatewayConnection {
       recentMessage: message,
     };
 
-    if (!visitor.status || visitor.status === 'solved') {
-      updateData.status = 'queued';
-      updateData.queuedAt = new Date();
+    if (visitor.status === 'new' || visitor.status === 'solved') {
+      const now = new Date();
+      const queued = await this.redis.zadd(
+        'visitor_queue',
+        'NX',
+        now.getTime(),
+        visitor.id,
+      );
+      if (queued) {
+        this.logger.debug('visitor start a new conversation', { visitorId });
+        await this.assignVisitorQueue.add({
+          visitorId,
+        } satisfies IAssignVisitorJobData);
+        updateData.status = 'queued';
+        updateData.queuedAt = now;
+      }
     }
 
     await this.visitorService.updateVisitor(visitorId, updateData);
@@ -104,7 +135,7 @@ export class VisitorGateway implements OnModuleInit, OnGatewayConnection {
   @OnEvent('message.created', { async: true })
   dispatchMessage(payload: MessageCreatedEvent) {
     let op = this.server.to(payload.message.visitorId);
-    if (payload.channel === 'chat' && payload.socketId) {
+    if (payload.socketId) {
       op = op.except(payload.socketId);
     }
     op.emit('message', payload.message);

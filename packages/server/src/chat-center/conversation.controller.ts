@@ -1,30 +1,27 @@
 import {
+  BadRequestException,
   Controller,
   ForbiddenException,
   Get,
-  Inject,
   NotFoundException,
   Param,
   Post,
   Query,
   UseGuards,
 } from '@nestjs/common';
-import { Redis } from 'ioredis';
 
-import { AuthGuard } from 'src/auth/auth.guard';
+import { Operator } from 'src/operator';
 import { VisitorService } from 'src/visitor';
 import { MessageService } from 'src/message';
-import { REDIS } from 'src/redis';
-import { CurrentOperator } from './decorators';
-import { Operator } from './operator.entity';
+import { AuthGuard } from './guards/auth.guard';
+import { ConversationService } from './conversation.service';
+import { CurrentOperator } from './decorators/current-operator.decorator';
 
 @Controller('conversations')
 @UseGuards(AuthGuard)
 export class ConversationController {
-  @Inject(REDIS)
-  private redis: Redis;
-
   constructor(
+    private conversationService: ConversationService,
     private visitorService: VisitorService,
     private messageService: MessageService,
   ) {}
@@ -57,18 +54,13 @@ export class ConversationController {
           orderBy: 'createdAt',
         });
       default:
-        return this.visitorService.getVisitors({
-          conditions: {},
-          orderBy: 'createdAt',
-        });
+        throw new BadRequestException('Invalid conversation type');
     }
   }
 
   @Get(':id/messages')
-  getMessages(@Param('id') id: string) {
-    return this.messageService.getMessages({
-      visitorId: id,
-    });
+  getConversationMessages(@Param('id') id: string) {
+    return this.messageService.getMessages({ visitorId: id });
   }
 
   @Post(':id/join')
@@ -83,11 +75,7 @@ export class ConversationController {
     if (visitor.operatorId) {
       throw new ForbiddenException(`会话 ${id} 已被分配`);
     }
-    await this.visitorService.updateVisitor(id, {
-      operatorId: operator.id,
-      status: 'inProgress',
-    });
-    await this.redis.hincrby('operator_concurrency', operator.id, 1);
+    await this.conversationService.assignOperator(visitor, operator);
   }
 
   @Post(':id/close')
@@ -102,10 +90,6 @@ export class ConversationController {
     if (visitor.operatorId !== operator.id) {
       throw new ForbiddenException(`会话 ${id} 不属于您`);
     }
-    await this.visitorService.updateVisitor(id, {
-      operatorId: null,
-      status: 'solved',
-    });
-    await this.redis.hincrby('operator_concurrency', operator.id, -1);
+    await this.conversationService.closeConversation(visitor);
   }
 }

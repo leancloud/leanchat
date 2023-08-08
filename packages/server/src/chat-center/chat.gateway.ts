@@ -32,7 +32,7 @@ import { CreateMessageDto } from './dtos/create-message.dto';
 @WebSocketGateway({ namespace: 'o' })
 @UsePipes(ZodValidationPipe)
 @UseInterceptors(WsInterceptor)
-export class OperatorGateway
+export class ChatGateway
   implements OnModuleInit, OnGatewayConnection, OnGatewayDisconnect
 {
   @WebSocketServer()
@@ -60,13 +60,6 @@ export class OperatorGateway
 
   async handleConnection(socket: Socket) {
     console.log('operator online', socket.data.id);
-    const operatorId = socket.data.id;
-    const visitors = await this.visitorService.getVisitors({
-      conditions: {
-        operatorId,
-      },
-    });
-    await this.redis.hset('operator_concurrency', operatorId, visitors.length);
   }
 
   handleDisconnect(socket: Socket) {
@@ -79,7 +72,16 @@ export class OperatorGateway
     @MessageBody(new ZodValidationPipe(z.enum(['ready', 'leave', 'busy'])))
     status: string,
   ) {
-    await this.redis.hset('operator_status', socket.data.id, status);
+    const operatorId = socket.data.id;
+    const pp = this.redis.pipeline();
+    pp.hset('operator_status', operatorId, status);
+    if (status === 'ready') {
+      const visitorCount = await this.visitorService.getVisitorCountForOperator(
+        operatorId,
+      );
+      pp.hset('operator_concurrency', operatorId, visitorCount);
+    }
+    await pp.exec();
   }
 
   @SubscribeMessage('getStatus')
@@ -122,7 +124,7 @@ export class OperatorGateway
       },
     });
 
-    await this.visitorService.updateVisitor(data.visitorId, {
+    await this.visitorService.updateVisitor(visitor, {
       recentMessage: message,
     });
 

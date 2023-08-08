@@ -9,8 +9,8 @@ import {
 import { TypedBody } from '@nestia/core';
 import { Request } from 'express';
 
-import { OperatorService } from './operator.service';
-import { ICreateSession } from './interfaces';
+import { OperatorService } from 'src/operator';
+import { ICreateSession } from './interfaces/session';
 
 @Controller('sessions')
 export class SessionController {

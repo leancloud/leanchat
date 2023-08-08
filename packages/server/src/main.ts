@@ -17,7 +17,9 @@ AV.init({
 });
 
 async function bootstrap() {
-  const app = await NestFactory.create<NestExpressApplication>(AppModule);
+  const app = await NestFactory.create<NestExpressApplication>(AppModule, {
+    logger: ['debug'],
+  });
   app.enable('trust proxy');
   app.disable('x-powered-by');
   app.setGlobalPrefix('api');
@@ -29,7 +31,7 @@ async function bootstrap() {
   const sessionMiddleware = session({
     store: new RedisStore({
       client,
-      prefix: 'chat_session:',
+      prefix: 'chat:session:',
     }),
     name: 'sid',
     secret: process.env.LEANCLOUD_APP_MASTER_KEY!,

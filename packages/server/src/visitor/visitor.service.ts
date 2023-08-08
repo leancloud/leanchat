@@ -1,4 +1,4 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
 import AV from 'leancloud-storage';
 
 import { Visitor } from './visitor.entity';
@@ -34,6 +34,12 @@ export class VisitorService {
     return objs.map((obj) => Visitor.fromAVObject(obj as AV.Object));
   }
 
+  getVisitorCountForOperator(operatorId: string) {
+    const query = new AV.Query('ChatVisitor');
+    query.equalTo('operatorId', operatorId);
+    return query.count({ useMasterKey: true });
+  }
+
   async getVisitor(id: string) {
     if (this.visitorCache.has(id)) {
       return this.visitorCache.get(id);
@@ -60,18 +66,14 @@ export class VisitorService {
     const obj = new AV.Object('ChatVisitor', {
       channel: 'chat',
       chatId,
+      status: 'new',
     });
     await obj.save(null, { useMasterKey: true });
     return Visitor.fromAVObject(obj);
   }
 
-  async updateVisitor(id: string, data: IUpdateVisitorDto) {
-    const visitor = await this.getVisitor(id);
-    if (!visitor) {
-      throw new NotFoundException(`Visitor ${id} not exists`);
-    }
-
-    const obj = AV.Object.createWithoutData('ChatVisitor', id);
+  async updateVisitor(visitor: Visitor, data: IUpdateVisitorDto) {
+    const obj = AV.Object.createWithoutData('ChatVisitor', visitor.id);
     if (data.status) {
       obj.set('status', data.status);
     }
@@ -88,9 +90,5 @@ export class VisitorService {
       obj.set('queuedAt', data.queuedAt);
     }
     await obj.save(null, { useMasterKey: true });
-
-    Object.assign(visitor, data);
-    this.visitorCache.set(id, visitor);
-    return visitor;
   }
 }
