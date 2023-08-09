@@ -1,22 +1,5 @@
+import { Conversation } from '../types';
 import { client } from './client';
-
-export interface Conversation {
-  id: string;
-  channel: string;
-  recentMessage?: Message;
-  status?: string;
-  operatorId?: string;
-}
-
-export interface Message {
-  id: string;
-  type: string;
-  from: string;
-  data: {
-    content: string;
-  };
-  createdAt: string;
-}
 
 export async function getConversations(type: string) {
   const res = await client.get<Conversation[]>('/conversations', {
@@ -25,15 +8,17 @@ export async function getConversations(type: string) {
   return res.data;
 }
 
-export async function getConversationMessages(id: string) {
-  const res = await client.get<Message[]>(`/conversations/${id}/messages`);
+export async function getUnassignedConversations() {
+  const res = await client.get<Conversation[]>('/conversations/queued');
   return res.data;
 }
 
-export async function joinConversation(id: string) {
-  await client.post(`/conversations/${id}/join`);
+export async function getOperatorConversations(operatorId: string) {
+  const res = await client.get<Conversation[]>(`/conversations/operators/${operatorId}`);
+  return res.data;
 }
 
-export async function closeConversation(id: string) {
-  await client.post(`/conversations/${id}/close`);
+export async function getSolvedConversations() {
+  const res = await client.get<Conversation[]>('/conversations/solved');
+  return res.data;
 }
