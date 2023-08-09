@@ -13,11 +13,15 @@ export class ChatService {
 
   async getOperatorStatus(operatorId: string) {
     const status = await this.redis.hget('operator_status', operatorId);
-    return status || 'offline';
+    return status || 'leave';
   }
 
   async setOperatorStatus(operatorId: string, status: string) {
     await this.redis.hset('operator_status', operatorId, status);
+  }
+
+  getOperatorStatuses() {
+    return this.redis.hgetall('operator_status');
   }
 
   async setOperatorReady(operatorId: string) {

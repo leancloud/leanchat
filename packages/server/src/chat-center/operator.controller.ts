@@ -5,13 +5,10 @@ import {
   Param,
   Patch,
   Post,
-  Res,
   UseGuards,
 } from '@nestjs/common';
-import { TypedBody, TypedQuery } from '@nestia/core';
-import { Response } from 'express';
+import { TypedBody } from '@nestia/core';
 
-import { IPagination } from 'src/interfaces';
 import { Operator, OperatorService } from 'src/operator';
 import { AuthGuard } from './guards/auth.guard';
 import { CurrentOperator } from './decorators/current-operator.decorator';
@@ -33,15 +30,14 @@ export class OperatorController {
   }
 
   @Get()
-  async listOperators(
-    @Res({ passthrough: true }) res: Response,
-    @TypedQuery() query: IPagination,
-  ) {
-    const { operators, count } = await this.operatorService.listOperators(
-      query,
-    );
-    res.set('x-total-count', count.toString());
-    return operators;
+  async getOperators() {
+    const operators = await this.operatorService.getOperators();
+    const statuses = await this.chatService.getOperatorStatuses();
+    return operators.map((operator) => {
+      const dto = OperatorDto.fromEntity(operator);
+      dto.status = statuses[operator.id] || 'leave';
+      return dto;
+    });
   }
 
   @Get('me')
@@ -57,11 +53,16 @@ export class OperatorController {
     if (!operator) {
       throw new NotFoundException(`客服 ${id} 不存在`);
     }
-    return operator;
+    const dto = OperatorDto.fromEntity(operator);
+    dto.status = await this.chatService.getOperatorStatus(operator.id);
+    return dto;
   }
 
   @Patch(':id')
-  updateOperator(@Param('id') id: string, @TypedBody() data: IUpdateOperator) {
-    return this.operatorService.updateOperator(id, data);
+  async updateOperator(
+    @Param('id') id: string,
+    @TypedBody() data: IUpdateOperator,
+  ) {
+    await this.operatorService.updateOperator(id, data);
   }
 }

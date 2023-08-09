@@ -1,3 +1,3 @@
-export interface AssignVisitorJobData {
-  visitorId: string;
+export interface AssignConversationJobData {
+  id: string;
 }

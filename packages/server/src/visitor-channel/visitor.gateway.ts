@@ -1,10 +1,4 @@
-import {
-  Inject,
-  Logger,
-  OnModuleInit,
-  UseInterceptors,
-  UsePipes,
-} from '@nestjs/common';
+import { OnModuleInit, UseInterceptors, UsePipes } from '@nestjs/common';
 import {
   ConnectedSocket,
   MessageBody,
@@ -18,15 +12,15 @@ import { OnEvent } from '@nestjs/event-emitter';
 import { Server, Socket } from 'socket.io';
 import { EventEmitter2 } from 'eventemitter2';
 import { ZodValidationPipe } from 'nestjs-zod';
-import { Redis } from 'ioredis';
 
 import { MessageService } from 'src/message';
 import { MessageCreatedEvent } from 'src/common/events';
-import { REDIS } from 'src/redis';
-import { IUpdateVisitorDto, VisitorService } from 'src/visitor';
+import { AssignService } from 'src/chat-center';
+import { ConversationService } from 'src/conversation';
+import { VisitorService } from 'src/visitor';
 import { WsInterceptor } from 'src/common/interceptors';
 import { CreateMessageDto } from './dtos/create-message.dto';
-import { AssignService } from 'src/chat-center';
+import { UpdateConversationData } from 'src/conversation/interfaces';
 
 @WebSocketGateway()
 @UsePipes(ZodValidationPipe)
@@ -35,14 +29,11 @@ export class VisitorGateway implements OnModuleInit, OnGatewayConnection {
   @WebSocketServer()
   private server: Server;
 
-  @Inject(REDIS)
-  private redis: Redis;
-
-  private readonly logger = new Logger(VisitorGateway.name);
-
   constructor(
     private visitorService: VisitorService,
+    private conversationService: ConversationService,
     private messageService: MessageService,
+
     private events: EventEmitter2,
     private assignService: AssignService,
   ) {}
@@ -57,7 +48,13 @@ export class VisitorGateway implements OnModuleInit, OnGatewayConnection {
       const visitor = await this.visitorService.registerVisitorFromChatChannel(
         id,
       );
+      const conversation =
+        await this.conversationService.getActiveConversationForVisitor(
+          visitor.id,
+        );
+
       socket.data.id = visitor.id;
+      socket.data.cid = conversation.id;
       next();
     });
   }
@@ -72,32 +69,36 @@ export class VisitorGateway implements OnModuleInit, OnGatewayConnection {
     @ConnectedSocket() socket: Socket,
     @MessageBody() data: CreateMessageDto,
   ) {
-    const visitorId = socket.data.id;
-    const visitor = await this.visitorService.getVisitor(visitorId);
+    const { id, cid } = socket.data;
+
+    const visitor = await this.visitorService.getVisitor(id);
     if (!visitor) {
-      throw new WsException('账户已被停用');
+      throw new WsException('账户已被删除');
+    }
+
+    const conv = await this.conversationService.getConversation(cid);
+    if (!conv) {
+      throw new WsException('会话已被删除');
     }
 
     const message = await this.messageService.createMessage({
-      visitorId,
+      visitorId: id,
       type: 'visitor',
-      from: visitorId,
+      from: id,
       data: data,
     });
 
-    const updateData: IUpdateVisitorDto = {
-      recentMessage: message,
+    const updateData: UpdateConversationData = {
+      lastMessage: message,
     };
-
-    if (visitor.status === 'new' || visitor.status === 'solved') {
-      const queuedAt = await this.assignService.assignVisitor(visitor);
+    if (conv.status === 'new') {
+      const queuedAt = await this.assignService.assignConversation(conv);
       if (queuedAt) {
         updateData.status = 'queued';
         updateData.queuedAt = queuedAt;
       }
     }
-
-    await this.visitorService.updateVisitor(visitor, updateData);
+    await this.conversationService.updateConversation(conv, updateData);
 
     this.events.emit('message.created', {
       message,

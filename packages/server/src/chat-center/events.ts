@@ -1,15 +1,15 @@
+import { Conversation } from 'src/conversation';
 import { Operator } from 'src/operator';
-import { Visitor } from 'src/visitor';
 
 export interface ConversationAssignedEvent {
-  visitor: Visitor;
+  conversation: Conversation;
   operator: Operator;
 }
 
 export interface ConversationClosedEvent {
-  visitor: Visitor;
+  conversation: Conversation;
 }
 
 export interface ConversationQueuedEvent {
-  visitorId: string;
+  conversationId: string;
 }

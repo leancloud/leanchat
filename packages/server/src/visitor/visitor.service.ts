@@ -66,7 +66,6 @@ export class VisitorService {
     const obj = new AV.Object('ChatVisitor', {
       channel: 'chat',
       chatId,
-      status: 'new',
     });
     await obj.save(null, { useMasterKey: true });
     return Visitor.fromAVObject(obj);

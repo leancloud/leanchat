@@ -8,9 +8,6 @@ import { BullModule } from '@nestjs/bull';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
 import { RedisModule } from './redis/redis.module';
-import { OperatorModule } from './operator/operator.module';
-import { VisitorModule } from './visitor/visitor.module';
-import { MessageModule } from './message/message.module';
 import { ChatCenterModule } from './chat-center/chat-center.module';
 import { VisitorChannelModule } from './visitor-channel/visitor-channel.module';
 
@@ -29,9 +26,6 @@ import { VisitorChannelModule } from './visitor-channel/visitor-channel.module';
       },
     }),
     RedisModule,
-    OperatorModule,
-    VisitorModule,
-    MessageModule,
     ChatCenterModule,
     VisitorChannelModule,
   ],

@@ -10,7 +10,6 @@ import AV from 'leancloud-storage';
 import { Cache } from 'cache-manager';
 import _ from 'lodash';
 
-import { IPagination } from 'src/interfaces';
 import { ICreateOperator, IUpdateOperator } from './interfaces';
 import { Operator } from './operator.entity';
 
@@ -71,16 +70,12 @@ export class OperatorService {
     return verify(hashedPassword, password);
   }
 
-  async listOperators({ page = 1, pageSize = 10 }: IPagination) {
+  async getOperators() {
     const query = new AV.Query('ChatOperator');
     query.addAscending('createdAt');
-    query.skip((page - 1) * pageSize);
-    query.limit(pageSize);
-    const [objs, count] = await query.findAndCount({ useMasterKey: true });
-    const operators = objs.map((obj) =>
-      Operator.fromAVObject(obj as AV.Object),
-    );
-    return { operators, count };
+    query.limit(1000);
+    const objs = await query.find({ useMasterKey: true });
+    return objs.map((obj) => Operator.fromAVObject(obj as AV.Object));
   }
 
   async updateOperator(id: string, data: IUpdateOperator) {

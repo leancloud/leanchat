@@ -1,0 +1,102 @@
+import { Injectable } from '@nestjs/common';
+import AV from 'leancloud-storage';
+import { LRUCache } from 'lru-cache';
+
+import { Conversation } from './conversation.entity';
+import { GetConversationOptions, UpdateConversationData } from './interfaces';
+
+@Injectable()
+export class ConversationService {
+  private cache = new LRUCache<string, Conversation>({
+    max: 5000,
+    ttl: 1000 * 60 * 5,
+  });
+
+  async createConversation(visitorId: string) {
+    const obj = new AV.Object('ChatConversation', {
+      visitorId,
+      status: 'new',
+    });
+    await obj.save(null, { useMasterKey: true });
+    return Conversation.fromAVObject(obj);
+  }
+
+  async getActiveConversationForVisitor(visitorId: string) {
+    const query = new AV.Query('ChatConversation');
+    query.equalTo('visitorId', visitorId);
+    query.notEqualTo('status', 'solved');
+    query.addDescending('createdAt');
+    const obj = await query.first({ useMasterKey: true });
+    if (obj) {
+      return Conversation.fromAVObject(obj);
+    }
+    return this.createConversation(visitorId);
+  }
+
+  private async getConversationObject(id: string) {
+    const query = new AV.Query('ChatConversation');
+    query.equalTo('objectId', id);
+    return query.first({ useMasterKey: true });
+  }
+
+  async getConversation(id: string) {
+    const cached = this.cache.get(id);
+    if (cached) {
+      return cached;
+    }
+
+    const obj = await this.getConversationObject(id);
+    if (obj) {
+      return Conversation.fromAVObject(obj);
+    }
+  }
+
+  async updateConversation(conv: Conversation, data: UpdateConversationData) {
+    const obj = AV.Object.createWithoutData('ChatConversation', conv.id);
+    if (data.operatorId) {
+      obj.set('operatorId', data.operatorId);
+    }
+    if (data.status) {
+      obj.set('status', data.status);
+    }
+    if (data.queuedAt) {
+      obj.set('queuedAt', data.queuedAt);
+    }
+    if (data.lastMessage) {
+      obj.set('lastMessage', data.lastMessage);
+    }
+    await obj.save(null, { useMasterKey: true });
+    this.cache.delete(conv.id);
+  }
+
+  async getConversations({
+    status,
+    visitorId,
+    operatorId,
+    sort = 'createdAt',
+    desc = false,
+  }: GetConversationOptions) {
+    const query = new AV.Query('ChatConversation');
+    if (status) {
+      query.equalTo('status', status);
+    }
+    if (visitorId) {
+      query.equalTo('visitorId', visitorId);
+    }
+    if (operatorId) {
+      query.equalTo('operatorId', operatorId);
+    }
+    if (operatorId === null) {
+      query.doesNotExist('operatorId');
+    }
+
+    if (desc) {
+      query.addDescending(sort);
+    } else {
+      query.addAscending(sort);
+    }
+
+    const objs = await query.find({ useMasterKey: true });
+    return objs.map(Conversation.fromAVObject);
+  }
+}

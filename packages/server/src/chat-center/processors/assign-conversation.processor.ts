@@ -6,28 +6,28 @@ import EventEmitter2 from 'eventemitter2';
 import _ from 'lodash';
 
 import { REDIS } from 'src/redis';
-import { VisitorService } from 'src/visitor';
 import { OperatorService } from 'src/operator';
-import { ConversationService } from '../conversation.service';
-import { AssignVisitorJobData } from '../interfaces/assign-job';
+import { ConversationService } from 'src/conversation';
+import { AssignConversationJobData } from '../interfaces/assign-job';
 import { ConversationQueuedEvent } from '../events';
+import { ChatConversationService } from '../services/chat-conversation.service';
 
-@Processor('assign_visitor')
-export class AssignVisitorProcessor {
+@Processor('assign_conversation')
+export class AssignConversationProcessor {
   @Inject(REDIS)
   private redis: Redis;
 
   constructor(
     private events: EventEmitter2,
-    private visitorService: VisitorService,
-    private operatorService: OperatorService,
     private conversationService: ConversationService,
+    private operatorService: OperatorService,
+    private chatConvService: ChatConversationService,
   ) {}
 
   @Process('assign')
-  async assign(job: Job<AssignVisitorJobData>) {
-    const visitor = await this.visitorService.getVisitor(job.data.visitorId);
-    if (!visitor) {
+  async assign(job: Job<AssignConversationJobData>) {
+    const conv = await this.conversationService.getConversation(job.data.id);
+    if (!conv) {
       return;
     }
 
@@ -36,24 +36,23 @@ export class AssignVisitorProcessor {
       return;
     }
 
-    await this.conversationService.assignOperator(visitor, operator);
+    await this.chatConvService.assign(conv, operator);
   }
 
   @Process('check')
-  async check(job: Job<AssignVisitorJobData>) {
-    const { visitorId } = job.data;
-    const queued = await this.conversationService.conversationQueued(visitorId);
-    if (queued) {
-      this.events.emit('conversation.queued', {
-        visitorId,
-      } satisfies ConversationQueuedEvent);
+  async check(job: Job<AssignConversationJobData>) {
+    const { id } = job.data;
+    const score = await this.redis.zscore('conversation_queue', id);
+    if (score === null) {
+      return;
     }
+    this.events.emit('conversation.queued', {
+      conversationId: id,
+    } satisfies ConversationQueuedEvent);
   }
 
   async selectOperator() {
-    const { operators } = await this.operatorService.listOperators({
-      pageSize: 1000,
-    });
+    const operators = await this.operatorService.getOperators();
     if (operators.length === 0) {
       return;
     }
