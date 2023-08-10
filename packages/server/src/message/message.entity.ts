@@ -5,6 +5,8 @@ export class Message {
 
   visitorId: string;
 
+  conversationId: string;
+
   type: string;
 
   from: string;
@@ -18,6 +20,7 @@ export class Message {
     const message = new Message();
     message.id = json.objectId;
     message.visitorId = json.visitorId;
+    message.conversationId = json.conversationId;
     message.type = json.type;
     message.from = json.from;
     message.data = json.data;

@@ -10,6 +10,7 @@ export class MessageService {
   async createMessage(data: Omit<IMessage, 'id' | 'createdAt'>) {
     const obj = new AV.Object('ChatMessage', {
       visitorId: data.visitorId,
+      conversationId: data.conversationId,
       type: data.type,
       from: data.from,
       data: data.data,
@@ -18,10 +19,13 @@ export class MessageService {
     return Message.fromAVObject(obj);
   }
 
-  async getMessages({ visitorId, types }: IGetMessagesDto) {
+  async getMessages({ visitorId, conversationId, types }: IGetMessagesDto) {
     const query = new AV.Query('ChatMessage');
     if (visitorId) {
       query.equalTo('visitorId', visitorId);
+    }
+    if (conversationId) {
+      query.equalTo('conversationId', conversationId);
     }
     if (types) {
       query.containedIn('type', types);

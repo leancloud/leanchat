@@ -44,7 +44,7 @@ export class ChatConversationService {
       await this.redis.hincrby('operator_concurrency', conv.operatorId, -1);
     }
 
-    this.events.emit('conversations.closed', {
+    this.events.emit('conversation.closed', {
       conversation: conv,
     } satisfies ConversationClosedEvent);
   }

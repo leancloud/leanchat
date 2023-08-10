@@ -83,6 +83,7 @@ export class VisitorGateway implements OnModuleInit, OnGatewayConnection {
 
     const message = await this.messageService.createMessage({
       visitorId: id,
+      conversationId: cid,
       type: 'visitor',
       from: id,
       data: data,

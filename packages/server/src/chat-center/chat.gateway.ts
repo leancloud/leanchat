@@ -127,16 +127,19 @@ export class ChatGateway
   ) {
     const operatorId = socket.data.id;
 
-    const visitor = await this.visitorService.getVisitor(data.visitorId);
-    if (!visitor) {
-      throw new WsException(`Visitor ${data.visitorId} not exists`);
+    const conv = await this.conversationService.getConversation(
+      data.conversationId,
+    );
+    if (!conv) {
+      throw new WsException(`对话 ${data.conversationId} 不存在`);
     }
-    if (visitor.operatorId !== operatorId) {
+    if (conv.operatorId !== operatorId) {
       throw new WsException(`Forbidden`);
     }
 
     const message = await this.messageService.createMessage({
-      visitorId: data.visitorId,
+      visitorId: conv.visitorId,
+      conversationId: conv.id,
       type: 'operator',
       from: operatorId,
       data: {
@@ -144,8 +147,8 @@ export class ChatGateway
       },
     });
 
-    await this.visitorService.updateVisitor(visitor, {
-      recentMessage: message,
+    await this.conversationService.updateConversation(conv, {
+      lastMessage: message,
     });
 
     this.events.emit('message.created', {

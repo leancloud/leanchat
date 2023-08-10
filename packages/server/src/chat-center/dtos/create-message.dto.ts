@@ -2,7 +2,7 @@ import { createZodDto } from 'nestjs-zod';
 import { z } from 'nestjs-zod/z';
 
 const CreateMessageSchema = z.object({
-  visitorId: z.string(),
+  conversationId: z.string(),
   content: z.string(),
 });
 

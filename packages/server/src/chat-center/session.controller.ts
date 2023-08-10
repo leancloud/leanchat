@@ -11,10 +11,15 @@ import { Request } from 'express';
 
 import { OperatorService } from 'src/operator';
 import { ICreateSession } from './interfaces/session';
+import { ChatService } from './chat.service';
+import { OperatorDto } from './dtos/operator.dto';
 
 @Controller('sessions')
 export class SessionController {
-  constructor(private operatorService: OperatorService) {}
+  constructor(
+    private operatorService: OperatorService,
+    private chatService: ChatService,
+  ) {}
 
   @Post()
   async createSession(@Req() req: Request, @TypedBody() data: ICreateSession) {
@@ -35,7 +40,10 @@ export class SessionController {
     await promisify(req.session.regenerate).call(req.session);
     req.session.uid = operator.id;
 
-    return operator;
+    const operatorDto = OperatorDto.fromEntity(operator);
+    operatorDto.status = await this.chatService.getOperatorStatus(operator.id);
+
+    return operatorDto;
   }
 
   @Delete('current')
