@@ -1,31 +1,14 @@
+import { Operator } from '@/App/Panel/types';
 import { client } from './client';
-
-export interface Operator {
-  id: string;
-  username: string;
-  externalName: string;
-  internalName: string;
-}
 
 export async function getOperator(id: string) {
   const res = await client.get<Operator>(`/operators/${id}`);
   return res.data;
 }
 
-interface GetOperatorsOptions {
-  page?: number;
-  pageSize?: number;
-}
-
-export async function getOperators({ page, pageSize }: GetOperatorsOptions) {
-  const res = await client.get<Operator[]>('/operators', {
-    params: { page, pageSize },
-  });
-  const count = parseInt(res.headers['x-total-count']);
-  return {
-    count,
-    items: res.data,
-  };
+export async function getOperators() {
+  const res = await client.get<Operator[]>('/operators');
+  return res.data;
 }
 
 interface CreateOpeatorData {

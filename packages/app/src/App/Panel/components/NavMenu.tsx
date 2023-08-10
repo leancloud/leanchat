@@ -49,11 +49,13 @@ export function NavButton({
   );
 }
 
-interface NavMenuItem {
+export interface NavMenuItem {
   key: string;
   icon?: NavButtonProps['icon'];
   label?: ReactNode;
   badge?: NavButtonProps['badge'];
+  active?: boolean;
+  onClick?: () => void;
 }
 
 interface NavMenuProps {
@@ -66,16 +68,20 @@ interface NavMenuProps {
 }
 
 export function NavMenu({ icon, label, items, activeKey, onChange, inverted }: NavMenuProps) {
-  const activeItem = useMemo(() => {
-    return items?.find((item) => item.key === activeKey);
+  const activeItems = useMemo(() => {
+    return items?.filter((item) => item.active || item.key === activeKey);
   }, [items, activeKey]);
 
-  const [expanded, setExpanded] = useState(!!activeItem);
+  const hasActiveItems = activeItems && activeItems.length > 0;
+
+  const [expanded, setExpanded] = useState(hasActiveItems);
+
+  const renderItems = expanded ? items : activeItems;
 
   return (
     <div
       className={cx({
-        'pb-3': expanded || activeItem,
+        'pb-3': expanded || hasActiveItems,
       })}
     >
       <NavButton icon={icon} onClick={() => setExpanded(!expanded)} inverted={inverted}>
@@ -86,32 +92,22 @@ export function NavMenu({ icon, label, items, activeKey, onChange, inverted }: N
           <BiChevronRight className="w-4 h-4 ml-0.5" />
         )}
       </NavButton>
-      {expanded &&
-        items?.map((item) => (
-          <NavButton
-            className="pl-[20px]"
-            key={item.key}
-            active={item.key === activeKey}
-            onClick={onChange && (() => onChange(item.key))}
-            inverted={inverted}
-            icon={item.icon}
-            badge={item.badge}
-          >
-            {item.label}
-          </NavButton>
-        ))}
-      {!expanded && activeItem && (
+      {renderItems?.map((item) => (
         <NavButton
-          active
+          key={item.key}
           className="pl-[20px]"
-          onClick={onChange && (() => onChange(activeItem.key))}
+          active={item.active || item.key === activeKey}
+          onClick={() => {
+            item.onClick?.();
+            onChange?.(item.key);
+          }}
           inverted={inverted}
-          icon={activeItem.icon}
-          badge={activeItem.badge}
+          icon={item.icon}
+          badge={item.badge}
         >
-          {activeItem.label}
+          {item.label}
         </NavButton>
-      )}
+      ))}
     </div>
   );
 }

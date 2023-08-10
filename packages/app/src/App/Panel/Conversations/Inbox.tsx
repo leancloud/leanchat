@@ -12,7 +12,10 @@ import { produce } from 'immer';
 
 import { Conversation, Message } from '@/App/Panel/types';
 import { useEffectEvent } from '@/App/Panel/hooks/useEffectEvent';
-import { ConversationsContext, ConversationsContextValue } from './ConversationsContext';
+import {
+  ConversationsContext,
+  ConversationsContextValue,
+} from '@/App/Panel/chat/ConversationsContext';
 import { ConversationContext } from './ConversationContext';
 import { getVisitorMessages } from '../api/visitor';
 import {

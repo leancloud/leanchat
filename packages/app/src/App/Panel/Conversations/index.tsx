@@ -1,185 +1,77 @@
 import {
   Fragment,
+  PropsWithChildren,
   ReactNode,
-  useCallback,
   useEffect,
   useLayoutEffect,
   useMemo,
   useRef,
   useState,
 } from 'react';
-import { Avatar, Badge, Button, Divider, Input } from 'antd';
+import { useMutation } from '@tanstack/react-query';
+import { Avatar, Button, Divider, Input } from 'antd';
 import { UserOutlined } from '@ant-design/icons';
 import dayjs from 'dayjs';
 import cx from 'classnames';
 import _ from 'lodash';
 
 import { callRpc, useEvent, useSocket } from '@/socket';
-import { useAuth } from '../auth';
 import { CustomSider } from '../Layout';
-import { diffTime } from './utils';
-import { NavMenu } from '../components/NavMenu';
 import { Message } from '../types';
+import { Sider } from './Sider';
 import {
-  getOperatorConversations,
-  getSolvedConversations,
-  getUnassignedConversations,
-} from '../api/conversation';
-import { useQueuedConversationCount } from '../states/conversation';
-import { Inbox, useChannelContext } from './Inbox';
-import { useConversationsContext } from './ConversationsContext';
-import { useConversationContext } from './ConversationContext';
-import { useMessagesContext } from './MessagesContext';
-import { useInboxContext } from './InboxContext';
+  ConversationsQueryVariables,
+  useConversation,
+  useConversationMessages,
+  useConversations,
+  useSetConversationQueryData,
+} from '@/App/Panel/hooks/conversation';
+import { useCurrentUser } from '@/App/Panel/auth';
 
 export default function Conversations() {
-  const [stream, setStream] = useState('myOpen');
+  const user = useCurrentUser();
+  const [activeNav, setActiveNav] = useState(['liveConversations', 'myOpen']);
+
+  const convQueryVars = useMemo<ConversationsQueryVariables>(() => {
+    if (activeNav[0] === 'liveConversations') {
+      switch (activeNav[1]) {
+        case 'unassigned':
+          return { type: 'unassigned' };
+        case 'myOpen':
+          return { type: 'operator', operatorId: user!.id };
+        case 'solved':
+          return { type: 'solved' };
+      }
+    } else if (activeNav[0] === 'operators') {
+      return { type: 'operator', operatorId: activeNav[1] };
+    }
+    return { type: 'operator', operatorId: user!.id };
+  }, [activeNav, user]);
+
+  const [conversationId, setConversationId] = useState<string>();
+
+  const { data: conversations } = useConversations(convQueryVars);
+
+  const setConvQueryData = useSetConversationQueryData();
 
   return (
-    <Inbox>
+    <>
       <CustomSider>
-        <Sider stream={stream} onChangeStream={setStream} />
+        <Sider
+          activeNav={activeNav}
+          onChangeActiveNav={setActiveNav}
+          conversations={conversations}
+          onClickConversation={(conv) => {
+            setConversationId(conv.id);
+            setConvQueryData(conv);
+          }}
+          activeConversation={conversationId}
+        />
       </CustomSider>
 
-      <ChatBox />
-    </Inbox>
+      {conversationId && <ChatBox key={conversationId} conversationId={conversationId} />}
+    </>
   );
-}
-
-interface SiderProps {
-  stream: string;
-  onChangeStream: (stream: string) => void;
-}
-
-function Sider({ stream, onChangeStream }: SiderProps) {
-  const { user } = useAuth();
-  const [, setChannel] = useChannelContext();
-
-  const handleChangeStream = (stream: string) => {
-    onChangeStream(stream);
-    if (stream === 'unassigned') {
-      setChannel({
-        key: stream,
-        label: '[emoji] unassigned',
-        fetch: getUnassignedConversations,
-      });
-    } else if (stream === 'myOpen') {
-      setChannel({
-        key: stream,
-        label: '[emoji] my open',
-        fetch: () => getOperatorConversations(user!.id),
-      });
-    } else if (stream === 'solved') {
-      setChannel({
-        key: stream,
-        label: '[emoji] ' + stream,
-        fetch: getSolvedConversations,
-      });
-    }
-  };
-
-  const contentByStream = useMemo<Record<string, ReactNode>>(
-    () => ({
-      unassigned: (
-        <>
-          <span className="mr-3">👋</span>
-          <span>未分配</span>
-        </>
-      ),
-      myOpen: (
-        <>
-          <span className="mr-3">📬</span>
-          <span>分配给我的</span>
-        </>
-      ),
-      solved: (
-        <>
-          <span className="mr-3">✅</span>
-          <span>已解决</span>
-        </>
-      ),
-    }),
-    []
-  );
-
-  const [queueSize] = useQueuedConversationCount();
-
-  return (
-    <div className="flex h-full">
-      <div className="w-[232px] bg-[#21324e]">
-        <div className="h-[60px] border-b border-[#1c2b45] flex items-center px-[20px]">
-          <div className="text-white text-[20px] font-medium">收件箱</div>
-        </div>
-        <div className="p-2">
-          <NavMenu
-            inverted
-            label="实时对话"
-            items={[
-              {
-                key: 'unassigned',
-                label: contentByStream['unassigned'],
-                badge: <Badge count={queueSize} size="small" />,
-              },
-              {
-                key: 'myOpen',
-                label: contentByStream['myOpen'],
-              },
-              {
-                key: 'solved',
-                label: contentByStream['solved'],
-              },
-            ]}
-            activeKey={stream}
-            onChange={handleChangeStream}
-          />
-        </div>
-      </div>
-      <div className="w-[320px] shadow-md flex flex-col">
-        <div className="px-5 py-4 border-[#eff2f6] border-b">
-          <h2 className="font-medium text-[20px] leading-7">{contentByStream[stream]}</h2>
-        </div>
-        <div className="overflow-y-auto">
-          <ConversationList />
-        </div>
-      </div>
-    </div>
-  );
-}
-
-function ConversationList() {
-  const { conversations } = useConversationsContext();
-  const { conversation, setConversation } = useConversationContext();
-
-  const now = Date.now();
-
-  return conversations?.map((conv) => (
-    <div
-      key={conv.id}
-      className={cx('h-[60px] px-5 py-4 border-b hover:bg-[#eff2f6] cursor-pointer box-content', {
-        'bg-[#eff2f6]': conv.id === conversation?.id,
-      })}
-      onClick={() => setConversation(conv)}
-    >
-      <div className="flex items-center">
-        <Avatar className="shrink-0">{conv.id.slice(0, 1)}</Avatar>
-        <div className="ml-[10px] grow overflow-hidden">
-          <div className="flex items-center">
-            <div className="text-sm font-medium truncate">{conv.id}</div>
-            {conv.lastMessage && (
-              <div className="text-xs ml-auto shrink-0">
-                {diffTime(now, conv.lastMessage.createdAt)}
-              </div>
-            )}
-          </div>
-          <div className="text-xs text-[#647491]">Live chat</div>
-        </div>
-      </div>
-      <div className="mt-2 flex items-center">
-        <div className="text-sm mr-auto">{conv.lastMessage?.data.content}</div>
-        {conv.operatorId && <Avatar size={18} icon={<UserOutlined />} />}
-      </div>
-    </div>
-  ));
 }
 
 interface DateGroup {
@@ -219,88 +111,33 @@ function groupMessages(messages: Message[]) {
   return groups;
 }
 
-function useMessageGroups() {
-  const [groups, setGroups] = useState<DateGroup[]>([]);
-
-  const reset = useCallback(() => setGroups([]), []);
-
-  const setHistoryMessages = useCallback((historyMessages: Message[]) => {
-    setGroups(groupMessages(historyMessages));
-  }, []);
-
-  const push = useCallback((message: Message) => {
-    const date = dayjs(message.createdAt).startOf('day');
-    setGroups((groups) => {
-      const group = _.last(groups);
-      if (group && group.date.isSame(date)) {
-        const userGroup = _.last(group.users);
-        if (userGroup && userGroup.userId === message.from) {
-          return [
-            ...groups.slice(0, groups.length - 1),
-            {
-              ...group,
-              users: [
-                ...group.users.slice(0, group.users.length - 1),
-                {
-                  ...userGroup,
-                  messages: [...userGroup.messages, message],
-                },
-              ],
-            },
-          ];
-        } else {
-          return [
-            ...groups.slice(0, groups.length - 1),
-            {
-              ...group,
-              users: [
-                ...group.users,
-                {
-                  userId: message.from,
-                  messages: [message],
-                },
-              ],
-            },
-          ];
-        }
-      }
-      return [
-        ...groups,
-        {
-          date,
-          users: [
-            {
-              userId: message.from,
-              messages: [message],
-            },
-          ],
-        },
-      ];
-    });
-  }, []);
-
-  return { groups, setHistoryMessages, push, reset };
+interface ChatBoxProps {
+  conversationId: string;
 }
 
-function ChatBox() {
-  const { user } = useAuth();
+function ChatBox({ conversationId }: ChatBoxProps) {
+  const user = useCurrentUser();
   const socket = useSocket();
 
-  const { addMessage } = useInboxContext();
-  const { conversation } = useConversationContext();
-  const { messages } = useMessagesContext();
+  const { data: conversation } = useConversation(conversationId);
 
-  const { groups, setHistoryMessages, push, reset } = useMessageGroups();
+  const { data: remoteMessages } = useConversationMessages(conversationId);
+
+  const [messages, setMessages] = useState<Message[]>([]);
 
   useEffect(() => {
-    if (messages) {
-      setHistoryMessages(messages);
-    } else {
-      reset();
+    if (remoteMessages && messages.length === 0) {
+      setMessages(remoteMessages);
     }
-  }, [messages]);
+  }, [remoteMessages, messages]);
 
-  useEvent(socket, 'message', addMessage);
+  useEvent(socket, 'message', (message: Message) => {
+    if (message.conversationId === conversationId) {
+      setMessages((prev) => [...prev, message]);
+    }
+  });
+
+  const groups = useMemo(() => groupMessages(messages), [messages]);
 
   const [content, setContent] = useState('');
 
@@ -311,21 +148,35 @@ function ChatBox() {
     if (messageContainerRef.current) {
       messageContainerRef.current.scrollTop = messageContainerRef.current.scrollHeight;
     }
-  }, [groups]);
+  }, []);
 
   const handleCreateMessage = async () => {
     const trimedContent = content.trim();
     if (!trimedContent) {
       return;
     }
-    const message = await callRpc(socket, 'message', {
-      conversationId: 'TODO',
+    socket.emit('message', {
+      conversationId,
       content: trimedContent,
     });
-    push(message);
     setContent('');
     textareaRef.current?.focus();
   };
+
+  const { mutate: joinConversation } = useMutation({
+    mutationFn: () => {
+      return callRpc(socket, 'assignConversation', {
+        conversationId,
+        operatorId: user!.id,
+      });
+    },
+  });
+
+  const { mutate: closeConversation } = useMutation({
+    mutationFn: () => {
+      return callRpc(socket, 'closeConversation', { conversationId });
+    },
+  });
 
   if (!conversation) {
     return;
@@ -358,12 +209,7 @@ function ChatBox() {
       </div>
       <div className="border-t-[3px] border-primary bg-white relative">
         <div className="px-2 py-1 border-b">
-          <Button
-            size="small"
-            onClick={() => {
-              // TODO
-            }}
-          >
+          <Button size="small" onClick={() => closeConversation()}>
             结束会话
           </Button>
         </div>
@@ -406,14 +252,12 @@ function ChatBox() {
         </div>
 
         {!conversation.operatorId && (
-          <div className="absolute inset-0 bg-white bg-opacity-75 backdrop-blur-[2px] flex justify-center items-center">
-            <JoinConversationMask
-              onJoin={() => {
-                // TODO
-              }}
-            />
-          </div>
+          <Mask>
+            <JoinConversationMask onJoin={joinConversation} />
+          </Mask>
         )}
+
+        {conversation.status === 'solved' && <Mask>会话已结束</Mask>}
       </div>
     </div>
   );
@@ -451,6 +295,14 @@ function TextMessage({ avatar, username, createTime, message, showHeader }: Text
         )}
         <div className="text-sm whitespace-pre">{message}</div>
       </div>
+    </div>
+  );
+}
+
+function Mask({ children }: PropsWithChildren) {
+  return (
+    <div className="absolute inset-0 bg-white bg-opacity-75 backdrop-blur-[2px] flex justify-center items-center">
+      {children}
     </div>
   );
 }

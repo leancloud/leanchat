@@ -3,8 +3,9 @@ import { Navigate, useNavigate } from 'react-router-dom';
 import { Alert, Button, Form, Input } from 'antd';
 import { useMutation } from '@tanstack/react-query';
 
-import { useAuth } from './auth';
 import { createSession } from './api/session';
+import { useAuthContext } from './auth';
+import { useUserStatus } from './states/user';
 
 interface LoginData {
   username: string;
@@ -12,9 +13,11 @@ interface LoginData {
 }
 
 export default function Login() {
-  const { user, setUser } = useAuth();
+  const { user, setUser } = useAuthContext();
   const { control, handleSubmit } = useForm<LoginData>();
   const navigate = useNavigate();
+
+  const [, setStatus] = useUserStatus();
 
   const {
     mutate: login,
@@ -26,6 +29,7 @@ export default function Login() {
     },
     onSuccess: (user) => {
       setUser(user);
+      setStatus(user.status);
       navigate('..');
     },
   });

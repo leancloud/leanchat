@@ -8,12 +8,13 @@ import { MdSettings } from 'react-icons/md';
 import { BiSolidInbox } from 'react-icons/bi';
 import axios from 'axios';
 
-import { SocketProvider, useEvent, useSocket } from '@/socket';
-import { AuthProvider, useAuth } from './auth';
+import { SocketProvider, useSocket } from '@/socket';
+import { AuthProvider } from './auth';
 import Conversations from './Conversations';
 import { Layout } from './Layout';
 import { Compose } from './compose';
-import { useQueuedConversationCount } from './states/conversation';
+import { useAutoPushNewMessage, useConversationSubscription } from './hooks/conversation';
+import { useAuthContext } from './auth';
 
 const Login = lazy(() => import('./Login'));
 const Settings = lazy(() => import('./Settings'));
@@ -31,7 +32,7 @@ const navs = [
 
 function Fallback() {
   return (
-    <div className="h-full flex">
+    <div className="h-screen max-h-full flex">
       <div className="m-auto">
         <Spin />
       </div>
@@ -39,32 +40,33 @@ function Fallback() {
   );
 }
 
-function QueueSizeDetector() {
-  const [, setQueueSize] = useQueuedConversationCount();
-
+function Entry2() {
   const socket = useSocket();
 
-  useEvent(socket, 'queuedConversationCount', setQueueSize);
-  useEvent(socket, 'conversation.queued', () => {
-    // TODO: refresh queued count
-  });
+  useAutoPushNewMessage(socket);
+  useConversationSubscription(socket);
 
-  return null;
+  return <Outlet />;
 }
 
-function Entry() {
-  const { user } = useAuth();
+function RequireAuth({ children }: PropsWithChildren) {
+  const { user } = useAuthContext();
+
+  console.log('RequireAuth', user);
 
   if (!user) {
     return <Navigate to="login" />;
   }
 
+  return children;
+}
+
+function Entry() {
   return (
     <SocketProvider uri="/o">
       <Layout navs={navs}>
         <Suspense fallback={<Fallback />}>
-          <QueueSizeDetector />
-          <Outlet />
+          <Entry2 />
         </Suspense>
       </Layout>
     </SocketProvider>
@@ -114,7 +116,14 @@ export default function Panel() {
         <AuthProvider>
           <Routes>
             <Route path="login" element={<Login />} />
-            <Route path="*" element={<Entry />}>
+            <Route
+              path="*"
+              element={
+                <RequireAuth>
+                  <Entry />
+                </RequireAuth>
+              }
+            >
               <Route path="conversations" element={<Conversations />} />
               <Route path="settings/*" element={<Settings />} />
             </Route>

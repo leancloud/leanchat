@@ -1,4 +1,4 @@
-import { Conversation } from '../types';
+import { Conversation, Message } from '@/App/Panel/types';
 import { client } from './client';
 
 export async function getConversations(type: string) {
@@ -20,5 +20,15 @@ export async function getOperatorConversations(operatorId: string) {
 
 export async function getSolvedConversations() {
   const res = await client.get<Conversation[]>('/conversations/solved');
+  return res.data;
+}
+
+export async function getConversation(id: string) {
+  const res = await client.get<Conversation>(`/conversations/${id}`);
+  return res.data;
+}
+
+export async function getConversationMessages(id: string) {
+  const res = await client.get<Message[]>(`/conversations/${id}/messages`);
   return res.data;
 }

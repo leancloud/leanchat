@@ -1,30 +1,14 @@
-import { useState } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { Link, useNavigate, useParams } from 'react-router-dom';
 import { MdGroup, MdPersonAddAlt1, MdPerson } from 'react-icons/md';
 import { Alert, Button, Form, Input, InputNumber, Table, message } from 'antd';
 
-import {
-  createOperator,
-  getOperator,
-  getOperators,
-  updateOperator,
-} from '@/App/Panel/api/operator';
+import { createOperator, getOperator, updateOperator } from '@/App/Panel/api/operator';
+import { useOperators } from '@/App/Panel/hooks/operator';
 import { Container } from '../components/Container';
 
 export function Operators() {
-  const [page, setPage] = useState(1);
-  const [pageSize, setPageSize] = useState(20);
-  const [total, setTotal] = useState<number>();
-
-  const { data, isLoading } = useQuery({
-    queryKey: ['Operators', page, pageSize],
-    queryFn: async () => {
-      const { items, count } = await getOperators({ page, pageSize });
-      setTotal(count);
-      return items;
-    },
-  });
+  const { data, isLoading } = useOperators();
 
   return (
     <Container
@@ -42,15 +26,7 @@ export function Operators() {
         loading={isLoading}
         dataSource={data}
         rowKey="id"
-        pagination={{
-          pageSize,
-          total,
-          current: page,
-          onChange: (page, pageSize) => {
-            setPage(page);
-            setPageSize(pageSize);
-          },
-        }}
+        pagination={false}
         columns={[
           {
             dataIndex: 'username',
@@ -160,6 +136,8 @@ export function EditOperator() {
     queryFn: () => getOperator(id!),
   });
 
+  const queryClient = useQueryClient();
+
   const {
     mutate,
     isLoading: isUpdating,
@@ -167,6 +145,8 @@ export function EditOperator() {
   } = useMutation({
     mutationFn: updateOperator,
     onSuccess: () => {
+      queryClient.invalidateQueries(['Operator', id]);
+      queryClient.invalidateQueries(['Operators']);
       message.success('已保存');
     },
   });
