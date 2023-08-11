@@ -3,12 +3,14 @@ import {
   Get,
   NotFoundException,
   Param,
+  Query,
   UseGuards,
 } from '@nestjs/common';
 
 import { ConversationService } from 'src/conversation';
 import { MessageService } from 'src/message';
 import { AuthGuard } from '../guards/auth.guard';
+import { GetConversationsDto } from '../dtos/get-conversations.dto';
 
 @Controller('conversations')
 @UseGuards(AuthGuard)
@@ -18,30 +20,9 @@ export class ConversationController {
     private messageService: MessageService,
   ) {}
 
-  @Get('queued')
-  getQueuedConversatons() {
-    return this.conversationService.getConversations({
-      status: 'queued',
-      sort: 'queuedAt',
-      desc: true,
-    });
-  }
-
-  @Get('solved')
-  getSolvedConversations() {
-    return this.conversationService.getConversations({
-      status: 'solved',
-      desc: true,
-    });
-  }
-
-  @Get('operators/:oid')
-  getOperatorConversations(@Param('oid') operatorId: string) {
-    return this.conversationService.getConversations({
-      operatorId,
-      status: 'inProgress',
-      desc: true,
-    });
+  @Get()
+  getConversations(@Query() query: GetConversationsDto) {
+    return this.conversationService.getConversations(query);
   }
 
   @Get(':id')

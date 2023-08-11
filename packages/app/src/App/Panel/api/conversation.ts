@@ -9,17 +9,34 @@ export async function getConversations(type: string) {
 }
 
 export async function getUnassignedConversations() {
-  const res = await client.get<Conversation[]>('/conversations/queued');
+  const res = await client.get<Conversation[]>('/conversations', {
+    params: {
+      status: 'queued',
+      sort: 'queuedAt',
+      desc: 1,
+    },
+  });
   return res.data;
 }
 
 export async function getOperatorConversations(operatorId: string) {
-  const res = await client.get<Conversation[]>(`/conversations/operators/${operatorId}`);
+  const res = await client.get<Conversation[]>('/conversations', {
+    params: {
+      operatorId,
+      status: 'inProgress',
+      desc: 1,
+    },
+  });
   return res.data;
 }
 
 export async function getSolvedConversations() {
-  const res = await client.get<Conversation[]>('/conversations/solved');
+  const res = await client.get<Conversation[]>('/conversations', {
+    params: {
+      status: 'solved',
+      desc: 1,
+    },
+  });
   return res.data;
 }
 
