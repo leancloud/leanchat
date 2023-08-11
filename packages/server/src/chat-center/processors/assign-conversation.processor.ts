@@ -1,8 +1,8 @@
 import { Inject } from '@nestjs/common';
 import { Process, Processor } from '@nestjs/bull';
+import { EventEmitter2 } from '@nestjs/event-emitter';
 import { Job } from 'bull';
 import { Redis } from 'ioredis';
-import EventEmitter2 from 'eventemitter2';
 import _ from 'lodash';
 
 import { REDIS } from 'src/redis';

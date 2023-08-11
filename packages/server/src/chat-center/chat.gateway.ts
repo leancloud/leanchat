@@ -16,8 +16,7 @@ import {
 } from '@nestjs/websockets';
 import { Request } from 'express';
 import { Namespace, Socket } from 'socket.io';
-import { EventEmitter2 } from 'eventemitter2';
-import { OnEvent } from '@nestjs/event-emitter';
+import { EventEmitter2, OnEvent } from '@nestjs/event-emitter';
 import { ZodValidationPipe } from 'nestjs-zod';
 import { z } from 'nestjs-zod/z';
 

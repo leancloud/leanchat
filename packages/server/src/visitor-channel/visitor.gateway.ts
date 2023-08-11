@@ -8,9 +8,8 @@ import {
   WebSocketServer,
   WsException,
 } from '@nestjs/websockets';
-import { OnEvent } from '@nestjs/event-emitter';
+import { EventEmitter2, OnEvent } from '@nestjs/event-emitter';
 import { Server, Socket } from 'socket.io';
-import { EventEmitter2 } from 'eventemitter2';
 import { ZodValidationPipe } from 'nestjs-zod';
 
 import { MessageService } from 'src/message';

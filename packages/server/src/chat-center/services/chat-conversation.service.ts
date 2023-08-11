@@ -1,5 +1,5 @@
 import { Inject, Injectable } from '@nestjs/common';
-import EventEmitter2 from 'eventemitter2';
+import { EventEmitter2 } from '@nestjs/event-emitter';
 import { Redis } from 'ioredis';
 import { Conversation, ConversationService } from 'src/conversation';
 import { Operator } from 'src/operator';
