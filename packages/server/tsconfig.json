@@ -16,16 +16,6 @@
     "noImplicitAny": true,
     "strictBindCallApply": true,
     "forceConsistentCasingInFileNames": true,
-    "noFallthroughCasesInSwitch": true,
-    "plugins": [
-      {
-        "transform": "typia/lib/transform"
-      },
-      {
-        "transform": "@nestia/core/lib/transform",
-        "validate": "assert",
-        "stringify": "assert",
-      },
-    ]
+    "noFallthroughCasesInSwitch": true
   }
 }

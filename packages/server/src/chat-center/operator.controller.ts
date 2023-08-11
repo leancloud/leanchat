@@ -1,4 +1,5 @@
 import {
+  Body,
   Controller,
   Get,
   NotFoundException,
@@ -6,18 +7,21 @@ import {
   Patch,
   Post,
   UseGuards,
+  UsePipes,
 } from '@nestjs/common';
-import { TypedBody } from '@nestia/core';
+import { ZodValidationPipe } from 'nestjs-zod';
 
 import { Operator, OperatorService } from 'src/operator';
 import { AuthGuard } from './guards/auth.guard';
 import { CurrentOperator } from './decorators/current-operator.decorator';
-import { ICreateOperator, IUpdateOperator } from './interfaces/operator';
 import { ChatService } from './chat.service';
 import { OperatorDto } from './dtos/operator.dto';
+import { CreateOperatorDto } from './dtos/create-operator.dto';
+import { UpdateOperatorDto } from './dtos/update-operator.dto';
 
 @Controller('operators')
 @UseGuards(AuthGuard)
+@UsePipes(ZodValidationPipe)
 export class OperatorController {
   constructor(
     private operatorService: OperatorService,
@@ -25,7 +29,7 @@ export class OperatorController {
   ) {}
 
   @Post()
-  createOperator(@TypedBody() data: ICreateOperator) {
+  createOperator(@Body() data: CreateOperatorDto) {
     return this.operatorService.createOperator(data);
   }
 
@@ -61,7 +65,7 @@ export class OperatorController {
   @Patch(':id')
   async updateOperator(
     @Param('id') id: string,
-    @TypedBody() data: IUpdateOperator,
+    @Body() data: UpdateOperatorDto,
   ) {
     await this.operatorService.updateOperator(id, data);
   }

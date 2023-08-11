@@ -1,20 +1,23 @@
 import { promisify } from 'node:util';
 import {
+  Body,
   Controller,
   Delete,
   Post,
   Req,
   UnauthorizedException,
+  UsePipes,
 } from '@nestjs/common';
-import { TypedBody } from '@nestia/core';
 import { Request } from 'express';
+import { ZodValidationPipe } from 'nestjs-zod';
 
 import { OperatorService } from 'src/operator';
-import { ICreateSession } from './interfaces/session';
 import { ChatService } from './chat.service';
 import { OperatorDto } from './dtos/operator.dto';
+import { CreateSessionDto } from './dtos/create-session.dto';
 
 @Controller('sessions')
+@UsePipes(ZodValidationPipe)
 export class SessionController {
   constructor(
     private operatorService: OperatorService,
@@ -22,7 +25,7 @@ export class SessionController {
   ) {}
 
   @Post()
-  async createSession(@Req() req: Request, @TypedBody() data: ICreateSession) {
+  async createSession(@Req() req: Request, @Body() data: CreateSessionDto) {
     const operator = await this.operatorService.getOperatorByUsername(
       data.username,
     );
