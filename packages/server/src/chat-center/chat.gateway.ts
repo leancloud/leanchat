@@ -133,8 +133,8 @@ export class ChatGateway
     if (!conv) {
       throw new WsException(`对话 ${data.conversationId} 不存在`);
     }
-    if (conv.operatorId !== operatorId) {
-      throw new WsException(`Forbidden`);
+    if (conv.status === 'solved') {
+      throw new WsException('对话已结束');
     }
 
     const message = await this.messageService.createMessage({
