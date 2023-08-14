@@ -12,12 +12,12 @@ import {
 import { ZodValidationPipe } from 'nestjs-zod';
 
 import { Operator, OperatorService } from 'src/operator';
-import { AuthGuard } from './guards/auth.guard';
-import { CurrentOperator } from './decorators/current-operator.decorator';
-import { ChatService } from './chat.service';
-import { OperatorDto } from './dtos/operator.dto';
-import { CreateOperatorDto } from './dtos/create-operator.dto';
-import { UpdateOperatorDto } from './dtos/update-operator.dto';
+import { AuthGuard } from '../guards/auth.guard';
+import { CurrentOperator } from '../decorators/current-operator.decorator';
+import { ChatService } from '../chat.service';
+import { OperatorDto } from '../dtos/operator.dto';
+import { CreateOperatorDto } from '../dtos/create-operator.dto';
+import { UpdateOperatorDto } from '../dtos/update-operator.dto';
 
 @Controller('operators')
 @UseGuards(AuthGuard)

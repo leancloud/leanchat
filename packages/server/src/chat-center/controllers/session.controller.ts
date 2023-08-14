@@ -12,9 +12,9 @@ import { Request } from 'express';
 import { ZodValidationPipe } from 'nestjs-zod';
 
 import { OperatorService } from 'src/operator';
-import { ChatService } from './chat.service';
-import { OperatorDto } from './dtos/operator.dto';
-import { CreateSessionDto } from './dtos/create-session.dto';
+import { ChatService } from '../chat.service';
+import { OperatorDto } from '../dtos/operator.dto';
+import { CreateSessionDto } from '../dtos/create-session.dto';
 
 @Controller('sessions')
 @UsePipes(ZodValidationPipe)
