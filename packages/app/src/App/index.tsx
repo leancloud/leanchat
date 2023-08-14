@@ -7,7 +7,7 @@ const Chat = lazy(() => import('./Chat'));
 export default function App() {
   return (
     <BrowserRouter>
-      <Suspense>
+      <Suspense fallback="加载中...">
         <Routes>
           <Route path="panel/*" element={<Panel />} />
           <Route path="chat" element={<Chat />} />

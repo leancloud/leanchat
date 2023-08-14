@@ -1,15 +1,12 @@
-import { Dispatch, SetStateAction, createContext, useContext } from 'react';
+import { createContext, useContext } from 'react';
 
 import { Conversation } from '@/App/Panel/types';
 
-export interface ConversationContextValue {
-  conversation?: Conversation;
-  setConversation: Dispatch<SetStateAction<Conversation | undefined>>;
+interface ConversationContextValue {
+  conversation: Conversation;
 }
 
-export const ConversationContext = createContext<ConversationContextValue>({
-  setConversation: () => {},
-});
+export const ConversationContext = createContext<ConversationContextValue>(undefined as any);
 
 export function useConversationContext() {
   return useContext(ConversationContext);

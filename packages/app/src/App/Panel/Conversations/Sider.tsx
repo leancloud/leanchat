@@ -56,53 +56,49 @@ function OperatorLabel({ name, size }: OperatorLabelProps) {
 }
 
 interface SiderProps {
-  activeNav?: string[];
-  onChangeActiveNav: (activeNav: string[]) => void;
+  stream: string;
+  onChangeStream: (stream: string) => void;
   conversations?: Conversation[];
   onClickConversation: (conv: Conversation) => void;
   activeConversation?: string;
 }
 
 export function Sider({
-  activeNav,
-  onChangeActiveNav,
+  stream,
+  onChangeStream,
   conversations,
   onClickConversation,
   activeConversation,
 }: SiderProps) {
-  const activeNavKey = activeNav?.join('.');
-
   const { data: operators } = useOperators();
   const operatorMenuItems = useMemo<NavMenuItem[]>(() => {
     return [
       {
-        key: 'operators.all',
+        key: 'allOperators',
         label: '全部',
       },
       ...(operators || [])?.map((operator) => ({
-        key: `operators.${operator.id}`,
+        key: `operator/${operator.id}`,
         label: <OperatorLabel name={operator.internalName} />,
       })),
     ];
   }, [operators]);
 
   const sectionLabel = useMemo(() => {
-    if (activeNav) {
-      if (activeNav[0] === 'liveConversations') {
-        return LIVE_CONVERSATION_LABELS[activeNav[1]];
-      }
-      if (activeNav[0] === 'operators') {
-        const operator = operators?.find((t) => t.id === activeNav[1]);
-        if (operator) {
-          return <OperatorLabel name={operator.internalName} size="large" />;
-        }
+    if (stream in LIVE_CONVERSATION_LABELS) {
+      return LIVE_CONVERSATION_LABELS[stream];
+    }
+    if (stream === 'allOperators') {
+      return '全部';
+    }
+    if (stream.startsWith('operator/')) {
+      const operatorId = stream.slice('operator/'.length);
+      const operator = operators?.find((t) => t.id === operatorId);
+      if (operator) {
+        return <OperatorLabel name={operator.internalName} size="large" />;
       }
     }
-  }, [activeNav, operators]);
-
-  const handleChangeActiveKey = (key: string) => {
-    onChangeActiveNav(key.split('.'));
-  };
+  }, [stream, operators]);
 
   return (
     <div className="flex h-full">
@@ -116,29 +112,29 @@ export function Sider({
             label="实时对话"
             items={[
               {
-                key: 'liveConversations.unassigned',
+                key: 'unassigned',
                 label: LIVE_CONVERSATION_LABELS['unassigned'],
                 badge: <Badge count={0} size="small" />,
               },
               {
-                key: 'liveConversations.myOpen',
+                key: 'myOpen',
                 label: LIVE_CONVERSATION_LABELS['myOpen'],
               },
               {
-                key: 'liveConversations.solved',
+                key: 'solved',
                 label: LIVE_CONVERSATION_LABELS['solved'],
               },
             ]}
-            activeKey={activeNavKey}
-            onChange={handleChangeActiveKey}
+            activeKey={stream}
+            onChange={onChangeStream}
           />
 
           <NavMenu
             inverted
             label="客服"
             items={operatorMenuItems}
-            activeKey={activeNavKey}
-            onChange={handleChangeActiveKey}
+            activeKey={stream}
+            onChange={onChangeStream}
           />
         </div>
       </div>

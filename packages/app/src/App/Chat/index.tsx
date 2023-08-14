@@ -209,11 +209,11 @@ function Message({ content, visitor }: MessageProps) {
         {
           'float-left': !visitor,
           'float-right': visitor,
-        }
+        },
       )}
       style={style}
     >
-      <div ref={parseEmojiContent} className="whitespace-pre">
+      <div ref={parseEmojiContent} className="whitespace-pre-line">
         {content}
       </div>
     </div>

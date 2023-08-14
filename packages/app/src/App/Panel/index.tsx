@@ -52,8 +52,6 @@ function Entry2() {
 function RequireAuth({ children }: PropsWithChildren) {
   const { user } = useAuthContext();
 
-  console.log('RequireAuth', user);
-
   if (!user) {
     return <Navigate to="login" />;
   }

@@ -1,4 +1,3 @@
-import { useEffect } from 'react';
 import { Transition } from '@headlessui/react';
 import { Select } from 'antd';
 import { MdOutlineClose } from 'react-icons/md';
@@ -15,10 +14,6 @@ interface UserDetailsProps {
 export function UserDetails({ show, onToggle }: UserDetailsProps) {
   const [status, setStatusState] = useUserStatus();
   const socket = useSocket();
-
-  useEffect(() => {
-    callRpc(socket, 'getStatus').then(setStatusState);
-  }, []);
 
   const { mutate: setStatus } = useMutation({
     mutationFn: async (status: string) => {
@@ -39,7 +34,7 @@ export function UserDetails({ show, onToggle }: UserDetailsProps) {
       leaveTo="translate-x-full"
     >
       <div className="flex">
-        <button className="ml-auto text-[#647491]" onClick={onToggle}>
+        <button className="ml-auto text-[#647491] hover:text-[#354869]" onClick={onToggle}>
           <MdOutlineClose className="w-6 h-6" />
         </button>
       </div>

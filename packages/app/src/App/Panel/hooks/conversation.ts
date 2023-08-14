@@ -7,9 +7,7 @@ import { Conversation, Message } from '@/App/Panel/types';
 import {
   getConversation,
   getConversationMessages,
-  getOperatorConversations,
-  getSolvedConversations,
-  getUnassignedConversations,
+  getConversations,
 } from '@/App/Panel/api/conversation';
 
 export type ConversationsQueryVariables =
@@ -18,6 +16,9 @@ export type ConversationsQueryVariables =
     }
   | {
       type: 'solved';
+    }
+  | {
+      type: 'allOperators';
     }
   | {
       type: 'operator';
@@ -33,11 +34,27 @@ export function useConversations(variables: ConversationsQueryVariables) {
       const [, variables] = queryKey;
       switch (variables.type) {
         case 'unassigned':
-          return getUnassignedConversations();
+          return getConversations({
+            status: 'queued',
+            sort: 'queuedAt',
+            desc: true,
+          });
         case 'solved':
-          return getSolvedConversations();
+          return getConversations({
+            status: 'solved',
+            desc: true,
+          });
+        case 'allOperators':
+          return getConversations({
+            status: 'inProgress',
+            desc: true,
+          });
         case 'operator':
-          return getOperatorConversations(variables.operatorId);
+          return getConversations({
+            status: 'inProgress',
+            operatorId: variables.operatorId,
+            desc: true,
+          });
       }
     },
     staleTime: 1000 * 60,
@@ -58,7 +75,7 @@ export function useSetConversationQueryData() {
     (conversation: Conversation) => {
       queryClient.setQueryData(['Conversation', conversation.id], conversation);
     },
-    [queryClient]
+    [queryClient],
   );
 }
 
@@ -80,7 +97,7 @@ export function useAutoPushNewMessage(socket: Socket) {
           if (messages) {
             return [...messages, message];
           }
-        }
+        },
       );
       queryClient.setQueriesData<Conversation[] | undefined>(['Conversations'], (conversations) => {
         if (conversations) {
