@@ -8,7 +8,7 @@
   "author": "",
   "license": "MIT",
   "engines": {
-    "node": "^16"
+    "node": "^18"
   },
   "devDependencies": {
     "@types/node": "^20.4.5"

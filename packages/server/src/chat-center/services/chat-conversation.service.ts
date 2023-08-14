@@ -5,7 +5,11 @@ import { Conversation, ConversationService } from 'src/conversation';
 import { Operator } from 'src/operator';
 
 import { REDIS } from 'src/redis';
-import { ConversationAssignedEvent, ConversationClosedEvent } from '../events';
+import {
+  ConversationAssignedEvent,
+  ConversationClosedEvent,
+  ConversationQueuedEvent,
+} from '../events';
 
 @Injectable()
 export class ChatConversationService {
@@ -17,8 +21,22 @@ export class ChatConversationService {
     private conversationService: ConversationService,
   ) {}
 
+  async enqueue(conv: Conversation) {
+    const score = await this.redis.zscore('conversation_queue', conv.id);
+    if (!score) {
+      return;
+    }
+    const newConv = await this.conversationService.updateConversation(conv, {
+      status: 'queued',
+      queuedAt: new Date(Number(score)),
+    });
+    this.events.emit('conversation.queued', {
+      conversation: newConv,
+    } satisfies ConversationQueuedEvent);
+  }
+
   async assign(conv: Conversation, operator: Operator) {
-    await this.conversationService.updateConversation(conv, {
+    const newConv = await this.conversationService.updateConversation(conv, {
       status: 'inProgress',
       operatorId: operator.id,
     });
@@ -30,8 +48,7 @@ export class ChatConversationService {
       .exec();
 
     this.events.emit('conversation.assigned', {
-      conversation: conv,
-      operator,
+      conversation: newConv,
     } satisfies ConversationAssignedEvent);
   }
 

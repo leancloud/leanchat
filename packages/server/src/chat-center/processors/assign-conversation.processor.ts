@@ -1,6 +1,5 @@
 import { Inject } from '@nestjs/common';
 import { Process, Processor } from '@nestjs/bull';
-import { EventEmitter2 } from '@nestjs/event-emitter';
 import { Job } from 'bull';
 import { Redis } from 'ioredis';
 import _ from 'lodash';
@@ -9,7 +8,6 @@ import { REDIS } from 'src/redis';
 import { OperatorService } from 'src/operator';
 import { ConversationService } from 'src/conversation';
 import { AssignConversationJobData } from '../interfaces/assign-job';
-import { ConversationQueuedEvent } from '../events';
 import { ChatConversationService } from '../services/chat-conversation.service';
 
 @Processor('assign_conversation')
@@ -18,37 +16,25 @@ export class AssignConversationProcessor {
   private redis: Redis;
 
   constructor(
-    private events: EventEmitter2,
     private conversationService: ConversationService,
     private operatorService: OperatorService,
     private chatConvService: ChatConversationService,
   ) {}
 
-  @Process('assign')
+  @Process()
   async assign(job: Job<AssignConversationJobData>) {
-    const conv = await this.conversationService.getConversation(job.data.id);
+    const { conversationId } = job.data;
+    const conv = await this.conversationService.getConversation(conversationId);
     if (!conv) {
       return;
     }
 
     const operator = await this.selectOperator();
-    if (!operator) {
-      return;
+    if (operator) {
+      await this.chatConvService.assign(conv, operator);
+    } else {
+      await this.chatConvService.enqueue(conv);
     }
-
-    await this.chatConvService.assign(conv, operator);
-  }
-
-  @Process('check')
-  async check(job: Job<AssignConversationJobData>) {
-    const { id } = job.data;
-    const score = await this.redis.zscore('conversation_queue', id);
-    if (score === null) {
-      return;
-    }
-    this.events.emit('conversation.queued', {
-      conversationId: id,
-    } satisfies ConversationQueuedEvent);
   }
 
   async selectOperator() {

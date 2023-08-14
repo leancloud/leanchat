@@ -53,20 +53,28 @@ export class ConversationService {
 
   async updateConversation(conv: Conversation, data: UpdateConversationData) {
     const obj = AV.Object.createWithoutData('ChatConversation', conv.id);
+    const newConv = conv.clone();
     if (data.operatorId) {
       obj.set('operatorId', data.operatorId);
+      newConv.operatorId = data.operatorId;
     }
     if (data.status) {
       obj.set('status', data.status);
+      newConv.status = data.status;
     }
     if (data.queuedAt) {
       obj.set('queuedAt', data.queuedAt);
+      newConv.queuedAt = data.queuedAt;
     }
     if (data.lastMessage) {
       obj.set('lastMessage', data.lastMessage);
+      newConv.lastMessage = data.lastMessage;
     }
     await obj.save(null, { useMasterKey: true });
-    this.cache.delete(conv.id);
+    if (this.cache.has(conv.id)) {
+      this.cache.set(conv.id, newConv);
+    }
+    return newConv;
   }
 
   async getConversations({

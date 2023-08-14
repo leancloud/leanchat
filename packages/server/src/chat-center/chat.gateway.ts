@@ -23,7 +23,6 @@ import { z } from 'nestjs-zod/z';
 import { WsFilter } from 'src/common/filters';
 import { MessageCreatedEvent } from 'src/common/events';
 import { WsInterceptor } from 'src/common/interceptors';
-import { VisitorService } from 'src/visitor';
 import { ConversationService } from 'src/conversation';
 import { OperatorService } from 'src/operator';
 import { MessageService } from 'src/message';
@@ -50,7 +49,6 @@ export class ChatGateway
 
   constructor(
     private events: EventEmitter2,
-    private visitorService: VisitorService,
     private conversationService: ConversationService,
     private operatorService: OperatorService,
     private messageService: MessageService,
@@ -103,6 +101,11 @@ export class ChatGateway
     const operator = await this.operatorService.getOperator(data.operatorId);
     if (!operator) {
       throw new WsException(`客服 ${data.operatorId} 不存在`);
+    }
+
+    const status = await this.chatService.getOperatorStatus(operator.id);
+    if (status !== 'ready') {
+      throw new WsException(`客服 ${data.conversationId} 不是在线状态`);
     }
 
     await this.chatConvService.assign(conv, operator);
@@ -165,22 +168,21 @@ export class ChatGateway
   @OnEvent('conversation.queued')
   dispatchConversationQueued(payload: ConversationQueuedEvent) {
     this.server.emit('conversationQueued', {
-      conversationId: payload.conversationId,
+      conversation: payload.conversation,
     });
   }
 
   @OnEvent('conversation.assigned')
   dispatchConversationAssigned(payload: ConversationAssignedEvent) {
     this.server.emit('conversationAssigned', {
-      conversationId: payload.conversation.id,
-      operatorId: payload.operator.id,
+      conversation: payload.conversation,
     });
   }
 
   @OnEvent('conversation.closed')
   dispatchConversationClosed(payload: ConversationClosedEvent) {
     this.server.emit('conversationClosed', {
-      conversationId: payload.conversation.id,
+      conversation: payload.conversation,
     });
   }
 }

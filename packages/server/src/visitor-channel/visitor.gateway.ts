@@ -92,11 +92,7 @@ export class VisitorGateway implements OnModuleInit, OnGatewayConnection {
       lastMessage: message,
     };
     if (conv.status === 'new') {
-      const queuedAt = await this.assignService.assignConversation(conv);
-      if (queuedAt) {
-        updateData.status = 'queued';
-        updateData.queuedAt = queuedAt;
-      }
+      await this.assignService.assignConversation(conv);
     }
     await this.conversationService.updateConversation(conv, updateData);
 

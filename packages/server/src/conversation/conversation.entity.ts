@@ -26,4 +26,16 @@ export class Conversation {
     conv.createdAt = obj.get('createdAt');
     return conv;
   }
+
+  clone() {
+    const conv = new Conversation();
+    conv.id = this.id;
+    conv.visitorId = this.visitorId;
+    conv.operatorId = this.operatorId;
+    conv.lastMessage = this.lastMessage;
+    conv.status = this.status;
+    conv.queuedAt = this.queuedAt;
+    conv.createdAt = this.createdAt;
+    return conv;
+  }
 }

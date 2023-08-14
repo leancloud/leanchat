@@ -14,36 +14,21 @@ export class AssignService {
 
   constructor(
     @InjectQueue('assign_conversation')
-    private assignVisitorQueue: Queue,
+    private assignVisitorQueue: Queue<AssignConversationJobData>,
   ) {}
 
   async assignConversation(conv: Conversation) {
-    const now = new Date();
+    const queuedAt = new Date();
     const added = await this.redis.zadd(
       'conversation_queue',
       'NX',
-      now.getTime(),
+      queuedAt.getTime(),
       conv.id,
     );
     if (added) {
-      await this.assignVisitorQueue.addBulk([
-        {
-          name: 'assign',
-          data: {
-            id: conv.id,
-          } satisfies AssignConversationJobData,
-        },
-        {
-          name: 'check',
-          data: {
-            id: conv.id,
-          } satisfies AssignConversationJobData,
-          opts: {
-            delay: 1000 * 2, // 2 sec
-          },
-        },
-      ]);
-      return now;
+      await this.assignVisitorQueue.add({
+        conversationId: conv.id,
+      });
     }
   }
 }
