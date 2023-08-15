@@ -6,3 +6,7 @@ export interface GetVisitorsOptions {
   orderBy?: string;
   desc?: boolean;
 }
+
+export interface UpdateVisitorData {
+  currentConversationId?: string;
+}

@@ -53,7 +53,7 @@ export class ChatConversationService {
   }
 
   async close(conv: Conversation) {
-    await this.conversationService.updateConversation(conv, {
+    const newConv = await this.conversationService.updateConversation(conv, {
       status: 'solved',
     });
 
@@ -62,7 +62,7 @@ export class ChatConversationService {
     }
 
     this.events.emit('conversation.closed', {
-      conversation: conv,
+      conversation: newConv,
     } satisfies ConversationClosedEvent);
   }
 }

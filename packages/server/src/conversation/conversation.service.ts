@@ -30,7 +30,6 @@ export class ConversationService {
     if (obj) {
       return Conversation.fromAVObject(obj);
     }
-    return this.createConversation(visitorId);
   }
 
   private async getConversationObject(id: string) {

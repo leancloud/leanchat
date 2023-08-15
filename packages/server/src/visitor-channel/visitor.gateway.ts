@@ -15,11 +15,10 @@ import { ZodValidationPipe } from 'nestjs-zod';
 import { MessageService } from 'src/message';
 import { MessageCreatedEvent } from 'src/common/events';
 import { AssignService } from 'src/chat-center';
-import { ConversationService } from 'src/conversation';
+import { Conversation, ConversationService } from 'src/conversation';
 import { VisitorService } from 'src/visitor';
 import { WsInterceptor } from 'src/common/interceptors';
 import { CreateMessageDto } from './dtos/create-message.dto';
-import { UpdateConversationData } from 'src/conversation/interfaces';
 
 @WebSocketGateway()
 @UsePipes(ZodValidationPipe)
@@ -47,13 +46,8 @@ export class VisitorGateway implements OnModuleInit, OnGatewayConnection {
       const visitor = await this.visitorService.registerVisitorFromChatChannel(
         id,
       );
-      const conversation =
-        await this.conversationService.getActiveConversationForVisitor(
-          visitor.id,
-        );
 
       socket.data.id = visitor.id;
-      socket.data.cid = conversation.id;
       next();
     });
   }
@@ -68,33 +62,41 @@ export class VisitorGateway implements OnModuleInit, OnGatewayConnection {
     @ConnectedSocket() socket: Socket,
     @MessageBody() data: CreateMessageDto,
   ) {
-    const { id, cid } = socket.data;
+    const { id } = socket.data;
 
-    const visitor = await this.visitorService.getVisitor(id);
+    let visitor = await this.visitorService.getVisitor(id);
     if (!visitor) {
       throw new WsException('账户已被删除');
     }
 
-    const conv = await this.conversationService.getConversation(cid);
-    if (!conv) {
-      throw new WsException('会话已被删除');
+    let conv: Conversation | undefined;
+    if (visitor.currentConversationId) {
+      conv = await this.conversationService.getConversation(
+        visitor.currentConversationId,
+      );
+    }
+    if (!conv || conv.status === 'solved') {
+      conv = await this.conversationService.createConversation(id);
+      visitor = await this.visitorService.updateVisitor(visitor, {
+        currentConversationId: conv.id,
+      });
     }
 
     const message = await this.messageService.createMessage({
       visitorId: id,
-      conversationId: cid,
+      conversationId: conv.id,
       type: 'visitor',
       from: id,
       data: data,
     });
 
-    const updateData: UpdateConversationData = {
+    await this.conversationService.updateConversation(conv, {
       lastMessage: message,
-    };
+    });
+
     if (conv.status === 'new') {
       await this.assignService.assignConversation(conv);
     }
-    await this.conversationService.updateConversation(conv, updateData);
 
     this.events.emit('message.created', {
       message,
