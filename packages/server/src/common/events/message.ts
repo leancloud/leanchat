@@ -1,7 +1,7 @@
-import { IMessage } from '../interfaces/message';
+import { Message } from 'src/message';
 
 export interface MessageCreatedEvent {
-  message: IMessage;
+  message: Message;
   channel: string;
   socketId?: string;
 }

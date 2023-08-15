@@ -1,13 +1,12 @@
 import { Injectable } from '@nestjs/common';
 import AV from 'leancloud-storage';
 
-import { IMessage } from 'src/common/interfaces';
 import { Message } from './message.entity';
-import { IGetMessagesDto } from './interfaces';
+import { CreateMessageData, IGetMessagesDto } from './interfaces';
 
 @Injectable()
 export class MessageService {
-  async createMessage(data: Omit<IMessage, 'id' | 'createdAt'>) {
+  async createMessage(data: CreateMessageData) {
     const obj = new AV.Object('ChatMessage', {
       visitorId: data.visitorId,
       conversationId: data.conversationId,

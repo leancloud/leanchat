@@ -11,3 +11,8 @@ export interface ConversationClosedEvent {
 export interface ConversationQueuedEvent {
   conversation: Conversation;
 }
+
+export interface OperatorStatusChangedEvent {
+  operatorId: string;
+  status: string;
+}

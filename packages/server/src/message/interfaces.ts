@@ -3,3 +3,11 @@ export interface IGetMessagesDto {
   conversationId?: string;
   types?: string[];
 }
+
+export interface CreateMessageData {
+  visitorId: string;
+  conversationId: string;
+  type: string;
+  from: string;
+  data: any;
+}

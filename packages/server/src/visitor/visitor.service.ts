@@ -2,7 +2,7 @@ import { Injectable } from '@nestjs/common';
 import AV from 'leancloud-storage';
 
 import { Visitor } from './visitor.entity';
-import { GetVisitorsOptions, IUpdateVisitorDto } from './interfaces';
+import { GetVisitorsOptions } from './interfaces';
 import { LRUCache } from 'lru-cache';
 
 @Injectable()
@@ -34,12 +34,6 @@ export class VisitorService {
     return objs.map((obj) => Visitor.fromAVObject(obj as AV.Object));
   }
 
-  getVisitorCountForOperator(operatorId: string) {
-    const query = new AV.Query('ChatVisitor');
-    query.equalTo('operatorId', operatorId);
-    return query.count({ useMasterKey: true });
-  }
-
   async getVisitor(id: string) {
     if (this.visitorCache.has(id)) {
       return this.visitorCache.get(id);
@@ -69,26 +63,5 @@ export class VisitorService {
     });
     await obj.save(null, { useMasterKey: true });
     return Visitor.fromAVObject(obj);
-  }
-
-  async updateVisitor(visitor: Visitor, data: IUpdateVisitorDto) {
-    const obj = AV.Object.createWithoutData('ChatVisitor', visitor.id);
-    if (data.status) {
-      obj.set('status', data.status);
-    }
-    if (data.recentMessage) {
-      obj.set('recentMessage', data.recentMessage);
-    }
-    if (data.operatorId) {
-      obj.set('operatorId', data.operatorId);
-    }
-    if (data.operatorId === null) {
-      obj.unset('operatorId');
-    }
-    if (data.queuedAt) {
-      obj.set('queuedAt', data.queuedAt);
-    }
-    await obj.save(null, { useMasterKey: true });
-    this.visitorCache.delete(visitor.id);
   }
 }

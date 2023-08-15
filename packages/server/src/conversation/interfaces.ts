@@ -1,9 +1,9 @@
-import { IMessage } from 'src/common/interfaces';
+import { Message } from 'src/message';
 
 export interface UpdateConversationData {
   status?: string;
   operatorId?: string;
-  lastMessage?: IMessage;
+  lastMessage?: Message;
   queuedAt?: Date;
 }
 

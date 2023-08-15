@@ -32,6 +32,7 @@ import {
   ConversationAssignedEvent,
   ConversationClosedEvent,
   ConversationQueuedEvent,
+  OperatorStatusChangedEvent,
 } from './events';
 import { ChatConversationService } from './services/chat-conversation.service';
 import { AssignConversationDto } from './dtos/assign-conversation.dto';
@@ -68,6 +69,7 @@ export class ChatGateway
   }
 
   async handleConnection(socket: Socket) {
+    socket.join(socket.data.id);
     console.log('operator online', socket.data.id);
   }
 
@@ -82,11 +84,7 @@ export class ChatGateway
     status: string,
   ) {
     const operatorId = socket.data.id;
-    if (status === 'ready') {
-      await this.chatService.setOperatorReady(operatorId);
-    } else {
-      await this.chatService.setOperatorStatus(operatorId, status);
-    }
+    await this.chatService.setOperatorStatus(operatorId, status);
   }
 
   @SubscribeMessage('assignConversation')
@@ -183,6 +181,14 @@ export class ChatGateway
   dispatchConversationClosed(payload: ConversationClosedEvent) {
     this.server.emit('conversationClosed', {
       conversation: payload.conversation,
+    });
+  }
+
+  @OnEvent('operator.status.changed')
+  dispatchOperatorStatusChanged(payload: OperatorStatusChangedEvent) {
+    this.server.emit('operatorStatusChanged', {
+      operatorId: payload.operatorId,
+      status: payload.status,
     });
   }
 }

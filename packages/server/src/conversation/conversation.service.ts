@@ -107,4 +107,11 @@ export class ConversationService {
     const objs = await query.find({ useMasterKey: true });
     return objs.map(Conversation.fromAVObject);
   }
+
+  countOperatorConversations(operatorId: string) {
+    const query = new AV.Query('ChatConversation');
+    query.equalTo('operatorId', operatorId);
+    query.equalTo('status', 'inProgress');
+    return query.count({ useMasterKey: true });
+  }
 }

@@ -1,4 +1,4 @@
-import { IMessage } from 'src/common/interfaces';
+import { Message } from 'src/message';
 
 export class Conversation {
   id: string;
@@ -7,7 +7,7 @@ export class Conversation {
 
   operatorId?: string;
 
-  lastMessage?: IMessage;
+  lastMessage?: Message;
 
   status: string;
 
