@@ -245,6 +245,16 @@ export function Conversation({ conversationId, showDetail, onToggleDetail }: Con
               </Mask>
             )}
 
+            {conversation.operatorId && conversation.operatorId !== user.id && (
+              <Mask>
+                <div>
+                  <Button type="primary" onClick={() => joinConversation()}>
+                    抢接会话
+                  </Button>
+                </div>
+              </Mask>
+            )}
+
             {conversation.status === 'solved' && <Mask>会话已结束</Mask>}
           </div>
 

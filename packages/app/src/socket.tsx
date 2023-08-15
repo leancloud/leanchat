@@ -86,15 +86,3 @@ export function callRpc(socket: Socket, name: string, param?: any) {
     socket.timeout(5000).emit(...args);
   });
 }
-
-export function useSubscribeConversation(cid?: string) {
-  const socket = useSocket();
-
-  useEffect(() => {
-    if (!cid) return;
-    socket.emit('subscribeConversation', cid);
-    return () => {
-      socket.emit('unsubscribeConversation', cid);
-    };
-  }, [socket, cid]);
-}

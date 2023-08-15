@@ -13,8 +13,9 @@ import { AuthProvider } from './auth';
 import Conversations from './Conversations';
 import { Layout } from './Layout';
 import { Compose } from './compose';
-import { useAutoPushNewMessage, useConversationSubscription } from './hooks/conversation';
+import { useAutoPushNewMessage, useSubscribeConversations } from './hooks/conversation';
 import { useAuthContext } from './auth';
+import { useSubscribeOperatorsStatus } from './hooks/operator';
 
 const Login = lazy(() => import('./Login'));
 const Settings = lazy(() => import('./Settings'));
@@ -44,7 +45,8 @@ function Entry2() {
   const socket = useSocket();
 
   useAutoPushNewMessage(socket);
-  useConversationSubscription(socket);
+  useSubscribeConversations(socket);
+  useSubscribeOperatorsStatus(socket);
 
   return <Outlet />;
 }
@@ -115,7 +117,7 @@ export default function Panel() {
           <Routes>
             <Route path="login" element={<Login />} />
             <Route
-              path="*"
+              path="/"
               element={
                 <RequireAuth>
                   <Entry />

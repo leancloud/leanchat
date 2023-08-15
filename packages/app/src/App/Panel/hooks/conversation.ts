@@ -118,21 +118,62 @@ export function useAutoPushNewMessage(socket: Socket) {
   }, [socket, queryClient]);
 }
 
-export function useConversationSubscription(socket: Socket) {
+interface ConversationEvent {
+  conversation: Conversation;
+}
+
+export function useSubscribeConversations(socket: Socket) {
   const queryClient = useQueryClient();
+
   useEffect(() => {
-    // TODO: HEAVY!!!
-    const invalidateQueries = () => {
-      queryClient.invalidateQueries(['Conversations']);
-      queryClient.invalidateQueries(['Conversation']);
+    const unshiftConversation = (key: ConversationsQueryVariables, conv: Conversation) => {
+      queryClient.setQueryData<Conversation[] | undefined>(
+        ['Conversations', key],
+        (data) => data && [conv, ...data],
+      );
     };
-    socket.on('conversationQueued', invalidateQueries);
-    socket.on('conversationAssigned', invalidateQueries);
-    socket.on('conversationClosed', invalidateQueries);
+
+    const removeConversation = (id: string) => {
+      queryClient.setQueriesData<Conversation[] | undefined>(
+        ['Conversations'],
+        (data) => data && data.filter((conv) => conv.id !== id),
+      );
+    };
+
+    const setConversation = (conv: Conversation) => {
+      queryClient.setQueryData<Conversation | undefined>(
+        ['Conversation', conv.id],
+        (data) => data && conv,
+      );
+    };
+
+    const onConversationQueued = (e: ConversationEvent) => {
+      unshiftConversation({ type: 'unassigned' }, e.conversation);
+    };
+
+    const onConversationAssigned = (e: ConversationEvent) => {
+      removeConversation(e.conversation.id);
+      unshiftConversation({ type: 'allOperators' }, e.conversation);
+      unshiftConversation(
+        { type: 'operator', operatorId: e.conversation.operatorId! },
+        e.conversation,
+      );
+      setConversation(e.conversation);
+    };
+
+    const onConversationClosed = (e: ConversationEvent) => {
+      removeConversation(e.conversation.id);
+      unshiftConversation({ type: 'solved' }, e.conversation);
+      setConversation(e.conversation);
+    };
+
+    socket.on('conversationQueued', onConversationQueued);
+    socket.on('conversationAssigned', onConversationAssigned);
+    socket.on('conversationClosed', onConversationClosed);
     return () => {
-      socket.off('conversationQueued', invalidateQueries);
-      socket.off('conversationAssigned', invalidateQueries);
-      socket.off('conversationClosed', invalidateQueries);
+      socket.off('conversationQueued', onConversationQueued);
+      socket.off('conversationAssigned', onConversationAssigned);
+      socket.off('conversationClosed', onConversationClosed);
     };
   }, [socket, queryClient]);
 }

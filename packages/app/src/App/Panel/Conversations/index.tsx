@@ -36,7 +36,7 @@ export default function Conversations() {
 
   const [conversationId, setConversationId] = useState<string>();
 
-  const { data: conversations } = useConversations(convQueryVars);
+  const { data: conversations, isLoading } = useConversations(convQueryVars);
 
   const setConvQueryData = useSetConversationQueryData();
 
@@ -49,6 +49,7 @@ export default function Conversations() {
           stream={stream}
           onChangeStream={setStream}
           conversations={conversations}
+          loading={isLoading}
           onClickConversation={(conv) => {
             setConversationId(conv.id);
             setConvQueryData(conv);
