@@ -30,12 +30,7 @@ export interface ContainerProps {
 
 export function Container({ className, header, children, loading }: ContainerProps) {
   return (
-    <div
-      className={cx(
-        'max-w-[1280px] bg-white rounded-md shadow-[rgba(0,27,71,0.08)_0px_3px_8px]',
-        className
-      )}
-    >
+    <div className={cx('bg-white rounded-md shadow-[rgba(0,27,71,0.08)_0px_3px_8px]', className)}>
       {header && <Header {...header} />}
       <div className="p-[20px]">
         {loading ? (

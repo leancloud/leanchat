@@ -1,6 +1,7 @@
 import { Fragment, JSXElementConstructor, useMemo } from 'react';
 import {
   Navigate,
+  Outlet,
   Route,
   Routes,
   matchPath,
@@ -12,10 +13,12 @@ import {
 import { HiUserGroup } from 'react-icons/hi2';
 import { FaUserCheck } from 'react-icons/fa';
 import { MdAccountCircle } from 'react-icons/md';
+import { BiBot } from 'react-icons/bi';
 import cx from 'classnames';
 
-import { Operators, NewOperator, EditOperator } from './Team/Operators';
 import { NavButton, NavMenu } from '../components/NavMenu';
+import { ChatBots, NewChatBot } from './ChatBots';
+import { Operators, NewOperator, EditOperator } from './Team/Operators';
 
 interface NavSection {
   name: string;
@@ -39,6 +42,16 @@ const navs: NavSection[] = [
         icon: MdAccountCircle,
         name: '账号',
         path: 'account',
+      },
+    ],
+  },
+  {
+    name: '自动化',
+    items: [
+      {
+        icon: BiBot,
+        name: '聊天机器人',
+        path: 'bots',
       },
     ],
   },
@@ -131,25 +144,37 @@ function Navs() {
   );
 }
 
-export default function Settings() {
+function Layout() {
   return (
     <div className="h-full grid grid-cols-[232px_1fr]">
-      <div className="bg-[#f5f7f9] p-2 shadow-[rgba(0,27,71,0.12)_0px_2px_6px]">
+      <div className="bg-[#f5f7f9] p-2 shadow-[rgba(0,27,71,0.12)_0px_2px_6px] max-h-full overflow-y-auto">
         <Navs />
       </div>
-      <div className="p-[20px]">
-        <Routes>
-          <Route path="account">
-            <Route index element="Todo" />
-          </Route>
-          <Route path="team/operators">
-            <Route index element={<Operators />} />
-            <Route path="new" element={<NewOperator />} />
-            <Route path=":id" element={<EditOperator />} />
-          </Route>
-          <Route path="*" element={<Navigate to="account" replace />} />
-        </Routes>
+      <div className="p-[20px] max-w-[1280px] max-h-full overflow-auto">
+        <Outlet />
       </div>
     </div>
+  );
+}
+
+export default function Settings() {
+  return (
+    <Routes>
+      <Route element={<Layout />}>
+        <Route path="account">
+          <Route index element="Todo" />
+        </Route>
+        <Route path="chat-bots">
+          <Route index element={<ChatBots />} />
+        </Route>
+        <Route path="team/operators">
+          <Route index element={<Operators />} />
+          <Route path="new" element={<NewOperator />} />
+          <Route path=":id" element={<EditOperator />} />
+        </Route>
+      </Route>
+      <Route path="chat-bots/new" element={<NewChatBot />} />
+      <Route path="*" element={<Navigate to="account" replace />} />
+    </Routes>
   );
 }

@@ -24,7 +24,7 @@ export function ConversationList({
     const avatarColor = '#' + conv.visitorId.slice(-6);
 
     return (
-      <button onClick={() => onClick(conv)}>
+      <button key={conv.id} onClick={() => onClick(conv)}>
         <ConversationItem
           active={conv.id === activeConversation}
           avatar={

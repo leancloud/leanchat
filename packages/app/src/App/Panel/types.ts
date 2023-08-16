@@ -26,3 +26,14 @@ export interface Operator {
   concurrency: number;
   status: string;
 }
+
+export interface ChatBotNode {
+  id: string;
+  type: string;
+  next: string[];
+  [key: string]: any;
+}
+
+export interface ChatBot {
+  nodes: ChatBotNode[];
+}
