@@ -61,12 +61,7 @@ function ChatBox() {
   });
 
   const handleNewMessage = (content: string) => {
-    socket.emit('message', { content }, (res: { result?: Message }) => {
-      const message = res.result;
-      if (message) {
-        setMessages((prev) => [...prev, message]);
-      }
-    });
+    socket.emit('message', { content });
   };
 
   const { containerRef, scrollToBottom } = useScrollToBottom();

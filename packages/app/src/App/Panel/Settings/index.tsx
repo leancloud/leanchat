@@ -17,7 +17,7 @@ import { BiBot } from 'react-icons/bi';
 import cx from 'classnames';
 
 import { NavButton, NavMenu } from '../components/NavMenu';
-import { ChatBots, NewChatBot } from './ChatBots';
+import { ChatBots, NewChatBot, ChatBotDetail } from './ChatBots';
 import { Operators, NewOperator, EditOperator } from './Team/Operators';
 
 interface NavSection {
@@ -51,7 +51,7 @@ const navs: NavSection[] = [
       {
         icon: BiBot,
         name: '聊天机器人',
-        path: 'bots',
+        path: 'chat-bots',
       },
     ],
   },
@@ -174,6 +174,7 @@ export default function Settings() {
         </Route>
       </Route>
       <Route path="chat-bots/new" element={<NewChatBot />} />
+      <Route path="chat-bots/:id" element={<ChatBotDetail />} />
       <Route path="*" element={<Navigate to="account" replace />} />
     </Routes>
   );

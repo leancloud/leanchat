@@ -31,9 +31,15 @@ export interface ChatBotNode {
   id: string;
   type: string;
   next: string[];
+  position?: {
+    x: number;
+    y: number;
+  };
   [key: string]: any;
 }
 
 export interface ChatBot {
+  id: string;
+  name: string;
   nodes: ChatBotNode[];
 }
