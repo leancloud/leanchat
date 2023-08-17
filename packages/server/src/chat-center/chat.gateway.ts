@@ -21,7 +21,7 @@ import { ZodValidationPipe } from 'nestjs-zod';
 import { z } from 'nestjs-zod/z';
 
 import { WsFilter } from 'src/common/filters';
-import { MessageCreatedEvent } from 'src/common/events';
+import { MessageCreatedEvent } from 'src/event';
 import { WsInterceptor } from 'src/common/interceptors';
 import { ConversationService } from 'src/conversation';
 import { OperatorService } from 'src/operator';
@@ -150,41 +150,35 @@ export class ChatGateway
     await this.conversationService.updateConversation(conv, {
       lastMessage: message,
     });
-
-    this.events.emit('message.created', {
-      message,
-      channel: 'chat',
-      socketId: socket.id,
-    } satisfies MessageCreatedEvent);
   }
 
-  @OnEvent('message.created')
+  @OnEvent('message.created', { async: true })
   dispatchMessage(payload: MessageCreatedEvent) {
     this.server.emit('message', payload.message);
   }
 
-  @OnEvent('conversation.queued')
+  @OnEvent('conversation.queued', { async: true })
   dispatchConversationQueued(payload: ConversationQueuedEvent) {
     this.server.emit('conversationQueued', {
       conversation: payload.conversation,
     });
   }
 
-  @OnEvent('conversation.assigned')
+  @OnEvent('conversation.assigned', { async: true })
   dispatchConversationAssigned(payload: ConversationAssignedEvent) {
     this.server.emit('conversationAssigned', {
       conversation: payload.conversation,
     });
   }
 
-  @OnEvent('conversation.closed')
+  @OnEvent('conversation.closed', { async: true })
   dispatchConversationClosed(payload: ConversationClosedEvent) {
     this.server.emit('conversationClosed', {
       conversation: payload.conversation,
     });
   }
 
-  @OnEvent('operator.status.changed')
+  @OnEvent('operator.status.changed', { async: true })
   dispatchOperatorStatusChanged(payload: OperatorStatusChangedEvent) {
     this.server.emit('operatorStatusChanged', {
       operatorId: payload.operatorId,

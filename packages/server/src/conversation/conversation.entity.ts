@@ -15,7 +15,7 @@ export class Conversation {
 
   createdAt: Date;
 
-  static fromAVObject(obj: { get: (key: string) => any }) {
+  static fromAVObject(obj: { get(key: string): any }) {
     const conv = new Conversation();
     conv.id = obj.get('objectId');
     conv.visitorId = obj.get('visitorId');

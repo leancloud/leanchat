@@ -1,9 +1,11 @@
+import { ChatBotNode } from './interfaces';
+
 export class ChatBot {
   id: string;
 
   name: string;
 
-  nodes: any[];
+  nodes: ChatBotNode[];
 
   createdAt: Date;
 

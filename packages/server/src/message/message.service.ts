@@ -1,4 +1,5 @@
 import { Injectable } from '@nestjs/common';
+import { EventEmitter2 } from '@nestjs/event-emitter';
 import AV from 'leancloud-storage';
 
 import { Message } from './message.entity';
@@ -6,6 +7,8 @@ import { CreateMessageData, IGetMessagesDto } from './interfaces';
 
 @Injectable()
 export class MessageService {
+  constructor(private events: EventEmitter2) {}
+
   async createMessage(data: CreateMessageData) {
     const obj = new AV.Object('ChatMessage', {
       visitorId: data.visitorId,
@@ -15,7 +18,12 @@ export class MessageService {
       data: data.data,
     });
     await obj.save(null, { useMasterKey: true });
-    return Message.fromAVObject(obj);
+
+    const message = Message.fromAVObject(obj);
+
+    this.events.emit('message.created', { message });
+
+    return message;
   }
 
   async getMessages({ visitorId, conversationId, types }: IGetMessagesDto) {

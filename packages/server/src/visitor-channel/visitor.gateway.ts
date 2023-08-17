@@ -8,12 +8,12 @@ import {
   WebSocketServer,
   WsException,
 } from '@nestjs/websockets';
-import { EventEmitter2, OnEvent } from '@nestjs/event-emitter';
+import { OnEvent } from '@nestjs/event-emitter';
 import { Server, Socket } from 'socket.io';
 import { ZodValidationPipe } from 'nestjs-zod';
 
 import { MessageService } from 'src/message';
-import { MessageCreatedEvent } from 'src/common/events';
+import { MessageCreatedEvent } from 'src/event';
 import { AssignService } from 'src/chat-center';
 import { Conversation, ConversationService } from 'src/conversation';
 import { VisitorService } from 'src/visitor';
@@ -31,8 +31,6 @@ export class VisitorGateway implements OnModuleInit, OnGatewayConnection {
     private visitorService: VisitorService,
     private conversationService: ConversationService,
     private messageService: MessageService,
-
-    private events: EventEmitter2,
     private assignService: AssignService,
   ) {}
 
@@ -98,12 +96,6 @@ export class VisitorGateway implements OnModuleInit, OnGatewayConnection {
       await this.assignService.assignConversation(conv);
     }
 
-    this.events.emit('message.created', {
-      message,
-      channel: 'chat',
-      socketId: socket.id,
-    });
-
     return message;
   }
 
@@ -112,16 +104,16 @@ export class VisitorGateway implements OnModuleInit, OnGatewayConnection {
     const visitorId = socket.data.id;
     return this.messageService.getMessages({
       visitorId,
-      types: ['visitor', 'operator'],
+      types: ['visitor', 'operator', 'chat-bot'],
     });
   }
 
   @OnEvent('message.created', { async: true })
   dispatchMessage(payload: MessageCreatedEvent) {
-    let op = this.server.to(payload.message.visitorId);
-    if (payload.socketId) {
-      op = op.except(payload.socketId);
+    const { message } = payload;
+    if (!['visitor', 'operator', 'chat-bot'].includes(message.type)) {
+      return;
     }
-    op.emit('message', payload.message);
+    this.server.to(message.visitorId).emit('message', message);
   }
 }

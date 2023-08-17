@@ -3,7 +3,11 @@ import AV from 'leancloud-storage';
 import _ from 'lodash';
 
 import { ChatBotNodeSchema } from './schemas';
-import { ChatBotNode, CreateChatBotData } from './interfaces';
+import {
+  ChatBotNode,
+  CreateChatBotData,
+  UpdateChatBotData,
+} from './interfaces';
 import { ChatBot } from './chat-bot.entity';
 
 @Injectable()
@@ -50,5 +54,40 @@ export class ChatBotService {
     });
     await obj.save(null, { useMasterKey: true });
     return ChatBot.fromAVObject(obj);
+  }
+
+  async getChatBots() {
+    const query = new AV.Query('ChatBot');
+    query.select('name');
+    const objs = await query.find({ useMasterKey: true });
+    return objs.map(ChatBot.fromAVObject) as Pick<
+      ChatBot,
+      'id' | 'name' | 'createdAt'
+    >[];
+  }
+
+  async getChatBot(id: string) {
+    const query = new AV.Query('ChatBot');
+    query.equalTo('objectId', id);
+    const obj = await query.first({ useMasterKey: true });
+    return obj && ChatBot.fromAVObject(obj);
+  }
+
+  async updateChatBot(chatBot: ChatBot, data: UpdateChatBotData) {
+    const obj = AV.Object.createWithoutData('ChatBot', chatBot.id);
+    if (data.name) {
+      obj.set('name', data.name);
+    }
+    if (data.nodes) {
+      obj.set('nodes', data.nodes);
+    }
+    await obj.save(null, { useMasterKey: true });
+  }
+
+  async getChatBotsByNodeType(nodeType: string) {
+    const query = new AV.Query('ChatBot');
+    query.equalTo('nodes.type', nodeType);
+    const objs = await query.find({ useMasterKey: true });
+    return objs.map(ChatBot.fromAVObject);
   }
 }

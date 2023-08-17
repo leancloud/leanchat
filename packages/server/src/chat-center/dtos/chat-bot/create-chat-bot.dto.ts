@@ -3,7 +3,7 @@ import { createZodDto } from 'nestjs-zod';
 
 import { ChatBotNodeSchema } from 'src/chat-bot/schemas';
 
-const CreateChatBotSchema = z.object({
+export const CreateChatBotSchema = z.object({
   name: z.string(),
   nodes: z.array(ChatBotNodeSchema),
 });

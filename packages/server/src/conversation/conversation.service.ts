@@ -1,7 +1,9 @@
 import { Injectable } from '@nestjs/common';
+import { EventEmitter2 } from '@nestjs/event-emitter';
 import AV from 'leancloud-storage';
 import { LRUCache } from 'lru-cache';
 
+import { ConversationCreatedEvent } from 'src/event';
 import { Conversation } from './conversation.entity';
 import { GetConversationOptions, UpdateConversationData } from './interfaces';
 
@@ -12,13 +14,22 @@ export class ConversationService {
     ttl: 1000 * 60 * 5,
   });
 
+  constructor(private events: EventEmitter2) {}
+
   async createConversation(visitorId: string) {
     const obj = new AV.Object('ChatConversation', {
       visitorId,
       status: 'new',
     });
     await obj.save(null, { useMasterKey: true });
-    return Conversation.fromAVObject(obj);
+
+    const conversation = Conversation.fromAVObject(obj);
+
+    this.events.emit('conversation.created', {
+      conversation,
+    } satisfies ConversationCreatedEvent);
+
+    return conversation;
   }
 
   async getActiveConversationForVisitor(visitorId: string) {

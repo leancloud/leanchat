@@ -3,6 +3,12 @@ import { z } from 'zod';
 export const BaseChatBotNodeSchema = z.object({
   id: z.string(),
   next: z.array(z.string()),
+  position: z
+    .object({
+      x: z.number(),
+      y: z.number(),
+    })
+    .optional(),
 });
 
 export const OnConversationCreated = BaseChatBotNodeSchema.extend({
