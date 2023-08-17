@@ -13,12 +13,14 @@ import { EventHandler } from './event-handler';
 
 @Module({
   imports: [
-    BullModule.registerQueue({
-      name: QUEUE_CHAT_BOT_DISPATCH,
-    }),
-    BullModule.registerQueue({
-      name: QUEUE_CHAT_BOT_PROCESS,
-    }),
+    BullModule.registerQueue(
+      {
+        name: QUEUE_CHAT_BOT_DISPATCH,
+      },
+      {
+        name: QUEUE_CHAT_BOT_PROCESS,
+      },
+    ),
     ConversationModule,
     MessageModule,
   ],

@@ -12,6 +12,7 @@ import { RedisModule } from './redis/redis.module';
 import { ChatCenterModule } from './chat-center/chat-center.module';
 import { VisitorChannelModule } from './visitor-channel/visitor-channel.module';
 import { LeanCloudModule } from './leancloud/leancloud.module';
+import { parseRedisUrl } from './redis/utils';
 
 @Module({
   imports: [
@@ -28,7 +29,7 @@ import { LeanCloudModule } from './leancloud/leancloud.module';
       useFactory: (config: ConfigService) => {
         return {
           prefix: 'chat:queue',
-          redis: config.getOrThrow('REDIS_URL_QUEUE'),
+          redis: parseRedisUrl(config.getOrThrow('REDIS_URL_QUEUE')),
           defaultJobOptions: {
             removeOnComplete: true,
             removeOnFail: true,
