@@ -20,17 +20,11 @@ export function NewChatBot() {
     mutationFn: createChatBot,
     onSuccess: () => {
       queryClient.invalidateQueries(['ChatBots']);
+      message.success('已保存');
     },
   });
 
-  return (
-    <ChatBotCreator
-      onSave={(name, nodes) => {
-        mutate({ name, nodes });
-      }}
-      onBack={() => navigate('..', { relative: 'path' })}
-    />
-  );
+  return <ChatBotCreator onSave={mutate} onBack={() => navigate('..', { relative: 'path' })} />;
 }
 
 export function ChatBotDetail() {
@@ -65,12 +59,9 @@ export function ChatBotDetail() {
 
   return (
     <ChatBotCreator
-      initialName={data.name}
-      initialNodes={data.nodes}
+      initialData={data}
       loading={isSaving}
-      onSave={(name, nodes) => {
-        mutate({ name, nodes });
-      }}
+      onSave={mutate}
       onBack={() => navigate('..', { relative: 'path' })}
     />
   );

@@ -1,5 +1,6 @@
 import { ComponentProps } from 'react';
 import cx from 'classnames';
+import { nanoid } from 'nanoid';
 
 import { ChatBotNode } from '@/App/Panel/types';
 
@@ -8,13 +9,13 @@ function TriggerButton(props: ComponentProps<'button'>) {
 }
 
 function ActionButton(props: ComponentProps<'button'>) {
-  return <button {...props} className="bg-red-500 text-white px-2 py-1 rounded" />;
+  return <button {...props} className="bg-[#303f9f] text-white px-2 py-1 rounded" />;
 }
 
 interface NodePanelProps {
   show?: boolean;
   onToggle: () => void;
-  onAddNode: (type: string, node: Partial<ChatBotNode>) => void;
+  onAddNode: (node: ChatBotNode) => void;
 }
 
 export function NodePanel({ show, onToggle, onAddNode }: NodePanelProps) {
@@ -24,21 +25,13 @@ export function NodePanel({ show, onToggle, onAddNode }: NodePanelProps) {
       <div className="flex flex-wrap gap-2">
         <TriggerButton
           onClick={() =>
-            onAddNode('event', {
+            onAddNode({
+              id: nanoid(16),
               type: 'onConversationCreated',
             })
           }
         >
-          用户创建会话
-        </TriggerButton>
-        <TriggerButton
-          onClick={() =>
-            onAddNode('event', {
-              type: 'onVisitorInactive',
-            })
-          }
-        >
-          用户未回复
+          创建对话
         </TriggerButton>
       </div>
 
@@ -46,7 +39,8 @@ export function NodePanel({ show, onToggle, onAddNode }: NodePanelProps) {
       <div className="flex flex-wrap gap-2">
         <ActionButton
           onClick={() =>
-            onAddNode('action', {
+            onAddNode({
+              id: nanoid(16),
               type: 'doSendMessage',
               message: {
                 content: '',
@@ -55,15 +49,6 @@ export function NodePanel({ show, onToggle, onAddNode }: NodePanelProps) {
           }
         >
           发送消息
-        </ActionButton>
-        <ActionButton
-          onClick={() =>
-            onAddNode('action', {
-              type: 'doCloseConversation',
-            })
-          }
-        >
-          关闭会话
         </ActionButton>
       </div>
     </>

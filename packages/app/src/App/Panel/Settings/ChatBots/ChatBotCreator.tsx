@@ -7,6 +7,7 @@ import {
   DefaultEdgeOptions,
   Edge,
   EdgeTypes,
+  MiniMap,
   Node,
   NodeTypes,
   OnConnect,
@@ -24,18 +25,17 @@ import 'reactflow/dist/style.css';
 import _ from 'lodash';
 import { Button, Input, Modal } from 'antd';
 import { useToggle } from 'react-use';
-import { nanoid } from 'nanoid';
 
-import { ChatBotNode } from '@/App/Panel/types';
+import { ChatBotEdge, ChatBotNode } from '@/App/Panel/types';
 import './flow.css';
 import { NodePanel } from './NodePanel';
-import { EventNode } from './EventNode';
-import { ActionNode } from './ActionNode';
 import { NodeEdge } from './NodeEdge';
+import { OnConversationCreated } from './Nodes/OnConversationCreated';
+import { DoSendMessage } from './Nodes/DoSendMessage';
 
 const nodeTypes: NodeTypes = {
-  event: EventNode,
-  action: ActionNode,
+  onConversationCreated: OnConversationCreated,
+  doSendMessage: DoSendMessage,
 };
 
 const edgeTypes: EdgeTypes = {
@@ -59,19 +59,6 @@ function canReachNode(from: Node, to: Node, nodes: Node[], edges: Edge[]) {
   return false;
 }
 
-function getFlowNodeType(chatBotNodeType: string) {
-  if (chatBotNodeType.startsWith('on')) {
-    return 'event';
-  }
-  if (chatBotNodeType.startsWith('is')) {
-    return 'condition';
-  }
-  if (chatBotNodeType.startsWith('do')) {
-    return 'action';
-  }
-  return 'unknown';
-}
-
 function hasOrphanNode(nodes: Node[], edges: Edge[]) {
   return nodes.some((node) => {
     const inNodes = getIncomers(node, nodes, edges);
@@ -80,53 +67,49 @@ function hasOrphanNode(nodes: Node[], edges: Edge[]) {
   });
 }
 
+interface ChatBotCreatorData {
+  name: string;
+  nodes: ChatBotNode[];
+  edges: ChatBotEdge[];
+}
+
 interface ChatBotCreatorProps {
-  initialName?: string;
-  initialNodes?: ChatBotNode[];
-  onSave: (name: string, nodes: ChatBotNode[]) => void;
+  initialData?: ChatBotCreatorData;
+  onSave: (data: ChatBotCreatorData) => void;
   onBack?: () => void;
   loading?: boolean;
 }
 
-function ChatBotCreatorInner({
-  initialName,
-  initialNodes,
-  onSave,
-  onBack,
-  loading,
-}: ChatBotCreatorProps) {
-  const initialFlowNodes = useMemo<Node[]>(() => {
-    if (!initialNodes) {
-      return [];
-    }
-    return initialNodes.map((node) => {
-      return {
+function ChatBotCreatorInner({ initialData, onSave, onBack, loading }: ChatBotCreatorProps) {
+  const { initialNodes, initialEdges } = useMemo(() => {
+    const initialNodes: Node[] = [];
+    const initialEdges: Edge[] = [];
+
+    initialData?.nodes.forEach((node) => {
+      initialNodes.push({
         id: node.id,
-        type: getFlowNodeType(node.type),
+        type: node.type,
         data: node,
         position: node.position || { x: 0, y: 0 },
         dragHandle: '.dragHandle',
-      };
-    });
-  }, [initialNodes]);
-
-  const initialFlowEdges = useMemo<Edge[]>(() => {
-    if (!initialNodes) {
-      return [];
-    }
-    return initialNodes.flatMap((node) => {
-      return node.next.map((next) => {
-        return {
-          id: `${node.id}-${next}`,
-          source: node.id,
-          target: next,
-        };
       });
     });
-  }, [initialNodes]);
 
-  const [nodes, setNodes, onNodesChange] = useNodesState(initialFlowNodes);
-  const [edges, setEdges, onEdgesChange] = useEdgesState(initialFlowEdges);
+    initialData?.edges.forEach((edge) => {
+      initialEdges.push({
+        id: `${edge.sourceNode}-${edge.targetNode}`,
+        source: edge.sourceNode,
+        sourceHandle: edge.sourcePin,
+        target: edge.targetNode,
+        targetHandle: edge.targetPin,
+      });
+    });
+
+    return { initialNodes, initialEdges };
+  }, [initialData]);
+
+  const [nodes, setNodes, onNodesChange] = useNodesState(initialNodes);
+  const [edges, setEdges, onEdgesChange] = useEdgesState(initialEdges);
 
   const onConnect = useCallback<OnConnect>(
     (conn) => setEdges((eds) => addEdge(conn, eds)),
@@ -135,17 +118,13 @@ function ChatBotCreatorInner({
 
   const viewport = useViewport();
 
-  const handleAddNode = (type: string, botNode: Partial<ChatBotNode>) => {
-    const id = nanoid(16);
+  const handleAddNode = (botNode: ChatBotNode) => {
     const node: Node = {
-      id,
-      type,
+      id: botNode.id,
+      type: botNode.type,
       position: { x: -viewport.x, y: -viewport.y },
       dragHandle: '.dragHandle',
-      data: {
-        id,
-        ...botNode,
-      },
+      data: botNode,
     };
     setNodes((nodes) => [...nodes, node]);
   };
@@ -162,7 +141,7 @@ function ChatBotCreatorInner({
     return !canReachNode(targetNode, sourceNode, nodes, edges);
   };
 
-  const [name, setName] = useState(initialName || '');
+  const [name, setName] = useState(initialData?.name || '');
   const [showPanel, togglePanel] = useToggle(true);
 
   const handleCreate = () => {
@@ -176,10 +155,7 @@ function ChatBotCreatorInner({
     }
 
     if (error) {
-      return Modal.info({
-        title: '提示',
-        content: error,
-      });
+      return Modal.info({ title: '提示', content: error });
     }
 
     const botNodes: ChatBotNode[] = nodes.map((node) => {
@@ -187,14 +163,24 @@ function ChatBotCreatorInner({
         ...node.data,
         id: node.id,
         position: {
-          x: node.position.x,
-          y: node.position.y,
+          x: Math.round(node.position.x),
+          y: Math.round(node.position.y),
         },
-        next: getOutgoers(node, nodes, edges).map((node) => node.id),
       };
     });
 
-    onSave(name, botNodes);
+    const botEdges: ChatBotEdge[] = edges.map((edge) => ({
+      sourceNode: edge.source!,
+      sourcePin: edge.sourceHandle!,
+      targetNode: edge.target!,
+      targetPin: edge.targetHandle!,
+    }));
+
+    onSave({
+      name,
+      nodes: botNodes,
+      edges: botEdges,
+    });
   };
 
   return (
@@ -235,6 +221,7 @@ function ChatBotCreatorInner({
         <Panel position="top-right" style={{ top: 60, bottom: showPanel ? 0 : undefined }}>
           <NodePanel show={showPanel} onToggle={togglePanel} onAddNode={handleAddNode} />
         </Panel>
+        <MiniMap pannable />
       </ReactFlow>
     </>
   );

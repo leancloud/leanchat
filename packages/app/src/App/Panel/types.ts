@@ -30,7 +30,6 @@ export interface Operator {
 export interface ChatBotNode {
   id: string;
   type: string;
-  next: string[];
   position?: {
     x: number;
     y: number;
@@ -38,8 +37,16 @@ export interface ChatBotNode {
   [key: string]: any;
 }
 
+export interface ChatBotEdge {
+  sourceNode: string;
+  sourcePin: string;
+  targetNode: string;
+  targetPin: string;
+}
+
 export interface ChatBot {
   id: string;
   name: string;
   nodes: ChatBotNode[];
+  edges: ChatBotEdge[];
 }

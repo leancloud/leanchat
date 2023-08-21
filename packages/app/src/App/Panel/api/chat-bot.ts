@@ -1,9 +1,10 @@
-import { ChatBot, ChatBotNode } from '@/App/Panel/types';
+import { ChatBot, ChatBotEdge, ChatBotNode } from '@/App/Panel/types';
 import { client } from './client';
 
 interface CreateChatBotData {
   name: string;
   nodes: ChatBotNode[];
+  edges: ChatBotEdge[];
 }
 
 export async function createChatBot(data: CreateChatBotData) {
@@ -24,6 +25,7 @@ export async function getChatBot(id: string) {
 export interface UpdateChatBotData {
   name?: string;
   nodes?: ChatBotNode[];
+  edges?: ChatBotEdge[];
 }
 
 export async function updateChatBot(id: string, data: UpdateChatBotData) {
