@@ -2,8 +2,8 @@ import { Injectable } from '@nestjs/common';
 import AV from 'leancloud-storage';
 import _ from 'lodash';
 
-import { ChatBotNodeSchema } from './schemas';
 import {
+  ChatBotEdge,
   ChatBotNode,
   CreateChatBotData,
   UpdateChatBotData,
@@ -12,22 +12,14 @@ import { ChatBot } from './chat-bot.entity';
 
 @Injectable()
 export class ChatBotService {
-  validateChatBotNodes(nodes: unknown[]) {
-    const parsedNodes: ChatBotNode[] = [];
-    for (const node of nodes) {
-      const result = ChatBotNodeSchema.safeParse(node);
-      if (!result.success) {
-        return false;
-      }
-      parsedNodes.push(result.data);
-    }
-    if (this.detectFlowLoop(parsedNodes)) {
+  validateChatBotNodes(nodes: ChatBotNode[], edges: ChatBotEdge[]) {
+    if (this.detectFlowLoop(nodes, edges)) {
       return false;
     }
     return true;
   }
 
-  detectFlowLoop(nodes: ChatBotNode[]) {
+  detectFlowLoop(nodes: ChatBotNode[], edges: ChatBotEdge[]) {
     const nodeMap = _.keyBy(nodes, (node) => node.id);
     const visitedNodes = new Set<string>();
     const hasLoop = (node: ChatBotNode) => {
@@ -35,7 +27,10 @@ export class ChatBotService {
         return true;
       }
       visitedNodes.add(node.id);
-      for (const nextId of node.next) {
+      const targets = edges
+        .filter((edge) => edge.sourceNode === node.id)
+        .map((edge) => edge.targetNode);
+      for (const nextId of targets) {
         const node = nodeMap[nextId];
         if (node && hasLoop(node)) {
           return true;
@@ -51,6 +46,7 @@ export class ChatBotService {
     const obj = new AV.Object('ChatBot', {
       name: data.name,
       nodes: data.nodes,
+      edges: data.edges,
     });
     await obj.save(null, { useMasterKey: true });
     return ChatBot.fromAVObject(obj);
@@ -80,6 +76,9 @@ export class ChatBotService {
     }
     if (data.nodes) {
       obj.set('nodes', data.nodes);
+    }
+    if (data.edges) {
+      obj.set('edges', data.edges);
     }
     await obj.save(null, { useMasterKey: true });
   }

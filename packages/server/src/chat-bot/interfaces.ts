@@ -1,6 +1,5 @@
 interface BaseChatBodeNode {
   id: string;
-  next: string[];
 }
 
 export interface OnConversationCreated extends BaseChatBodeNode {
@@ -20,14 +19,23 @@ export interface ChatBotContext {
 
 export type ChatBotNode = OnConversationCreated | DoSendMessageConfig;
 
+export interface ChatBotEdge {
+  sourceNode: string;
+  sourcePin: string;
+  targetNode: string;
+  targetPin: string;
+}
+
 export interface CreateChatBotData {
   name: string;
   nodes: ChatBotNode[];
+  edges: ChatBotEdge[];
 }
 
 export interface UpdateChatBotData {
   name?: string;
   nodes?: ChatBotNode[];
+  edges?: ChatBotEdge[];
 }
 
 export interface ChatBotDispatchJobData {
@@ -39,5 +47,6 @@ export interface ChatBotProcessJobData {
   chatBotId: string;
   nodeId: string;
   nodes: ChatBotNode[];
+  edges: ChatBotEdge[];
   context: ChatBotContext;
 }

@@ -22,7 +22,10 @@ export class ChatBotController {
 
   @Post()
   createChatBot(@Body() data: CreateChatBotDto) {
-    const result = this.chatBotService.validateChatBotNodes(data.nodes);
+    const result = this.chatBotService.validateChatBotNodes(
+      data.nodes,
+      data.edges,
+    );
     if (!result) {
       throw new BadRequestException('机器人配置不合法');
     }

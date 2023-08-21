@@ -1,5 +1,4 @@
 import { InjectQueue, Process, Processor } from '@nestjs/bull';
-import { EventEmitter2 } from '@nestjs/event-emitter';
 import { Job, Queue } from 'bull';
 
 import { ConversationService } from 'src/conversation';
@@ -14,7 +13,6 @@ import {
 @Processor(QUEUE_CHAT_BOT_PROCESS)
 export class ChatBotProcessProcessor {
   constructor(
-    private events: EventEmitter2,
     @InjectQueue(QUEUE_CHAT_BOT_PROCESS)
     private queue: Queue<ChatBotProcessJobData>,
     private conversationService: ConversationService,
@@ -30,27 +28,26 @@ export class ChatBotProcessProcessor {
       return;
     }
 
-    let nextIds: string[] = [];
+    let nextId: string | undefined;
     switch (node.type) {
       case 'onConversationCreated':
-        nextIds = this.processEventNode(node);
+        nextId = this.getNextNodeId(node, job.data);
         break;
       case 'doSendMessage':
-        nextIds = await this.processDoSendMessage(job.data, node);
+        nextId = await this.processDoSendMessage(job.data, node);
         break;
     }
 
-    if (nextIds.length) {
-      await this.queue.addBulk(
-        nextIds
-          .map((nodeId) => ({ ...job.data, nodeId }))
-          .map((data) => ({ data })),
-      );
+    if (nextId) {
+      await this.queue.add({
+        ...job.data,
+        nodeId: nextId,
+      });
     }
   }
 
-  processEventNode(node: ChatBotNode) {
-    return node.next;
+  getNextNodeId(node: ChatBotNode, data: ChatBotProcessJobData) {
+    return data.edges.find((edge) => edge.sourceNode === node.id)?.targetNode;
   }
 
   async processDoSendMessage(
@@ -69,6 +66,6 @@ export class ChatBotProcessProcessor {
         data: node.message,
       });
     }
-    return node.next;
+    return this.getNextNodeId(node, data);
   }
 }

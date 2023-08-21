@@ -19,19 +19,26 @@ export class ChatBotDispatchProcessor {
 
     const chatBots = await this.chatBotService.getChatBotsByNodeType(type);
 
-    const datas = chatBots.flatMap((chatBot) =>
+    const datas: ChatBotProcessJobData[] = [];
+
+    chatBots.forEach((chatBot) => {
       chatBot.nodes
         .filter((node) => node.type === type)
-        .flatMap((node) => node.next)
-        .map((nodeId) => {
-          return {
-            chatBotId: chatBot.id,
-            nodes: chatBot.nodes,
-            nodeId,
-            context,
-          };
-        }),
-    );
+        .forEach((node) => {
+          const edge = chatBot.edges.find(
+            (edge) => edge.sourceNode === node.id,
+          );
+          if (edge) {
+            datas.push({
+              chatBotId: chatBot.id,
+              nodes: chatBot.nodes,
+              edges: chatBot.edges,
+              nodeId: edge.targetNode,
+              context,
+            });
+          }
+        });
+    });
 
     if (datas.length) {
       await this.chatBotProcessQueue.addBulk(datas.map((data) => ({ data })));
