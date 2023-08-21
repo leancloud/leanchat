@@ -13,6 +13,8 @@ export class Conversation {
 
   queuedAt?: Date;
 
+  visitorLastActivityAt?: Date;
+
   createdAt: Date;
 
   static fromAVObject(obj: { get(key: string): any }) {
@@ -23,6 +25,7 @@ export class Conversation {
     conv.lastMessage = obj.get('lastMessage');
     conv.status = obj.get('status');
     conv.queuedAt = obj.get('queuedAt');
+    conv.visitorLastActivityAt = obj.get('visitorLastActivityAt');
     conv.createdAt = obj.get('createdAt');
     return conv;
   }

@@ -6,18 +6,32 @@ export interface OnConversationCreated extends BaseChatBodeNode {
   type: 'onConversationCreated';
 }
 
-export interface DoSendMessageConfig extends BaseChatBodeNode {
+export interface OnVisitorInactive extends BaseChatBodeNode {
+  type: 'onVisitorInactive';
+  inactiveDuration: number;
+  repeatInterval: number;
+}
+
+export interface DoSendMessage extends BaseChatBodeNode {
   type: 'doSendMessage';
   message: {
     content: string;
   };
 }
 
+export interface DoCloseConversation extends BaseChatBodeNode {
+  type: 'doCloseConversation';
+}
+
 export interface ChatBotContext {
   conversationId: string;
 }
 
-export type ChatBotNode = OnConversationCreated | DoSendMessageConfig;
+export type ChatBotNode =
+  | OnConversationCreated
+  | OnVisitorInactive
+  | DoSendMessage
+  | DoCloseConversation;
 
 export interface ChatBotEdge {
   sourceNode: string;

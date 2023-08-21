@@ -16,7 +16,7 @@ import {
 } from '@nestjs/websockets';
 import { Request } from 'express';
 import { Namespace, Socket } from 'socket.io';
-import { EventEmitter2, OnEvent } from '@nestjs/event-emitter';
+import { OnEvent } from '@nestjs/event-emitter';
 import { ZodValidationPipe } from 'nestjs-zod';
 import { z } from 'nestjs-zod/z';
 
@@ -49,7 +49,6 @@ export class ChatGateway
   private server: Namespace;
 
   constructor(
-    private events: EventEmitter2,
     private conversationService: ConversationService,
     private operatorService: OperatorService,
     private messageService: MessageService,

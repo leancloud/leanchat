@@ -38,6 +38,6 @@ export class MessageService {
       query.containedIn('type', types);
     }
     const objs = await query.find({ useMasterKey: true });
-    return objs.map((obj) => Message.fromAVObject(obj as AV.Object));
+    return objs.map((obj) => Message.fromAVObject(obj));
   }
 }

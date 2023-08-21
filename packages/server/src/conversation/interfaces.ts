@@ -5,6 +5,7 @@ export interface UpdateConversationData {
   operatorId?: string;
   lastMessage?: Message;
   queuedAt?: Date;
+  visitorLastActivityAt?: Date;
 }
 
 export interface GetConversationOptions {
@@ -14,4 +15,5 @@ export interface GetConversationOptions {
 
   sort?: string;
   desc?: boolean;
+  limit?: number;
 }

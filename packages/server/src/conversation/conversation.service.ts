@@ -80,6 +80,10 @@ export class ConversationService {
       obj.set('lastMessage', data.lastMessage);
       newConv.lastMessage = data.lastMessage;
     }
+    if (data.visitorLastActivityAt) {
+      obj.set('visitorLastActivityAt', data.visitorLastActivityAt);
+      newConv.visitorLastActivityAt = data.visitorLastActivityAt;
+    }
     await obj.save(null, { useMasterKey: true });
     if (this.cache.has(conv.id)) {
       this.cache.set(conv.id, newConv);
@@ -93,6 +97,7 @@ export class ConversationService {
     operatorId,
     sort = 'createdAt',
     desc = false,
+    limit,
   }: GetConversationOptions) {
     const query = new AV.Query('ChatConversation');
     if (status) {
@@ -112,6 +117,10 @@ export class ConversationService {
       query.addDescending(sort);
     } else {
       query.addAscending(sort);
+    }
+
+    if (limit) {
+      query.limit(limit);
     }
 
     const objs = await query.find({ useMasterKey: true });

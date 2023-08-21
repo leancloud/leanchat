@@ -17,18 +17,34 @@ export const ChatBotEdgeSchema = z.object({
   targetPin: z.string(),
 });
 
-export const OnConversationCreated = BaseChatBotNodeSchema.extend({
+// Events
+
+const OnConversationCreated = BaseChatBotNodeSchema.extend({
   type: z.literal('onConversationCreated'),
 });
 
-export const DoSendMessage = BaseChatBotNodeSchema.extend({
+const OnVisitorInactive = BaseChatBotNodeSchema.extend({
+  type: z.literal('onVisitorInactive'),
+  inactiveDuration: z.number().int().positive(),
+  repeatInterval: z.number().int().min(0),
+});
+
+// Actions
+
+const DoSendMessage = BaseChatBotNodeSchema.extend({
   type: z.literal('doSendMessage'),
   message: z.object({
     content: z.string(),
   }),
 });
 
+const DoCloseConversation = BaseChatBotNodeSchema.extend({
+  type: z.literal('doCloseConversation'),
+});
+
 export const ChatBotNodeSchema = z.discriminatedUnion('type', [
   OnConversationCreated,
+  OnVisitorInactive,
   DoSendMessage,
+  DoCloseConversation,
 ]);

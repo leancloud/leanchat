@@ -47,7 +47,7 @@ import {
     VisitorController,
     ChatBotController,
   ],
-  exports: [AssignService],
+  exports: [AssignService, ChatConversationService],
 })
 export class ChatCenterModule implements NestModule {
   configure(consumer: MiddlewareConsumer) {

@@ -1,5 +1,3 @@
-import AV from 'leancloud-storage';
-
 export class Message {
   id: string;
 
@@ -13,18 +11,17 @@ export class Message {
 
   data: any;
 
-  createdAt: string;
+  createdAt: Date;
 
-  static fromAVObject(obj: AV.Object) {
-    const json = obj.toJSON();
+  static fromAVObject(obj: { get(key: string): any }) {
     const message = new Message();
-    message.id = json.objectId;
-    message.visitorId = json.visitorId;
-    message.conversationId = json.conversationId;
-    message.type = json.type;
-    message.from = json.from;
-    message.data = json.data;
-    message.createdAt = json.createdAt;
+    message.id = obj.get('objectId');
+    message.visitorId = obj.get('visitorId');
+    message.conversationId = obj.get('conversationId');
+    message.type = obj.get('type');
+    message.from = obj.get('from');
+    message.data = obj.get('data');
+    message.createdAt = obj.get('createdAt');
     return message;
   }
 }
