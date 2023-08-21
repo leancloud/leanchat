@@ -1,4 +1,4 @@
-import { useCallback, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import {
   Background,
   BackgroundVariant,
@@ -19,6 +19,7 @@ import {
   getOutgoers,
   useEdgesState,
   useNodesState,
+  useReactFlow,
   useViewport,
 } from 'reactflow';
 import 'reactflow/dist/style.css';
@@ -27,14 +28,19 @@ import { Button, Input, Modal } from 'antd';
 import { useToggle } from 'react-use';
 
 import { ChatBotEdge, ChatBotNode } from '@/App/Panel/types';
+import { useEffectEvent } from '@/App/Panel/hooks/useEffectEvent';
 import './flow.css';
 import { NodePanel } from './NodePanel';
 import { NodeEdge } from './NodeEdge';
 import { OnConversationCreated } from './Nodes/OnConversationCreated';
 import { DoSendMessage } from './Nodes/DoSendMessage';
+import { OnVisitorInactive } from './Nodes/OnVisitorInactive';
+import { DoCloseConversation } from './Nodes/DoCloseConversation';
 
 const nodeTypes: NodeTypes = {
   onConversationCreated: OnConversationCreated,
+  onVisitorInactive: OnVisitorInactive,
+  doCloseConversation: DoCloseConversation,
   doSendMessage: DoSendMessage,
 };
 
@@ -67,6 +73,14 @@ function hasOrphanNode(nodes: Node[], edges: Edge[]) {
   });
 }
 
+function useFitView() {
+  const { fitView } = useReactFlow();
+  const fit = useEffectEvent(() => fitView({ maxZoom: 1 }));
+  useEffect(() => {
+    setTimeout(fit);
+  }, []);
+}
+
 interface ChatBotCreatorData {
   name: string;
   nodes: ChatBotNode[];
@@ -97,11 +111,11 @@ function ChatBotCreatorInner({ initialData, onSave, onBack, loading }: ChatBotCr
 
     initialData?.edges.forEach((edge) => {
       initialEdges.push({
-        id: `${edge.sourceNode}-${edge.targetNode}`,
+        id: `${edge.sourceNode}.${edge.sourcePin}-${edge.targetNode}.${edge.targetPin}`,
         source: edge.sourceNode,
-        sourceHandle: edge.sourcePin,
+        sourceHandle: `${edge.sourceNode}.${edge.sourcePin}`,
         target: edge.targetNode,
-        targetHandle: edge.targetPin,
+        targetHandle: `${edge.targetNode}.${edge.targetPin}`,
       });
     });
 
@@ -110,6 +124,8 @@ function ChatBotCreatorInner({ initialData, onSave, onBack, loading }: ChatBotCr
 
   const [nodes, setNodes, onNodesChange] = useNodesState(initialNodes);
   const [edges, setEdges, onEdgesChange] = useEdgesState(initialEdges);
+
+  useFitView();
 
   const onConnect = useCallback<OnConnect>(
     (conn) => setEdges((eds) => addEdge(conn, eds)),
@@ -170,10 +186,10 @@ function ChatBotCreatorInner({ initialData, onSave, onBack, loading }: ChatBotCr
     });
 
     const botEdges: ChatBotEdge[] = edges.map((edge) => ({
-      sourceNode: edge.source!,
-      sourcePin: edge.sourceHandle!,
-      targetNode: edge.target!,
-      targetPin: edge.targetHandle!,
+      sourceNode: edge.source,
+      sourcePin: edge.sourceHandle!.slice(edge.source.length + 1),
+      targetNode: edge.target,
+      targetPin: edge.targetHandle!.slice(edge.target.length + 1),
     }));
 
     onSave({
@@ -197,7 +213,7 @@ function ChatBotCreatorInner({ initialData, onSave, onBack, loading }: ChatBotCr
         isValidConnection={isValidConnection}
         defaultEdgeOptions={defaultEdgeOptions}
       >
-        <Controls />
+        <Controls fitViewOptions={{ maxZoom: 1 }} />
         <Background variant={BackgroundVariant.Cross} />
         <Panel position="top-left">
           <Input

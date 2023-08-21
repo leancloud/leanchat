@@ -28,7 +28,7 @@ export function NodeContainer({ type, onRemove, children }: NodeContainerProps) 
           <MdClose className="w-[12px] h-[12px]" />
         </button>
       </div>
-      {children}
+      <div className="cursor-default">{children}</div>
     </div>
   );
 }

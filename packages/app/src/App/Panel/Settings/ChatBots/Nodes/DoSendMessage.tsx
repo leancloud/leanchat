@@ -18,8 +18,8 @@ export const DoSendMessage = withNode('action', ({ data, setData }) => {
     <div className="w-[300px] py-2">
       <div className="px-2 relative">
         发送消息
-        <NodeHandle id="defaultTarget" type="target" />
-        <NodeHandle id="defaultSource" type="source" />
+        <NodeHandle type="target" id={`${data.id}.in`} />
+        <NodeHandle type="source" id={`${data.id}.out`} />
       </div>
       <div className="px-2 pt-2">
         <Input.TextArea
