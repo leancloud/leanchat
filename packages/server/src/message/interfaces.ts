@@ -17,7 +17,11 @@ export interface FileMessageData {
   size?: number;
 }
 
-export type MessageData = TextMessageData | FileMessageData;
+export interface LogMessageData {
+  type: 'evaluateInvitationSent';
+}
+
+export type MessageData = TextMessageData | FileMessageData | LogMessageData;
 
 export interface CreateMessageData {
   visitorId: string;

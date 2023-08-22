@@ -37,6 +37,7 @@ import {
 import { ChatConversationService } from './services/chat-conversation.service';
 import { AssignConversationDto } from './dtos/assign-conversation.dto';
 import { CloseConversationDto } from './dtos/close-conversation.dto';
+import { InviteEvaluationDto } from './dtos/invite-evaluation.dto';
 
 @WebSocketGateway({ namespace: 'o' })
 @UseFilters(WsFilter)
@@ -146,6 +147,32 @@ export class ChatGateway
 
     await this.conversationService.updateConversation(conv, {
       lastMessage: message,
+    });
+  }
+
+  @SubscribeMessage('inviteEvaluation')
+  async handleInviteEvaluation(
+    @ConnectedSocket() socket: Socket,
+    @MessageBody() data: InviteEvaluationDto,
+  ) {
+    const conv = await this.conversationService.getConversation(
+      data.conversationId,
+    );
+    if (!conv) {
+      throw new WsException('会话不存在');
+    }
+    if (conv.evaluation) {
+      throw new WsException('会话已评价');
+    }
+
+    await this.messageService.createMessage({
+      visitorId: conv.visitorId,
+      conversationId: conv.id,
+      from: { type: 'system', id: 'system' },
+      type: 'log',
+      data: {
+        type: 'evaluateInvitationSent',
+      },
     });
   }
 

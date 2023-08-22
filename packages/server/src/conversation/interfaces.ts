@@ -6,6 +6,10 @@ export interface UpdateConversationData {
   lastMessage?: Message;
   queuedAt?: Date;
   visitorLastActivityAt?: Date;
+  evaluation?: {
+    star: number;
+    feedback: string;
+  };
 }
 
 export interface GetConversationOptions {

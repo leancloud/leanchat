@@ -84,6 +84,10 @@ export class ConversationService {
       obj.set('visitorLastActivityAt', data.visitorLastActivityAt);
       newConv.visitorLastActivityAt = data.visitorLastActivityAt;
     }
+    if (data.evaluation) {
+      obj.set('evaluation', data.evaluation);
+      newConv.evaluation = data.evaluation;
+    }
     await obj.save(null, { useMasterKey: true });
     if (this.cache.has(conv.id)) {
       this.cache.set(conv.id, newConv);
