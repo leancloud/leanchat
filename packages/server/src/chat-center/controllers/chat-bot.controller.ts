@@ -11,47 +11,47 @@ import {
 } from '@nestjs/common';
 import { ZodValidationPipe } from 'nestjs-zod';
 
-import { ChatBotService } from 'src/chat-bot';
-import { CreateChatBotDto } from '../dtos/chat-bot';
-import { UpdateChatBotDto } from '../dtos/chat-bot/update-chat-bot.dto';
+import { ChatbotService } from 'src/chatbot';
+import { CreateChatbotDto } from '../dtos/chat-bot';
+import { UpdateChatbotDto } from '../dtos/chat-bot/update-chat-bot.dto';
 
 @Controller('chat-bots')
 @UsePipes(ZodValidationPipe)
-export class ChatBotController {
-  constructor(private chatBotService: ChatBotService) {}
+export class ChatbotController {
+  constructor(private chatbotService: ChatbotService) {}
 
   @Post()
-  createChatBot(@Body() data: CreateChatBotDto) {
-    const result = this.chatBotService.validateChatBotNodes(
+  createChatbot(@Body() data: CreateChatbotDto) {
+    const result = this.chatbotService.validateChatbotNodes(
       data.nodes,
       data.edges,
     );
     if (!result) {
       throw new BadRequestException('机器人配置不合法');
     }
-    return this.chatBotService.createChatBot(data);
+    return this.chatbotService.createChatbot(data);
   }
 
   @Get()
-  getChatBots() {
-    return this.chatBotService.getChatBots();
+  getChatbots() {
+    return this.chatbotService.getChatbots();
   }
 
   @Get(':id')
-  async getChatBot(@Param('id') id: string) {
-    const chatBot = await this.chatBotService.getChatBot(id);
-    if (!chatBot) {
+  async getChatbot(@Param('id') id: string) {
+    const chatbot = await this.chatbotService.getChatbot(id);
+    if (!chatbot) {
       throw new NotFoundException(`聊天机器人 ${id} 不存在`);
     }
-    return chatBot;
+    return chatbot;
   }
 
   @Patch(':id')
-  async updateChatBot(@Param('id') id: string, @Body() data: UpdateChatBotDto) {
-    const chatBot = await this.chatBotService.getChatBot(id);
-    if (!chatBot) {
+  async updateChatbot(@Param('id') id: string, @Body() data: UpdateChatbotDto) {
+    const chatbot = await this.chatbotService.getChatbot(id);
+    if (!chatbot) {
       throw new NotFoundException(`聊天机器人 ${id} 不存在`);
     }
-    await this.chatBotService.updateChatBot(chatBot, data);
+    await this.chatbotService.updateChatbot(chatbot, data);
   }
 }

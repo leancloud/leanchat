@@ -4,11 +4,11 @@ import { BullModule } from '@nestjs/bull';
 import { ConversationModule } from 'src/conversation/conversation.module';
 import { MessageModule } from 'src/message/message.module';
 import { ChatCenterModule } from 'src/chat-center/chat-center.module';
-import { ChatBotService } from './chat-bot.service';
-import { QUEUE_CHAT_BOT_DISPATCH, QUEUE_CHAT_BOT_PROCESS } from './constants';
+import { ChatbotService } from './chatbot.service';
+import { QUEUE_CHATBOT_DISPATCH, QUEUE_CHATBOT_PROCESS } from './constants';
 import {
-  ChatBotDispatchProcessor,
-  ChatBotProcessProcessor,
+  ChatbotDispatchProcessor,
+  ChatbotProcessProcessor,
 } from './processors';
 import { EventHandler } from './event-handler';
 
@@ -16,10 +16,10 @@ import { EventHandler } from './event-handler';
   imports: [
     BullModule.registerQueue(
       {
-        name: QUEUE_CHAT_BOT_DISPATCH,
+        name: QUEUE_CHATBOT_DISPATCH,
       },
       {
-        name: QUEUE_CHAT_BOT_PROCESS,
+        name: QUEUE_CHATBOT_PROCESS,
       },
     ),
     ConversationModule,
@@ -27,11 +27,11 @@ import { EventHandler } from './event-handler';
     forwardRef(() => ChatCenterModule),
   ],
   providers: [
-    ChatBotService,
-    ChatBotDispatchProcessor,
-    ChatBotProcessProcessor,
+    ChatbotService,
+    ChatbotDispatchProcessor,
+    ChatbotProcessProcessor,
     EventHandler,
   ],
-  exports: [ChatBotService],
+  exports: [ChatbotService],
 })
-export class ChatBotModule {}
+export class ChatbotModule {}

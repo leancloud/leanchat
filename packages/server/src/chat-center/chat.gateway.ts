@@ -139,11 +139,9 @@ export class ChatGateway
     const message = await this.messageService.createMessage({
       visitorId: conv.visitorId,
       conversationId: conv.id,
-      type: 'operator',
-      from: operatorId,
-      data: {
-        content: data.content,
-      },
+      type: 'message',
+      from: { type: 'operator', id: operatorId },
+      data: data.data,
     });
 
     await this.conversationService.updateConversation(conv, {

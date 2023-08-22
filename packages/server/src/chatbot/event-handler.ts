@@ -9,9 +9,9 @@ import _ from 'lodash';
 import { ConversationCreatedEvent } from 'src/event';
 import { REDIS } from 'src/redis';
 import { ConversationService } from 'src/conversation';
-import { QUEUE_CHAT_BOT_DISPATCH, QUEUE_CHAT_BOT_PROCESS } from './constants';
-import { ChatBotDispatchJobData, ChatBotProcessJobData } from './interfaces';
-import { ChatBotService } from './chat-bot.service';
+import { QUEUE_CHATBOT_DISPATCH, QUEUE_CHATBOT_PROCESS } from './constants';
+import { ChatbotDispatchJobData, ChatbotProcessJobData } from './interfaces';
+import { ChatbotService } from './chatbot.service';
 
 @Injectable()
 export class EventHandler {
@@ -19,17 +19,17 @@ export class EventHandler {
   private redis: Redis;
 
   constructor(
-    @InjectQueue(QUEUE_CHAT_BOT_DISPATCH)
-    private chatBotDispatchQueue: Queue<ChatBotDispatchJobData>,
-    @InjectQueue(QUEUE_CHAT_BOT_PROCESS)
-    private chatBotProcessQueue: Queue<ChatBotProcessJobData>,
+    @InjectQueue(QUEUE_CHATBOT_DISPATCH)
+    private chatbotDispatchQueue: Queue<ChatbotDispatchJobData>,
+    @InjectQueue(QUEUE_CHATBOT_PROCESS)
+    private chatbotProcessQueue: Queue<ChatbotProcessJobData>,
     private conversationService: ConversationService,
-    private chatBotService: ChatBotService,
+    private chatbotService: ChatbotService,
   ) {}
 
   @OnEvent('conversation.created', { async: true })
   handleOnConversationCreated(payload: ConversationCreatedEvent) {
-    this.chatBotDispatchQueue.add({
+    this.chatbotDispatchQueue.add({
       type: 'onConversationCreated',
       context: {
         conversationId: payload.conversation.id,
@@ -44,10 +44,10 @@ export class EventHandler {
       return;
     }
 
-    const chatBots = await this.chatBotService.getChatBotsByNodeType(
+    const chatbots = await this.chatbotService.getChatbotsByNodeType(
       'onVisitorInactive',
     );
-    if (chatBots.length === 0) {
+    if (chatbots.length === 0) {
       return;
     }
 
@@ -59,11 +59,11 @@ export class EventHandler {
       return;
     }
 
-    const jobDatas: ChatBotProcessJobData[] = [];
+    const jobDatas: ChatbotProcessJobData[] = [];
 
     convs.forEach((conv) => {
-      chatBots.forEach((chatBot) => {
-        chatBot.nodes
+      chatbots.forEach((chatbot) => {
+        chatbot.nodes
           .filter((node) => {
             if (node.type === 'onVisitorInactive') {
               const visitorLastActivityAt =
@@ -76,9 +76,9 @@ export class EventHandler {
           })
           .forEach((node) => {
             jobDatas.push({
-              chatBotId: chatBot.id,
-              nodes: chatBot.nodes,
-              edges: chatBot.edges,
+              chatbotId: chatbot.id,
+              nodes: chatbot.nodes,
+              edges: chatbot.edges,
               nodeId: node.id,
               context: {
                 conversationId: conv.id,
@@ -90,7 +90,7 @@ export class EventHandler {
 
     const jobDataChunks = _.chunk(jobDatas, 20);
     for (const jobDatas of jobDataChunks) {
-      await this.chatBotProcessQueue.addBulk(
+      await this.chatbotProcessQueue.addBulk(
         jobDatas.map((data) => ({ data })),
       );
     }
@@ -98,7 +98,7 @@ export class EventHandler {
 
   private async acquireIntervalEventLock(timeout = 60) {
     const res = await this.redis.set(
-      'chat_bot_interval_lock',
+      'chatbot_interval_lock',
       1,
       'EX',
       timeout,

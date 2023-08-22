@@ -1,7 +1,7 @@
 import { createZodDto } from 'nestjs-zod';
 
-import { CreateChatBotSchema } from './create-chat-bot.dto';
+import { CreateChatbotSchema } from './create-chat-bot.dto';
 
-const UpdateChatBotSchema = CreateChatBotSchema.partial();
+const UpdateChatbotSchema = CreateChatbotSchema.partial();
 
-export class UpdateChatBotDto extends createZodDto(UpdateChatBotSchema) {}
+export class UpdateChatbotDto extends createZodDto(UpdateChatbotSchema) {}

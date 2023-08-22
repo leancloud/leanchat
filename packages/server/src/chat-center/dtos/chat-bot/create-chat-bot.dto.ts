@@ -1,12 +1,12 @@
 import { z } from 'zod';
 import { createZodDto } from 'nestjs-zod';
 
-import { ChatBotEdgeSchema, ChatBotNodeSchema } from 'src/chat-bot/schemas';
+import { ChatbotEdgeSchema, ChatbotNodeSchema } from 'src/chatbot/schemas';
 
-export const CreateChatBotSchema = z.object({
+export const CreateChatbotSchema = z.object({
   name: z.string(),
-  nodes: z.array(ChatBotNodeSchema),
-  edges: z.array(ChatBotEdgeSchema),
+  nodes: z.array(ChatbotNodeSchema),
+  edges: z.array(ChatbotEdgeSchema),
 });
 
-export class CreateChatBotDto extends createZodDto(CreateChatBotSchema) {}
+export class CreateChatbotDto extends createZodDto(CreateChatbotSchema) {}

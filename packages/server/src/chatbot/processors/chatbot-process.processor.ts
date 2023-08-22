@@ -7,30 +7,30 @@ import { ConversationService } from 'src/conversation';
 import { MessageService } from 'src/message';
 import { REDIS } from 'src/redis';
 import { ChatConversationService } from 'src/chat-center/services';
-import { QUEUE_CHAT_BOT_PROCESS } from '../constants';
+import { QUEUE_CHATBOT_PROCESS } from '../constants';
 import {
-  ChatBotNode,
-  ChatBotProcessJobData,
+  ChatbotNode,
+  ChatbotProcessJobData,
   DoCloseConversation,
   DoSendMessage,
   OnVisitorInactive,
 } from '../interfaces';
 
-@Processor(QUEUE_CHAT_BOT_PROCESS)
-export class ChatBotProcessProcessor {
+@Processor(QUEUE_CHATBOT_PROCESS)
+export class ChatbotProcessProcessor {
   @Inject(REDIS)
   private redis: Redis;
 
   constructor(
-    @InjectQueue(QUEUE_CHAT_BOT_PROCESS)
-    private queue: Queue<ChatBotProcessJobData>,
+    @InjectQueue(QUEUE_CHATBOT_PROCESS)
+    private queue: Queue<ChatbotProcessJobData>,
     private conversationService: ConversationService,
     private messageService: MessageService,
     private chatConvService: ChatConversationService,
   ) {}
 
   @Process()
-  async process(job: Job<ChatBotProcessJobData>) {
+  async process(job: Job<ChatbotProcessJobData>) {
     const { nodes, nodeId } = job.data;
 
     const node = nodes.find((node) => node.id === nodeId);
@@ -62,16 +62,16 @@ export class ChatBotProcessProcessor {
     }
   }
 
-  getNextNodeId(node: ChatBotNode, data: ChatBotProcessJobData) {
+  getNextNodeId(node: ChatbotNode, data: ChatbotProcessJobData) {
     return data.edges.find((edge) => edge.sourceNode === node.id)?.targetNode;
   }
 
   async processOnVisitorInactive(
     node: OnVisitorInactive,
-    data: ChatBotProcessJobData,
+    data: ChatbotProcessJobData,
   ) {
     if (node.repeatInterval) {
-      const key = `chat_bot_event_lock_${data.chatBotId}_${node.id}_${data.context.conversationId}`;
+      const key = `chatbot_event_lock_${data.chatbotId}_${node.id}_${data.context.conversationId}`;
       const res = await this.redis.set(key, 1, 'EX', node.repeatInterval, 'NX');
       if (res !== 'OK') {
         return;
@@ -94,16 +94,16 @@ export class ChatBotProcessProcessor {
     return this.getNextNodeId(node, data);
   }
 
-  async processDoSendMessage(node: DoSendMessage, data: ChatBotProcessJobData) {
-    const { chatBotId, context } = data;
+  async processDoSendMessage(node: DoSendMessage, data: ChatbotProcessJobData) {
+    const { chatbotId, context } = data;
     const { conversationId } = context;
     const conv = await this.conversationService.getConversation(conversationId);
     if (conv) {
       const message = await this.messageService.createMessage({
         visitorId: conv.visitorId,
         conversationId: conv.id,
-        type: 'chat-bot',
-        from: chatBotId,
+        type: 'message',
+        from: { type: 'chatbot', id: chatbotId },
         data: node.message,
       });
       await this.conversationService.updateConversation(conv, {
@@ -115,7 +115,7 @@ export class ChatBotProcessProcessor {
 
   async processDoCloseConversation(
     node: DoCloseConversation,
-    data: ChatBotProcessJobData,
+    data: ChatbotProcessJobData,
   ) {
     const conv = await this.conversationService.getConversation(
       data.context.conversationId,

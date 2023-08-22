@@ -1,3 +1,5 @@
+import { MessageData } from 'src/message/interfaces';
+
 interface BaseChatBodeNode {
   id: string;
 }
@@ -14,53 +16,51 @@ export interface OnVisitorInactive extends BaseChatBodeNode {
 
 export interface DoSendMessage extends BaseChatBodeNode {
   type: 'doSendMessage';
-  message: {
-    content: string;
-  };
+  message: MessageData;
 }
 
 export interface DoCloseConversation extends BaseChatBodeNode {
   type: 'doCloseConversation';
 }
 
-export interface ChatBotContext {
+export interface ChatbotContext {
   conversationId: string;
 }
 
-export type ChatBotNode =
+export type ChatbotNode =
   | OnConversationCreated
   | OnVisitorInactive
   | DoSendMessage
   | DoCloseConversation;
 
-export interface ChatBotEdge {
+export interface ChatbotEdge {
   sourceNode: string;
   sourcePin: string;
   targetNode: string;
   targetPin: string;
 }
 
-export interface CreateChatBotData {
+export interface CreateChatbotData {
   name: string;
-  nodes: ChatBotNode[];
-  edges: ChatBotEdge[];
+  nodes: ChatbotNode[];
+  edges: ChatbotEdge[];
 }
 
-export interface UpdateChatBotData {
+export interface UpdateChatbotData {
   name?: string;
-  nodes?: ChatBotNode[];
-  edges?: ChatBotEdge[];
+  nodes?: ChatbotNode[];
+  edges?: ChatbotEdge[];
 }
 
-export interface ChatBotDispatchJobData {
+export interface ChatbotDispatchJobData {
   type: string;
-  context: ChatBotContext;
+  context: ChatbotContext;
 }
 
-export interface ChatBotProcessJobData {
-  chatBotId: string;
+export interface ChatbotProcessJobData {
+  chatbotId: string;
   nodeId: string;
-  nodes: ChatBotNode[];
-  edges: ChatBotEdge[];
-  context: ChatBotContext;
+  nodes: ChatbotNode[];
+  edges: ChatbotEdge[];
+  context: ChatbotContext;
 }

@@ -1,6 +1,8 @@
 import { z } from 'zod';
 
-export const BaseChatBotNodeSchema = z.object({
+import { MessageSchema } from 'src/message/schemas';
+
+export const BaseChatbotNodeSchema = z.object({
   id: z.string(),
   position: z
     .object({
@@ -10,7 +12,7 @@ export const BaseChatBotNodeSchema = z.object({
     .optional(),
 });
 
-export const ChatBotEdgeSchema = z.object({
+export const ChatbotEdgeSchema = z.object({
   sourceNode: z.string(),
   sourcePin: z.string(),
   targetNode: z.string(),
@@ -19,11 +21,11 @@ export const ChatBotEdgeSchema = z.object({
 
 // Events
 
-const OnConversationCreated = BaseChatBotNodeSchema.extend({
+const OnConversationCreated = BaseChatbotNodeSchema.extend({
   type: z.literal('onConversationCreated'),
 });
 
-const OnVisitorInactive = BaseChatBotNodeSchema.extend({
+const OnVisitorInactive = BaseChatbotNodeSchema.extend({
   type: z.literal('onVisitorInactive'),
   inactiveDuration: z.number().int().positive(),
   repeatInterval: z.number().int().min(0),
@@ -31,18 +33,16 @@ const OnVisitorInactive = BaseChatBotNodeSchema.extend({
 
 // Actions
 
-const DoSendMessage = BaseChatBotNodeSchema.extend({
+const DoSendMessage = BaseChatbotNodeSchema.extend({
   type: z.literal('doSendMessage'),
-  message: z.object({
-    content: z.string(),
-  }),
+  message: MessageSchema,
 });
 
-const DoCloseConversation = BaseChatBotNodeSchema.extend({
+const DoCloseConversation = BaseChatbotNodeSchema.extend({
   type: z.literal('doCloseConversation'),
 });
 
-export const ChatBotNodeSchema = z.discriminatedUnion('type', [
+export const ChatbotNodeSchema = z.discriminatedUnion('type', [
   OnConversationCreated,
   OnVisitorInactive,
   DoSendMessage,

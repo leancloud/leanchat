@@ -1,18 +1,18 @@
-import { ChatBotEdge, ChatBotNode } from './interfaces';
+import { ChatbotEdge, ChatbotNode } from './interfaces';
 
-export class ChatBot {
+export class Chatbot {
   id: string;
 
   name: string;
 
-  nodes: ChatBotNode[];
+  nodes: ChatbotNode[];
 
-  edges: ChatBotEdge[];
+  edges: ChatbotEdge[];
 
   createdAt: Date;
 
   static fromAVObject(obj: { get(key: string): any }) {
-    const bot = new ChatBot();
+    const bot = new Chatbot();
     bot.id = obj.get('objectId');
     bot.name = obj.get('name');
     bot.nodes = obj.get('nodes');

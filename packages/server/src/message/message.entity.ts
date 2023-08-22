@@ -7,7 +7,10 @@ export class Message {
 
   type: string;
 
-  from: string;
+  from: {
+    type: string;
+    id: string;
+  };
 
   data: any;
 

@@ -83,9 +83,9 @@ export class VisitorGateway implements OnModuleInit, OnGatewayConnection {
     const message = await this.messageService.createMessage({
       visitorId: id,
       conversationId: conv.id,
-      type: 'visitor',
-      from: id,
-      data: data,
+      type: 'message',
+      from: { type: 'visitor', id },
+      data: data.data,
     });
 
     await this.conversationService.updateConversation(conv, {
@@ -105,14 +105,14 @@ export class VisitorGateway implements OnModuleInit, OnGatewayConnection {
     const visitorId = socket.data.id;
     return this.messageService.getMessages({
       visitorId,
-      types: ['visitor', 'operator', 'chat-bot'],
+      types: ['message'],
     });
   }
 
   @OnEvent('message.created', { async: true })
   dispatchMessage(payload: MessageCreatedEvent) {
     const { message } = payload;
-    if (!['visitor', 'operator', 'chat-bot'].includes(message.type)) {
+    if (!['message'].includes(message.type)) {
       return;
     }
     this.server.to(message.visitorId).emit('message', message);

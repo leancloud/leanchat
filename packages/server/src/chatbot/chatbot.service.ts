@@ -3,26 +3,26 @@ import AV from 'leancloud-storage';
 import _ from 'lodash';
 
 import {
-  ChatBotEdge,
-  ChatBotNode,
-  CreateChatBotData,
-  UpdateChatBotData,
+  ChatbotEdge,
+  ChatbotNode,
+  CreateChatbotData,
+  UpdateChatbotData,
 } from './interfaces';
-import { ChatBot } from './chat-bot.entity';
+import { Chatbot } from './chatbot.entity';
 
 @Injectable()
-export class ChatBotService {
-  validateChatBotNodes(nodes: ChatBotNode[], edges: ChatBotEdge[]) {
+export class ChatbotService {
+  validateChatbotNodes(nodes: ChatbotNode[], edges: ChatbotEdge[]) {
     if (this.detectFlowLoop(nodes, edges)) {
       return false;
     }
     return true;
   }
 
-  detectFlowLoop(nodes: ChatBotNode[], edges: ChatBotEdge[]) {
+  detectFlowLoop(nodes: ChatbotNode[], edges: ChatbotEdge[]) {
     const nodeMap = _.keyBy(nodes, (node) => node.id);
     const visitedNodes = new Set<string>();
-    const hasLoop = (node: ChatBotNode) => {
+    const hasLoop = (node: ChatbotNode) => {
       if (visitedNodes.has(node.id)) {
         return true;
       }
@@ -42,35 +42,35 @@ export class ChatBotService {
     return nodes.some(hasLoop);
   }
 
-  async createChatBot(data: CreateChatBotData) {
+  async createChatbot(data: CreateChatbotData) {
     const obj = new AV.Object('ChatBot', {
       name: data.name,
       nodes: data.nodes,
       edges: data.edges,
     });
     await obj.save(null, { useMasterKey: true });
-    return ChatBot.fromAVObject(obj);
+    return Chatbot.fromAVObject(obj);
   }
 
-  async getChatBots() {
+  async getChatbots() {
     const query = new AV.Query('ChatBot');
     query.select('name');
     const objs = await query.find({ useMasterKey: true });
-    return objs.map(ChatBot.fromAVObject) as Pick<
-      ChatBot,
+    return objs.map(Chatbot.fromAVObject) as Pick<
+      Chatbot,
       'id' | 'name' | 'createdAt'
     >[];
   }
 
-  async getChatBot(id: string) {
+  async getChatbot(id: string) {
     const query = new AV.Query('ChatBot');
     query.equalTo('objectId', id);
     const obj = await query.first({ useMasterKey: true });
-    return obj && ChatBot.fromAVObject(obj);
+    return obj && Chatbot.fromAVObject(obj);
   }
 
-  async updateChatBot(chatBot: ChatBot, data: UpdateChatBotData) {
-    const obj = AV.Object.createWithoutData('ChatBot', chatBot.id);
+  async updateChatbot(chatbot: Chatbot, data: UpdateChatbotData) {
+    const obj = AV.Object.createWithoutData('ChatBot', chatbot.id);
     if (data.name) {
       obj.set('name', data.name);
     }
@@ -83,10 +83,10 @@ export class ChatBotService {
     await obj.save(null, { useMasterKey: true });
   }
 
-  async getChatBotsByNodeType(nodeType: string) {
+  async getChatbotsByNodeType(nodeType: string) {
     const query = new AV.Query('ChatBot');
     query.equalTo('nodes.type', nodeType);
     const objs = await query.find({ useMasterKey: true });
-    return objs.map(ChatBot.fromAVObject);
+    return objs.map(Chatbot.fromAVObject);
   }
 }
