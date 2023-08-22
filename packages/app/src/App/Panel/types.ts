@@ -3,8 +3,12 @@ export interface Message {
   visitorId: string;
   conversationId: string;
   type: string;
-  from: string;
+  from: {
+    type: string;
+    id: string;
+  };
   data: {
+    type: 'text';
     content: string;
   };
   createdAt: string;

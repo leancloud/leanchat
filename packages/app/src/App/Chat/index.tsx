@@ -12,8 +12,12 @@ import style from './index.module.css';
 interface Message {
   id: string;
   type: string;
-  from: string;
+  from: {
+    type: string;
+    id: string;
+  };
   data: {
+    type: 'text';
     content: string;
   };
   createdAt: string;
@@ -61,7 +65,12 @@ function ChatBox() {
   });
 
   const handleNewMessage = (content: string) => {
-    socket.emit('message', { content });
+    socket.emit('message', {
+      data: {
+        type: 'text',
+        content,
+      },
+    });
   };
 
   const { containerRef, scrollToBottom } = useScrollToBottom();
@@ -178,7 +187,7 @@ function Messages({ messages }: MessagesProps) {
   return (
     <div className="w-full float-left">
       {messages.map((msg, key) => (
-        <Message key={key} content={msg.data.content} visitor={msg.type === 'visitor'} />
+        <Message key={key} content={msg.data.content} visitor={msg.from.type === 'visitor'} />
       ))}
     </div>
   );

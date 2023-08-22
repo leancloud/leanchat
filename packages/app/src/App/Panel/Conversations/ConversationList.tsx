@@ -1,4 +1,3 @@
-import { UserOutlined } from '@ant-design/icons';
 import { Avatar } from 'antd';
 
 import { Conversation } from '@/App/Panel/types';
@@ -35,10 +34,8 @@ export function ConversationList({
           title={conv.id}
           time={conv.lastMessage && diffTime(now, conv.lastMessage!.createdAt)}
           message={conv.lastMessage?.data.content}
-          operatorAvatar={
-            conv.operatorId && <Avatar className="shrink-0" size={18} icon={<UserOutlined />} />
-          }
-          unread={unreadAlert && conv.lastMessage?.from === conv.visitorId}
+          operatorAvatar={conv.operatorId && <Avatar className="shrink-0" size={18} />}
+          unread={unreadAlert && conv.lastMessage?.from.id === conv.visitorId}
         />
       </button>
     );

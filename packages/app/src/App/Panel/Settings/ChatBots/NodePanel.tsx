@@ -62,6 +62,7 @@ export function NodePanel({ show, onToggle, onAddNode }: NodePanelProps) {
               id: nanoid(16),
               type: 'doSendMessage',
               message: {
+                type: 'text',
                 content: '',
               },
             })

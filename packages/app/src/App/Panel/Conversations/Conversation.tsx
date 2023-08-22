@@ -9,8 +9,7 @@ import {
   useState,
 } from 'react';
 import { useMutation } from '@tanstack/react-query';
-import { Avatar, Button, Divider, Input } from 'antd';
-import { UserOutlined } from '@ant-design/icons';
+import { Button, Divider, Input } from 'antd';
 import dayjs from 'dayjs';
 import cx from 'classnames';
 import _ from 'lodash';
@@ -19,6 +18,7 @@ import { callRpc, useEvent, useSocket } from '@/socket';
 import { useCurrentUser } from '@/App/Panel/auth';
 import { useConversation, useConversationMessages } from '@/App/Panel/hooks/conversation';
 import { Message } from '@/App/Panel/types';
+import { Avatar } from '@/App/Panel/components/Avatar';
 import { ConversationDetail } from './ConversationDetail';
 import { ConversationContext } from './ConversationContext';
 
@@ -39,17 +39,17 @@ function groupMessages(messages: Message[]) {
     const group = _.last(groups);
     if (group && group.date.isSame(date)) {
       const userGroup = _.last(group.users);
-      if (userGroup && userGroup.userId === message.from) {
+      if (userGroup && userGroup.userId === message.from.id) {
         userGroup.messages.push(message);
       } else {
-        group.users.push({ userId: message.from, messages: [message] });
+        group.users.push({ userId: message.from.id, messages: [message] });
       }
     } else {
       groups.push({
         date,
         users: [
           {
-            userId: message.from,
+            userId: message.from.id,
             messages: [message],
           },
         ],
@@ -143,7 +143,10 @@ export function Conversation({ conversationId, showDetail, onToggleDetail }: Con
     }
     socket.emit('message', {
       conversationId,
-      content: trimedContent,
+      data: {
+        type: 'text',
+        content: trimedContent,
+      },
     });
     setContent('');
     textareaRef.current?.focus();
@@ -183,8 +186,8 @@ export function Conversation({ conversationId, showDetail, onToggleDetail }: Con
                     {messages.map((msg, i) => (
                       <TextMessage
                         key={msg.id}
-                        avatar={i === 0 && <Avatar icon={<UserOutlined />} />}
-                        username={msg.from === user!.id ? 'You' : msg.from}
+                        avatar={i === 0 && <Avatar type={msg.from.type} />}
+                        username={msg.from.id === user!.id ? 'You' : msg.from.id}
                         createTime={msg.createdAt}
                         message={msg.data.content}
                         showHeader={i === 0}
