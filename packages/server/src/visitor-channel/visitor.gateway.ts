@@ -12,13 +12,14 @@ import { OnEvent } from '@nestjs/event-emitter';
 import { Server, Socket } from 'socket.io';
 import { ZodValidationPipe } from 'nestjs-zod';
 
-import { MessageService } from 'src/message';
+import { Message, MessageService } from 'src/message';
 import { MessageCreatedEvent } from 'src/event';
 import { AssignService } from 'src/chat-center';
 import { Conversation, ConversationService } from 'src/conversation';
 import { VisitorService } from 'src/visitor';
 import { WsInterceptor } from 'src/common/interceptors';
 import { CreateMessageDto } from './dtos/create-message.dto';
+import { EvaluationDto } from './dtos/evaluation.dto';
 
 @WebSocketGateway()
 @UsePipes(ZodValidationPipe)
@@ -50,9 +51,27 @@ export class VisitorGateway implements OnModuleInit, OnGatewayConnection {
     });
   }
 
-  handleConnection(socket: Socket) {
+  async handleConnection(socket: Socket) {
     console.log('visitor online', socket.data.id);
     socket.join(socket.data.id);
+
+    const visitor = await this.visitorService.getVisitor(socket.data.id);
+    if (visitor) {
+      if (visitor.currentConversationId) {
+        const conv = await this.conversationService.getConversation(
+          visitor.currentConversationId,
+        );
+        if (conv) {
+          socket.emit('currentConversation', conv);
+        }
+      }
+
+      const messages = await this.messageService.getMessages({
+        visitorId: visitor.id,
+        types: ['message'],
+      });
+      socket.emit('messages', messages);
+    }
   }
 
   @SubscribeMessage('message')
@@ -100,21 +119,62 @@ export class VisitorGateway implements OnModuleInit, OnGatewayConnection {
     return message;
   }
 
-  @SubscribeMessage('getHistory')
-  handleGetHistory(@ConnectedSocket() socket: Socket) {
+  @SubscribeMessage('evaluate')
+  async handleEvaluate(
+    @ConnectedSocket() socket: Socket,
+    @MessageBody() data: EvaluationDto,
+  ) {
     const visitorId = socket.data.id;
-    return this.messageService.getMessages({
-      visitorId,
-      types: ['message'],
+    const visitor = await this.visitorService.getVisitor(visitorId);
+    if (!visitor) {
+      throw new WsException('账户不存在');
+    }
+    if (!visitor.currentConversationId) {
+      throw new WsException('当前未在会话中');
+    }
+    const conv = await this.conversationService.getConversation(
+      visitor.currentConversationId,
+    );
+    if (!conv) {
+      throw new WsException('当前会话不存在');
+    }
+    if (conv.evaluation) {
+      return;
+    }
+    await this.conversationService.updateConversation(conv, {
+      evaluation: data,
     });
+    await this.messageService.createMessage({
+      visitorId: visitor.id,
+      conversationId: conv.id,
+      type: 'log',
+      from: {
+        type: 'system',
+        id: 'system',
+      },
+      data: {
+        type: 'evaluated',
+        star: data.star,
+        feedback: data.feedback,
+      },
+    });
+  }
+
+  shouldDispatchMessage(message: Message) {
+    if (message.type === 'message') {
+      return true;
+    }
+    if (message.type === 'log' && message.data.type === 'evaluated') {
+      return true;
+    }
+    return false;
   }
 
   @OnEvent('message.created', { async: true })
   dispatchMessage(payload: MessageCreatedEvent) {
     const { message } = payload;
-    if (!['message'].includes(message.type)) {
-      return;
+    if (this.shouldDispatchMessage(message)) {
+      this.server.to(message.visitorId).emit('message', message);
     }
-    this.server.to(message.visitorId).emit('message', message);
   }
 }

@@ -18,7 +18,8 @@ export interface FileMessageData {
 }
 
 export interface LogMessageData {
-  type: 'evaluateInvitationSent';
+  type: 'evaluateInvitationSent' | 'evaluated';
+  [key: string]: any;
 }
 
 export type MessageData = TextMessageData | FileMessageData | LogMessageData;
