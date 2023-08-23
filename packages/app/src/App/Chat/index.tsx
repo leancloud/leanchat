@@ -1,12 +1,16 @@
+import React from 'react';
+import ReactDOM from 'react-dom/client';
 import { useLocalStorage } from 'react-use';
 import { nanoid } from 'nanoid';
+
+import './index.css';
 
 import { SocketProvider } from '@/socket';
 import { Classic } from './Classic';
 
 const VISITOR_ID = nanoid();
 
-export default function Chat() {
+function Chat() {
   const [visitorId] = useLocalStorage('LeanChat/visitorId', VISITOR_ID);
 
   return (
@@ -31,3 +35,9 @@ export default function Chat() {
     </SocketProvider>
   );
 }
+
+ReactDOM.createRoot(document.getElementById('root')!).render(
+  <React.StrictMode>
+    <Chat />
+  </React.StrictMode>,
+);
