@@ -21,4 +21,12 @@ export default defineConfig({
       '@': path.resolve('./src'),
     },
   },
+  build: {
+    rollupOptions: {
+      input: {
+        main: path.resolve(__dirname, 'index.html'),
+        chat: path.resolve(__dirname, 'chat/index.html'),
+      },
+    },
+  },
 });
