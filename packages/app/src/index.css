@@ -1,3 +1,5 @@
+@config '../tailwind.panel.config.ts';
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
