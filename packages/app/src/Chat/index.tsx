@@ -3,10 +3,7 @@ import ReactDOM from 'react-dom/client';
 import { useLocalStorage } from 'react-use';
 import { nanoid } from 'nanoid';
 
-import './index.css';
-
 import { SocketProvider } from '@/socket';
-import { Classic } from './Classic';
 
 const VISITOR_ID = nanoid();
 
@@ -29,9 +26,7 @@ function Chat() {
           maxWidth: '100vw',
           zIndex: '999999999 !important',
         }}
-      >
-        <Classic />
-      </div>
+      ></div>
     </SocketProvider>
   );
 }
