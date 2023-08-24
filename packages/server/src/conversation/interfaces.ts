@@ -21,3 +21,8 @@ export interface GetConversationOptions {
   desc?: boolean;
   limit?: number;
 }
+
+export interface EvaluateConversationData {
+  star: number;
+  feedback: string;
+}

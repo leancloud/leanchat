@@ -4,8 +4,13 @@ import AV from 'leancloud-storage';
 import { LRUCache } from 'lru-cache';
 
 import { ConversationCreatedEvent } from 'src/event';
+import { MessageService } from 'src/message';
 import { Conversation } from './conversation.entity';
-import { GetConversationOptions, UpdateConversationData } from './interfaces';
+import {
+  EvaluateConversationData,
+  GetConversationOptions,
+  UpdateConversationData,
+} from './interfaces';
 
 @Injectable()
 export class ConversationService {
@@ -14,7 +19,10 @@ export class ConversationService {
     ttl: 1000 * 60 * 5,
   });
 
-  constructor(private events: EventEmitter2) {}
+  constructor(
+    private events: EventEmitter2,
+    private messageService: MessageService,
+  ) {}
 
   async createConversation(visitorId: string) {
     const obj = new AV.Object('ChatConversation', {
@@ -136,5 +144,25 @@ export class ConversationService {
     query.equalTo('operatorId', operatorId);
     query.equalTo('status', 'inProgress');
     return query.count({ useMasterKey: true });
+  }
+
+  async evaluateConversation(
+    conv: Conversation,
+    evaluation: EvaluateConversationData,
+  ) {
+    await this.updateConversation(conv, {
+      evaluation,
+    });
+    await this.messageService.createMessage({
+      visitorId: conv.visitorId,
+      conversationId: conv.id,
+      type: 'log',
+      from: {
+        type: 'system',
+      },
+      data: {
+        type: 'evaluated',
+      },
+    });
   }
 }

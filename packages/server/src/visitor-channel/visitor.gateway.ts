@@ -142,22 +142,7 @@ export class VisitorGateway implements OnModuleInit, OnGatewayConnection {
     if (conv.evaluation) {
       return;
     }
-    await this.conversationService.updateConversation(conv, {
-      evaluation: data,
-    });
-    await this.messageService.createMessage({
-      visitorId: visitor.id,
-      conversationId: conv.id,
-      type: 'log',
-      from: {
-        type: 'system',
-      },
-      data: {
-        type: 'evaluated',
-        star: data.star,
-        feedback: data.feedback,
-      },
-    });
+    await this.conversationService.evaluateConversation(conv, data);
   }
 
   shouldDispatchMessage(message: Message) {
