@@ -4,7 +4,7 @@ import cx from 'classnames';
 import { nanoid } from 'nanoid';
 import { Tooltip } from 'antd';
 
-import { ChatBotNode } from '@/App/Panel/types';
+import { ChatBotNode } from '@/Panel/types';
 
 function TriggerButton(props: ComponentProps<'button'>) {
   return (

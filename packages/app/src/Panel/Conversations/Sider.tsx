@@ -3,9 +3,9 @@ import { AiOutlineUser } from 'react-icons/ai';
 import { Badge, Empty, Spin } from 'antd';
 import cx from 'classnames';
 
-import { Conversation } from '@/App/Panel/types';
-import { NavMenu, NavMenuItem } from '@/App/Panel/components/NavMenu';
-import { useOperators } from '@/App/Panel/hooks/operator';
+import { Conversation } from '@/Panel/types';
+import { NavMenu, NavMenuItem } from '@/Panel/components/NavMenu';
+import { useOperators } from '@/Panel/hooks/operator';
 import { ConversationList } from './ConversationList';
 
 const LIVE_CONVERSATION_LABELS: Record<string, ReactNode> = {

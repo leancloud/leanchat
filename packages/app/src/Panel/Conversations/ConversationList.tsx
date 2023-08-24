@@ -1,6 +1,6 @@
 import { Avatar } from 'antd';
 
-import { Conversation } from '@/App/Panel/types';
+import { Conversation } from '@/Panel/types';
 import { diffTime } from './utils';
 import { ConversationItem } from './ConversationItem';
 

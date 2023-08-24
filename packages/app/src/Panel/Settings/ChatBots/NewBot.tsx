@@ -3,12 +3,7 @@ import { useParams, useNavigate } from 'react-router-dom';
 import { Spin, message } from 'antd';
 import _ from 'lodash';
 
-import {
-  UpdateChatBotData,
-  createChatBot,
-  getChatBot,
-  updateChatBot,
-} from '@/App/Panel/api/chat-bot';
+import { UpdateChatBotData, createChatBot, getChatBot, updateChatBot } from '@/Panel/api/chat-bot';
 import { ChatBotCreator } from './ChatBotCreator';
 
 export function NewChatBot() {

@@ -1,6 +1,6 @@
 import { ReactNode, createContext, useCallback, useContext, useRef, useState } from 'react';
 
-import { Conversation } from '@/App/Panel/types';
+import { Conversation } from '@/Panel/types';
 
 interface ConversationsQuery {
   isLoading: boolean;

@@ -2,7 +2,7 @@ import { useQuery } from '@tanstack/react-query';
 import { Button, Table } from 'antd';
 import { Link } from 'react-router-dom';
 
-import { getChatBots } from '@/App/Panel/api/chat-bot';
+import { getChatBots } from '@/Panel/api/chat-bot';
 export { NewChatBot, ChatBotDetail } from './NewBot';
 
 export function ChatBots() {

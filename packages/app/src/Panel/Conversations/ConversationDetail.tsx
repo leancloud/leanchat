@@ -2,7 +2,7 @@ import { useMemo } from 'react';
 import { Select, SelectProps, Tabs, TabsProps } from 'antd';
 import { Transition } from '@headlessui/react';
 
-import { useOperators } from '@/App/Panel/hooks/operator';
+import { useOperators } from '@/Panel/hooks/operator';
 import { useConversationContext } from './ConversationContext';
 import { useMutation } from '@tanstack/react-query';
 import { callRpc, useSocket } from '@/socket';

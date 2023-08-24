@@ -1,6 +1,6 @@
 import { createContext, useContext } from 'react';
 
-import { Conversation } from '@/App/Panel/types';
+import { Conversation } from '@/Panel/types';
 
 interface ConversationContextValue {
   conversation: Conversation;

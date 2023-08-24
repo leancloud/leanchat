@@ -1,4 +1,4 @@
-import { ChatBot, ChatBotEdge, ChatBotNode } from '@/App/Panel/types';
+import { ChatBot, ChatBotEdge, ChatBotNode } from '@/Panel/types';
 import { client } from './client';
 
 interface CreateChatBotData {

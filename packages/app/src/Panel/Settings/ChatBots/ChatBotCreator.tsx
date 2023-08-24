@@ -27,8 +27,8 @@ import _ from 'lodash';
 import { Button, Input, Modal } from 'antd';
 import { useToggle } from 'react-use';
 
-import { ChatBotEdge, ChatBotNode } from '@/App/Panel/types';
-import { useEffectEvent } from '@/App/Panel/hooks/useEffectEvent';
+import { ChatBotEdge, ChatBotNode } from '@/Panel/types';
+import { useEffectEvent } from '@/Panel/hooks/useEffectEvent';
 import './flow.css';
 import { NodePanel } from './NodePanel';
 import { NodeEdge } from './NodeEdge';

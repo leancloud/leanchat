@@ -1,4 +1,4 @@
-import { Operator } from '@/App/Panel/types';
+import { Operator } from '@/Panel/types';
 import { client } from './client';
 
 export async function createSession(username: string, password: string) {

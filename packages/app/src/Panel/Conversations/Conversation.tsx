@@ -15,10 +15,10 @@ import cx from 'classnames';
 import _ from 'lodash';
 
 import { callRpc, useEvent, useSocket } from '@/socket';
-import { useCurrentUser } from '@/App/Panel/auth';
-import { useConversation, useConversationMessages } from '@/App/Panel/hooks/conversation';
-import { Message } from '@/App/Panel/types';
-import { Avatar } from '@/App/Panel/components/Avatar';
+import { useCurrentUser } from '@/Panel/auth';
+import { useConversation, useConversationMessages } from '@/Panel/hooks/conversation';
+import { Message } from '@/Panel/types';
+import { Avatar } from '@/Panel/components/Avatar';
 import { ConversationDetail } from './ConversationDetail';
 import { ConversationContext } from './ConversationContext';
 

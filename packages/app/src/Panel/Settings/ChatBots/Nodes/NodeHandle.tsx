@@ -1,7 +1,7 @@
 import { useEffect, useMemo } from 'react';
 import { Handle, HandleProps, Position, useEdges, useReactFlow } from 'reactflow';
 
-import { useEffectEvent } from '@/App/Panel/hooks/useEffectEvent';
+import { useEffectEvent } from '@/Panel/hooks/useEffectEvent';
 import { useNode } from './Container';
 
 interface NodeHandleProps extends Omit<HandleProps, 'position'> {

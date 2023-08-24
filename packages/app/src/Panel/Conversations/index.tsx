@@ -7,8 +7,8 @@ import {
   ConversationsQueryVariables,
   useConversations,
   useSetConversationQueryData,
-} from '@/App/Panel/hooks/conversation';
-import { useCurrentUser } from '@/App/Panel/auth';
+} from '@/Panel/hooks/conversation';
+import { useCurrentUser } from '@/Panel/auth';
 import { Conversation } from './Conversation';
 import { useToggle } from 'react-use';
 

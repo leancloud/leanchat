@@ -3,8 +3,8 @@ import { Link, useNavigate, useParams } from 'react-router-dom';
 import { MdGroup, MdPersonAddAlt1, MdPerson } from 'react-icons/md';
 import { Alert, Button, Form, Input, InputNumber, Table, message } from 'antd';
 
-import { createOperator, getOperator, updateOperator } from '@/App/Panel/api/operator';
-import { useOperators } from '@/App/Panel/hooks/operator';
+import { createOperator, getOperator, updateOperator } from '@/Panel/api/operator';
+import { useOperators } from '@/Panel/hooks/operator';
 import { Container } from '../components/Container';
 
 export function Operators() {

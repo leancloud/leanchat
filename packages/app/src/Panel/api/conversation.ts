@@ -1,4 +1,4 @@
-import { Conversation, Message } from '@/App/Panel/types';
+import { Conversation, Message } from '@/Panel/types';
 import { client } from './client';
 
 export interface GetConversationsOptions {

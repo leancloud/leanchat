@@ -3,12 +3,12 @@ import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { Socket } from 'socket.io-client';
 import { produce } from 'immer';
 
-import { Conversation, Message } from '@/App/Panel/types';
+import { Conversation, Message } from '@/Panel/types';
 import {
   getConversation,
   getConversationMessages,
   getConversations,
-} from '@/App/Panel/api/conversation';
+} from '@/Panel/api/conversation';
 
 export type ConversationsQueryVariables =
   | {

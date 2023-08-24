@@ -3,8 +3,8 @@ import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { Socket } from 'socket.io-client';
 import { produce } from 'immer';
 
-import { getOperators } from '@/App/Panel/api/operator';
-import { Operator } from '@/App/Panel/types';
+import { getOperators } from '@/Panel/api/operator';
+import { Operator } from '@/Panel/types';
 
 interface OperatorStatusChangedEvent {
   operatorId: string;
