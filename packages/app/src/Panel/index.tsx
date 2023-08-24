@@ -1,5 +1,5 @@
 import { PropsWithChildren, Suspense, lazy, useState } from 'react';
-import { Navigate, Outlet, Route, Routes, useNavigate } from 'react-router-dom';
+import { BrowserRouter, Navigate, Outlet, Route, Routes, useNavigate } from 'react-router-dom';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { RecoilRoot } from 'recoil';
 import { Spin } from 'antd';
@@ -103,6 +103,7 @@ function PanelQueryClientProvider({ children }: PropsWithChildren) {
 }
 
 const Root = new Compose()
+  .push(BrowserRouter)
   // https://github.com/ant-design/ant-design/issues/38794
   .push(StyleProvider, { hashPriority: 'high' })
   .push(RecoilRoot)

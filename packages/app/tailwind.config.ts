@@ -1,7 +1,7 @@
 import type { Config } from 'tailwindcss';
 
 export default {
-  content: ['./src/App/Panel/**/*.{ts,tsx}'],
+  content: ['./src/**/*.{ts,tsx}'],
   theme: {
     extend: {
       colors: {

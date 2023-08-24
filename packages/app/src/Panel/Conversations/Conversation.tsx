@@ -1,99 +1,15 @@
-import {
-  Fragment,
-  PropsWithChildren,
-  ReactNode,
-  useEffect,
-  useLayoutEffect,
-  useMemo,
-  useRef,
-  useState,
-} from 'react';
+import { PropsWithChildren, useEffect, useLayoutEffect, useRef, useState } from 'react';
 import { useMutation } from '@tanstack/react-query';
-import { Button, Divider, Input } from 'antd';
-import dayjs from 'dayjs';
-import cx from 'classnames';
+import { Button, Input } from 'antd';
 import _ from 'lodash';
 
 import { callRpc, useEvent, useSocket } from '@/socket';
 import { useCurrentUser } from '@/Panel/auth';
 import { useConversation, useConversationMessages } from '@/Panel/hooks/conversation';
 import { Message } from '@/Panel/types';
-import { Avatar } from '@/Panel/components/Avatar';
 import { ConversationDetail } from './ConversationDetail';
 import { ConversationContext } from './ConversationContext';
-
-interface DateGroup {
-  date: dayjs.Dayjs;
-  users: UserGroup[];
-}
-
-interface UserGroup {
-  userId: string;
-  messages: Message[];
-}
-
-function groupMessages(messages: Message[]) {
-  const groups: DateGroup[] = [];
-  for (const message of messages) {
-    const date = dayjs(message.createdAt).startOf('day');
-    const group = _.last(groups);
-    if (group && group.date.isSame(date)) {
-      const userGroup = _.last(group.users);
-      if (userGroup && userGroup.userId === message.from.id) {
-        userGroup.messages.push(message);
-      } else {
-        group.users.push({ userId: message.from.id, messages: [message] });
-      }
-    } else {
-      groups.push({
-        date,
-        users: [
-          {
-            userId: message.from.id,
-            messages: [message],
-          },
-        ],
-      });
-    }
-  }
-  return groups;
-}
-
-interface TextMessageProps {
-  avatar?: ReactNode;
-  username: string;
-  createTime: number | string | Date;
-  message: string;
-  showHeader?: boolean;
-}
-
-function TextMessage({ avatar, username, createTime, message, showHeader }: TextMessageProps) {
-  return (
-    <div className="flex px-[20px] my-[10px] group hover:bg-[#f7f8fc]">
-      <div className="pt-1">{avatar}</div>
-      <div
-        className={cx({
-          'ml-[14px]': showHeader,
-          flex: !showHeader,
-        })}
-      >
-        {showHeader ? (
-          <div className="flex items-center align-middle">
-            <div className="text-sm font-medium">{username}</div>
-            <div className="text-xs ml-[10px] text-[#647491]">
-              {dayjs(createTime).format('HH:mm')}
-            </div>
-          </div>
-        ) : (
-          <div className="text-xs text-[#647491] w-[46px] group-hover:visible invisible shrink-0">
-            {dayjs(createTime).format('HH:mm')}
-          </div>
-        )}
-        <div className="text-sm whitespace-pre-line">{message}</div>
-      </div>
-    </div>
-  );
-}
+import { MessageList } from './MessageList';
 
 interface ConversationProps {
   conversationId: string;
@@ -123,8 +39,6 @@ export function Conversation({ conversationId, showDetail, onToggleDetail }: Con
     }
   });
 
-  const groups = useMemo(() => groupMessages(messages), [messages]);
-
   const [content, setContent] = useState('');
 
   const textareaRef = useRef<HTMLTextAreaElement>(null);
@@ -134,7 +48,7 @@ export function Conversation({ conversationId, showDetail, onToggleDetail }: Con
     if (messageContainerRef.current) {
       messageContainerRef.current.scrollTop = messageContainerRef.current.scrollHeight;
     }
-  }, []);
+  }, [messages]);
 
   const handleCreateMessage = async () => {
     const trimedContent = content.trim();
@@ -176,27 +90,7 @@ export function Conversation({ conversationId, showDetail, onToggleDetail }: Con
       <div className="h-full flex">
         <div className="h-full flex flex-col overflow-hidden relative grow">
           <div ref={messageContainerRef} className="mt-auto overflow-y-auto">
-            {groups.map(({ date, users }) => (
-              <div key={date.unix()}>
-                <Divider style={{ margin: 0, padding: '10px 20px', fontSize: 14 }}>
-                  {dayjs(date).format('MMM DD, YYYY')}
-                </Divider>
-                {users.map(({ userId, messages }) => (
-                  <Fragment key={`${userId}.${messages[0].id}`}>
-                    {messages.map((msg, i) => (
-                      <TextMessage
-                        key={msg.id}
-                        avatar={i === 0 && <Avatar type={msg.from.type} />}
-                        username={msg.from.id === user!.id ? 'You' : msg.from.id}
-                        createTime={msg.createdAt}
-                        message={msg.data.content}
-                        showHeader={i === 0}
-                      />
-                    ))}
-                  </Fragment>
-                ))}
-              </div>
-            ))}
+            <MessageList messages={messages} />
           </div>
           <div className="border-t-[3px] border-primary bg-white relative">
             <div className="px-2 py-1 border-b">
