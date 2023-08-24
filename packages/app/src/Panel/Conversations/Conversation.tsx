@@ -1,6 +1,6 @@
 import { PropsWithChildren, useEffect, useLayoutEffect, useRef, useState } from 'react';
 import { useMutation } from '@tanstack/react-query';
-import { Button, Input } from 'antd';
+import { Button, Input, message } from 'antd';
 import _ from 'lodash';
 
 import { callRpc, useEvent, useSocket } from '@/socket';
@@ -81,6 +81,15 @@ export function Conversation({ conversationId, showDetail, onToggleDetail }: Con
     },
   });
 
+  const { mutate: inviteEvaluation } = useMutation({
+    mutationFn: () => {
+      return callRpc(socket, 'inviteEvaluation', { conversationId });
+    },
+    onSuccess: () => {
+      message.info('评价邀请已发送');
+    },
+  });
+
   if (!conversation) {
     return;
   }
@@ -93,9 +102,12 @@ export function Conversation({ conversationId, showDetail, onToggleDetail }: Con
             <MessageList messages={messages} />
           </div>
           <div className="border-t-[3px] border-primary bg-white relative">
-            <div className="px-2 py-1 border-b">
+            <div className="px-2 py-1 border-b space-x-1">
               <Button size="small" onClick={() => closeConversation()}>
                 结束会话
+              </Button>
+              <Button size="small" onClick={() => inviteEvaluation()}>
+                邀请评价
               </Button>
             </div>
             <div>

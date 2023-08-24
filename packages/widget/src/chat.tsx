@@ -14,6 +14,7 @@ import { nanoid } from 'nanoid';
 import { Conversation, EvaluateData, Message } from './types';
 
 interface ChatContextValue {
+  socket: Socket;
   conversation?: Conversation;
   messages: Message[];
   sendMessage: (content: string) => void;
@@ -113,17 +114,48 @@ export function Chat({ children }: ChatProps) {
     [socket],
   );
 
-  if (!connected) {
+  if (!socket || !connected) {
     return;
   }
 
   return (
-    <ChatContext.Provider value={{ conversation, messages, sendMessage, evaluate }}>
+    <ChatContext.Provider value={{ socket, conversation, messages, sendMessage, evaluate }}>
       {children}
     </ChatContext.Provider>
   );
 }
 
-export function useChat() {
-  return useContext(ChatContext);
+function useEffectEvent<T extends (...args: any[]) => any>(callback: T): T {
+  const ref = useRef(callback);
+  ref.current = callback;
+  return useCallback((...args: any[]) => ref.current(...args), []) as T;
+}
+
+interface UseChatOptions {
+  onInviteEvaluation?: () => void;
+}
+
+export function useChat(options: UseChatOptions = {}) {
+  const { onInviteEvaluation } = options;
+
+  const chatCtx = useContext(ChatContext);
+
+  const { socket } = chatCtx;
+
+  const anyListener = useEffectEvent((event: string) => {
+    switch (event) {
+      case 'inviteEvaluation':
+        onInviteEvaluation?.();
+        break;
+    }
+  });
+
+  useEffect(() => {
+    socket.onAny(anyListener);
+    return () => {
+      socket.offAny(anyListener);
+    };
+  }, []);
+
+  return chatCtx;
 }

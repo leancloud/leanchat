@@ -99,17 +99,22 @@ export function useAutoPushNewMessage(socket: Socket) {
           }
         },
       );
-      queryClient.setQueriesData<Conversation[] | undefined>(['Conversations'], (conversations) => {
-        if (conversations) {
-          return produce(conversations, (draft) => {
-            draft.forEach((conversation) => {
-              if (conversation.id === message.conversationId) {
-                conversation.lastMessage = message;
-              }
-            });
-          });
-        }
-      });
+      if (message.type === 'message') {
+        queryClient.setQueriesData<Conversation[] | undefined>(
+          ['Conversations'],
+          (conversations) => {
+            if (conversations) {
+              return produce(conversations, (draft) => {
+                draft.forEach((conversation) => {
+                  if (conversation.id === message.conversationId) {
+                    conversation.lastMessage = message;
+                  }
+                });
+              });
+            }
+          },
+        );
+      }
     };
     socket.on('message', onMessage);
     return () => {

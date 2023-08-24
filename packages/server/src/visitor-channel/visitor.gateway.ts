@@ -98,6 +98,7 @@ export class VisitorGateway implements OnModuleInit, OnGatewayConnection {
       visitor = await this.visitorService.updateVisitor(visitor, {
         currentConversationId: conv.id,
       });
+      socket.emit('currentConversation', conv);
     }
 
     const message = await this.messageService.createMessage({
