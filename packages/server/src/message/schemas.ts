@@ -13,12 +13,7 @@ const FileMessageSchema = z.object({
   size: z.number().optional(),
 });
 
-const LogMessageSchema = z.object({
-  type: z.enum(['evaluateInvitationSent']),
-});
-
 export const MessageSchema = z.discriminatedUnion('type', [
   TextMessageSchema,
   FileMessageSchema,
-  LogMessageSchema,
 ]);

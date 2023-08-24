@@ -14,6 +14,7 @@ import { ZodValidationPipe } from 'nestjs-zod';
 
 import { Message, MessageService } from 'src/message';
 import { MessageCreatedEvent } from 'src/event';
+import { ConversationEvaluationInvitedEvent } from 'src/events';
 import { AssignService } from 'src/chat-center';
 import { Conversation, ConversationService } from 'src/conversation';
 import { VisitorService } from 'src/visitor';
@@ -150,7 +151,6 @@ export class VisitorGateway implements OnModuleInit, OnGatewayConnection {
       type: 'log',
       from: {
         type: 'system',
-        id: 'system',
       },
       data: {
         type: 'evaluated',
@@ -176,5 +176,13 @@ export class VisitorGateway implements OnModuleInit, OnGatewayConnection {
     if (this.shouldDispatchMessage(message)) {
       this.server.to(message.visitorId).emit('message', message);
     }
+  }
+
+  @OnEvent('conversation.evaluationInvited', { async: true })
+  dispatchEvaluationInvitation(payload: ConversationEvaluationInvitedEvent) {
+    const { conversation } = payload;
+    this.server.to(conversation.visitorId).emit('inviteEvaluation', {
+      conversationId: conversation.id,
+    });
   }
 }

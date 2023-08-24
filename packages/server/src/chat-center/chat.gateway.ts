@@ -16,12 +16,13 @@ import {
 } from '@nestjs/websockets';
 import { Request } from 'express';
 import { Namespace, Socket } from 'socket.io';
-import { OnEvent } from '@nestjs/event-emitter';
+import { EventEmitter2, OnEvent } from '@nestjs/event-emitter';
 import { ZodValidationPipe } from 'nestjs-zod';
 import { z } from 'nestjs-zod/z';
 
 import { WsFilter } from 'src/common/filters';
 import { MessageCreatedEvent } from 'src/event';
+import { ConversationEvaluationInvitedEvent } from 'src/events';
 import { WsInterceptor } from 'src/common/interceptors';
 import { ConversationService } from 'src/conversation';
 import { OperatorService } from 'src/operator';
@@ -50,6 +51,7 @@ export class ChatGateway
   private server: Namespace;
 
   constructor(
+    private events: EventEmitter2,
     private conversationService: ConversationService,
     private operatorService: OperatorService,
     private messageService: MessageService,
@@ -151,10 +153,7 @@ export class ChatGateway
   }
 
   @SubscribeMessage('inviteEvaluation')
-  async handleInviteEvaluation(
-    @ConnectedSocket() socket: Socket,
-    @MessageBody() data: InviteEvaluationDto,
-  ) {
+  async handleInviteEvaluation(@MessageBody() data: InviteEvaluationDto) {
     const conv = await this.conversationService.getConversation(
       data.conversationId,
     );
@@ -164,16 +163,9 @@ export class ChatGateway
     if (conv.evaluation) {
       throw new WsException('会话已评价');
     }
-
-    await this.messageService.createMessage({
-      visitorId: conv.visitorId,
-      conversationId: conv.id,
-      from: { type: 'system', id: 'system' },
-      type: 'log',
-      data: {
-        type: 'evaluateInvitationSent',
-      },
-    });
+    this.events.emit('conversation.evaluationInvited', {
+      conversation: conv,
+    } satisfies ConversationEvaluationInvitedEvent);
   }
 
   @OnEvent('message.created', { async: true })

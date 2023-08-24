@@ -18,7 +18,7 @@ export interface FileMessageData {
 }
 
 export interface LogMessageData {
-  type: 'evaluateInvitationSent' | 'evaluated';
+  type: 'evaluated';
   [key: string]: any;
 }
 
@@ -30,7 +30,7 @@ export interface CreateMessageData {
   type: string;
   from: {
     type: string;
-    id: string;
+    id?: string;
   };
   data: MessageData;
 }
