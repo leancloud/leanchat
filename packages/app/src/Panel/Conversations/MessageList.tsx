@@ -5,6 +5,7 @@ import cx from 'classnames';
 import _ from 'lodash';
 
 import { Message as IMessage } from '@/Panel/types';
+import { useNow } from '../contexts/NowContext';
 
 type IMessageItem =
   | {
@@ -21,9 +22,14 @@ interface DateDividerProps {
 }
 
 function DateDivider({ date }: DateDividerProps) {
+  const now = useNow();
+
+  const today = dayjs(now).format('YYYY-MM-DD');
+  const content = dayjs(date).format('YYYY-MM-DD');
+
   return (
     <Divider style={{ margin: 0, padding: '10px 20px', fontSize: 14 }}>
-      {dayjs(date).isToday() ? '今天' : dayjs(date).format('YYYY-MM-DD')}
+      {content === today ? '今天' : content}
     </Divider>
   );
 }

@@ -16,6 +16,7 @@ import { Compose } from './compose';
 import { useAutoPushNewMessage, useSubscribeConversations } from './hooks/conversation';
 import { useAuthContext } from './auth';
 import { useSubscribeOperatorsStatus } from './hooks/operator';
+import { NowProvider } from './contexts/NowContext';
 
 const Login = lazy(() => import('./Login'));
 const Settings = lazy(() => import('./Settings'));
@@ -79,7 +80,7 @@ function PanelQueryClientProvider({ children }: PropsWithChildren) {
   const onError = (error: unknown) => {
     if (axios.isAxiosError(error)) {
       if (error.response?.status === 401) {
-        navigate('/panel/login');
+        navigate('/login');
       }
     }
   };
@@ -108,6 +109,7 @@ const Root = new Compose()
   .push(StyleProvider, { hashPriority: 'high' })
   .push(RecoilRoot)
   .push(PanelQueryClientProvider)
+  .push(NowProvider, { interval: 1000 * 20 })
   .assemble();
 
 export default function Panel() {

@@ -1,6 +1,6 @@
 import dayjs from 'dayjs';
 
-export function diffTime(a: number | string, b: number | string) {
+export function diffTime(a: number | string | Date, b: number | string | Date) {
   const d1 = dayjs(a);
   const d2 = dayjs(b);
   const years = d1.diff(d2, 'year');

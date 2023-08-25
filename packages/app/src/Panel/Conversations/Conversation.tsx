@@ -1,8 +1,10 @@
-import { PropsWithChildren, useEffect, useLayoutEffect, useRef, useState } from 'react';
+import { PropsWithChildren, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
 import { useMutation } from '@tanstack/react-query';
 import { AiOutlineClockCircle } from 'react-icons/ai';
 import { FiCheck } from 'react-icons/fi';
-import { Button, Input, message } from 'antd';
+import { HiDotsHorizontal } from 'react-icons/hi';
+import { FaUserEdit } from 'react-icons/fa';
+import { Button, Dropdown, Input, message } from 'antd';
 import _ from 'lodash';
 
 import { callRpc, useEvent, useSocket } from '@/socket';
@@ -12,6 +14,38 @@ import { Message } from '@/Panel/types';
 import { ConversationDetail } from './ConversationDetail';
 import { ConversationContext } from './ConversationContext';
 import { MessageList } from './MessageList';
+import { Avatar } from '../components/Avatar';
+import { useOperators } from '../hooks/operator';
+import { useToggle } from 'react-use';
+import { ReassignModal } from './ReassignModal';
+
+interface OperatorLabelProps {
+  operatorId: string;
+  onClick?: () => void;
+}
+
+function OperatorLabel({ operatorId, onClick }: OperatorLabelProps) {
+  const { data: operators } = useOperators();
+
+  const operator = useMemo(
+    () => operators?.find((o) => o.id === operatorId),
+    [operators, operatorId],
+  );
+
+  if (!operator) {
+    return;
+  }
+
+  return (
+    <button
+      className="flex items-center rounded-full pr-2 transition-colors hover:bg-[#f7f7f7]"
+      onClick={onClick}
+    >
+      <Avatar size={32} status={operator.status} />
+      <div className="ml-2 text-sm">{operator.internalName}</div>
+    </button>
+  );
+}
 
 interface ConversationProps {
   conversationId: string;
@@ -90,6 +124,8 @@ export function Conversation({ conversationId }: ConversationProps) {
     },
   });
 
+  const [showReassignModal, toggleReassignModal] = useToggle(false);
+
   if (!conversation) {
     return;
   }
@@ -99,18 +135,39 @@ export function Conversation({ conversationId }: ConversationProps) {
       <div className="h-full flex">
         <div className="h-full flex flex-col overflow-hidden relative grow bg-white">
           <div className="shrink-0 h-[70px] box-content border-b flex items-center px-5">
-            <div className="text-[20px] font-medium truncate">{conversation.visitorId}</div>
-            <div className="ml-auto space-x-3 shrink-0">
-              <button className="text-[#969696] p-1 rounded transition-colors hover:bg-gray-100">
+            <div className="text-[20px] font-medium truncate mr-auto">{conversation.visitorId}</div>
+            <div className="ml-2 shrink-0 flex items-center gap-3">
+              {conversation.operatorId && (
+                <OperatorLabel operatorId={conversation.operatorId} onClick={toggleReassignModal} />
+              )}
+              <button className="text-[#969696] p-1 rounded transition-colors hover:bg-[#f7f7f7]">
                 <AiOutlineClockCircle className="w-5 h-5" />
               </button>
               <button
-                className="text-[#969696] p-1 rounded transition-colors hover:bg-gray-100"
+                className="text-[#969696] p-1 rounded transition-colors hover:bg-[#f7f7f7]"
                 title="结束会话"
                 onClick={() => closeConversation()}
               >
                 <FiCheck className="w-5 h-5" />
               </button>
+              <Dropdown
+                trigger={['click']}
+                placement="bottomRight"
+                menu={{
+                  items: [
+                    {
+                      key: 'reassign',
+                      icon: <FaUserEdit />,
+                      label: '重新分配',
+                      onClick: toggleReassignModal,
+                    },
+                  ],
+                }}
+              >
+                <button className="text-[#969696] p-1 rounded transition-colors hover:bg-[#f7f7f7]">
+                  <HiDotsHorizontal className="w-5 h-5" />
+                </button>
+              </Dropdown>
             </div>
           </div>
 
@@ -180,6 +237,8 @@ export function Conversation({ conversationId }: ConversationProps) {
             {conversation.status === 'solved' && <Mask>会话已结束</Mask>}
           </div>
         </div>
+
+        <ReassignModal open={showReassignModal} onClose={toggleReassignModal} />
 
         <ConversationDetail />
       </div>

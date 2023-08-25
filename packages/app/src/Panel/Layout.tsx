@@ -1,10 +1,11 @@
 import { JSXElementConstructor, ReactNode } from 'react';
 import { NavLink } from 'react-router-dom';
 import cx from 'classnames';
-import { Avatar, Dropdown } from 'antd';
+import { Dropdown } from 'antd';
 import { useMutation } from '@tanstack/react-query';
 
 import { callRpc, useSocket } from '@/socket';
+import { Avatar } from '@/Panel/components/Avatar';
 import { useUserStatus } from './states/user';
 
 interface Nav {
@@ -15,7 +16,7 @@ interface Nav {
 function Logo() {
   return (
     <div className="h-[70px] flex">
-      <div className="m-auto w-10 leading-10 bg-primary text-center font-mono text-[32px] text-white rounded select-none">
+      <div className="m-auto w-9 leading-9 bg-primary text-center font-mono text-3xl text-white rounded select-none">
         L
       </div>
     </div>
@@ -32,8 +33,9 @@ export function Layout({ navs, children }: LayoutProps) {
     <div className="h-screen min-w-[1200px] grid grid-cols-[70px_1fr] bg-[#f7f7f7]">
       <div className="flex flex-col border-r border-r-[#ececec]">
         <Logo />
-        <hr className="border-t-[#ececec] m-3" />
-        <div>{navs?.map((nav) => <Nav key={nav.to} {...nav} />)}</div>
+        <hr className="border-t-[#ececec] mx-3 my-2" />
+        <div className="grow">{navs?.map((nav) => <Nav key={nav.to} {...nav} />)}</div>
+        <hr className="border-t-[#ececec] mx-3 my-2" />
         <div className="h-[60px] flex justify-center items-center mt-auto">
           <User />
         </div>
@@ -73,39 +75,43 @@ function User() {
       setStatusState(status);
     },
   });
-
   return (
     <Dropdown
+      trigger={['click']}
       menu={{
         onClick: (e) => setStatus(e.key),
         items: [
           {
             key: 'ready',
-            label: '在线',
+            name: '在线',
+            color: '#34b857',
           },
           {
             key: 'busy',
-            label: '忙碌',
+            name: '忙碌',
+            color: '#e81332',
           },
           {
             key: 'leave',
-            label: '离开',
+            name: '离开',
+            color: '#d7dae1',
           },
-        ],
+        ].map(({ key, name, color }) => ({
+          key,
+          label: (
+            <div className="flex items-center">
+              <div
+                className="w-[10px] h-[10px] rounded-full mr-2"
+                style={{ backgroundColor: color }}
+              />
+              {name}
+            </div>
+          ),
+        })),
       }}
     >
       <button className="relative">
-        <Avatar />
-        <div
-          className={cx(
-            'w-3 h-3 rounded-full absolute right-0 bottom-0 translate-x-[25%] translate-y-[25%]',
-            {
-              'bg-[#34b857]': status === 'ready',
-              'bg-[#d7dae1]': status === 'leave',
-              'bg-[#e81332]': status === 'busy',
-            },
-          )}
-        />
+        <Avatar size={32} status={status} />
       </button>
     </Dropdown>
   );

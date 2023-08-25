@@ -1,7 +1,9 @@
 import { ReactNode, useMemo, useState } from 'react';
 import { MdMenuOpen } from 'react-icons/md';
 import { Empty, Spin } from 'antd';
+import cx from 'classnames';
 import _ from 'lodash';
+import { useToggle } from 'react-use';
 
 import { Sider } from './Sider';
 import {
@@ -12,8 +14,10 @@ import {
 import { useCurrentUser } from '@/Panel/auth';
 import { Conversation } from './Conversation';
 import { ConversationList } from './ConversationList';
+import { useOperators } from '../hooks/operator';
+import { Avatar } from '../components/Avatar';
 
-const LIVE_CONVERSATION_LABELS: Record<string, ReactNode> = {
+const STREAM_LABELS: Record<string, ReactNode> = {
   unassigned: (
     <>
       <span>未分配</span>
@@ -60,17 +64,51 @@ export default function Conversations() {
 
   const setConvQueryData = useSetConversationQueryData();
 
+  const [showSider, toggleSider] = useToggle(true);
+
+  const { data: operators } = useOperators();
+
+  const streamLabel = useMemo(() => {
+    if (stream in STREAM_LABELS) {
+      return STREAM_LABELS[stream];
+    }
+    if (stream.startsWith('operator/')) {
+      const operatorId = stream.slice('operator/'.length);
+      const operator = operators?.find((t) => t.id === operatorId);
+      if (operator) {
+        return (
+          <div className="flex items-center">
+            <Avatar size={24} status={operator.status} />
+            <div className="ml-3">{operator.internalName}</div>
+          </div>
+        );
+      }
+    }
+  }, [stream, operators]);
+
   return (
     <div className="h-full flex">
-      <Sider stream={stream} onChangeStream={setStream} />
+      <Sider show={showSider} stream={stream} onChangeStream={setStream} />
 
-      <div className="w-[300px] border-x flex flex-col bg-white rounded-l-2xl shrink-0">
+      <div
+        className={cx('w-[300px] border-x flex flex-col bg-white shrink-0 z-10', {
+          'rounded-l-2xl': showSider,
+          'border-l-0': !showSider,
+        })}
+      >
         <div className="px-5 border-b border-[#ededed]">
           <div className="h-[70px] font-medium text-[20px] flex items-center">
-            <button className="mr-4 text-[#969696] p-1 rounded hover:bg-gray-100">
-              <MdMenuOpen className="w-[22px] h-[22px]" />
+            <button
+              className="mr-4 text-[#969696] p-1 rounded transition-colors hover:bg-[#f7f7f7]"
+              onClick={toggleSider}
+            >
+              <MdMenuOpen
+                className={cx('w-[22px] h-[22px] transition-transform duration-300', {
+                  '-rotate-180': !showSider,
+                })}
+              />
             </button>
-            {LIVE_CONVERSATION_LABELS[stream]}
+            {streamLabel}
           </div>
         </div>
         <div className="overflow-y-auto grow flex flex-col">
