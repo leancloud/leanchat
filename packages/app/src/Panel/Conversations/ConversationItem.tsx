@@ -7,7 +7,6 @@ interface ConversationItemProps {
   title: string;
   time?: string;
   message?: string;
-  operatorAvatar?: ReactNode;
   unread?: boolean;
 }
 
@@ -17,15 +16,15 @@ export function ConversationItem({
   title,
   time,
   message,
-  operatorAvatar,
   unread,
 }: ConversationItemProps) {
   return (
     <div
       className={cx(
-        'h-[60px] px-5 py-4 border-b cursor-pointer box-content text-left hover:bg-[#eff2f6]',
+        'h-[60px] p-5 border-b cursor-pointer box-content text-left transition-colors hover:bg-[#f7f7f7] border-l-2',
         {
-          'bg-[#eff2f6]': active,
+          'border-l-transparent': !active,
+          'bg-[#f7f7f7] border-l-[#3884f7]': active,
         },
       )}
     >
@@ -34,21 +33,18 @@ export function ConversationItem({
         <div className="ml-[10px] grow overflow-hidden">
           <div className="flex items-center">
             <div className="text-sm font-medium truncate mr-auto">{title}</div>
-            {unread && <div className="w-2 h-2 rounded-full bg-[#0566ff] mx-2 shrink-0" />}
-            {time && <div className="text-xs shrink-0">{time}</div>}
           </div>
-          <div className="text-xs text-[#647491]">Live chat</div>
         </div>
+        {time && <div className="text-xs text-[#a8a8a8] shrink-0 ml-2">{time}</div>}
       </div>
       <div className="mt-2 flex items-center">
         <div
-          className={cx('text-sm mr-auto truncate', {
+          className={cx('text-sm text-[#646464] mr-auto truncate', {
             'font-bold': unread,
           })}
         >
           {message}
         </div>
-        {operatorAvatar}
       </div>
     </div>
   );

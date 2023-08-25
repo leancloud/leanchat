@@ -1,6 +1,5 @@
 import { useMemo } from 'react';
 import { Select, SelectProps, Tabs, TabsProps } from 'antd';
-import { Transition } from '@headlessui/react';
 
 import { useOperators } from '@/Panel/hooks/operator';
 import { useConversationContext } from './ConversationContext';
@@ -57,25 +56,12 @@ function ConversationInfo() {
   );
 }
 
-interface ConversationDetailProps {
-  show?: boolean;
-}
+interface ConversationDetailProps {}
 
-export function ConversationDetail({ show }: ConversationDetailProps) {
+export function ConversationDetail({}: ConversationDetailProps) {
   return (
-    <Transition
-      className="shrink-0 border border-l-[#d3dbe5]"
-      show={show}
-      enter="transition-[width] duration-300"
-      enterFrom="w-0"
-      enterTo="w-[320px]"
-      leave="transition-[width] duration-300"
-      leaveFrom="w-[320px]"
-      leaveTo="w-0"
-    >
-      <div className="w-[320px] px-4">
-        <Tabs size="small" items={tabsItems} />
-      </div>
-    </Transition>
+    <div className="w-[320px] p-5 border-l shrink-0 bg-white">
+      <Tabs size="small" items={tabsItems} />
+    </div>
   );
 }

@@ -9,9 +9,7 @@
 }
 
 body {
-  @apply antialiased;
-  font-family: sans-serif;
-  letter-spacing: -0.24px;
+  color: #1e1e1e;
 }
 
 /* twemoji */

@@ -1,7 +1,8 @@
-import { useMemo, useState } from 'react';
+import { ReactNode, useMemo, useState } from 'react';
+import { MdMenuOpen } from 'react-icons/md';
+import { Empty, Spin } from 'antd';
 import _ from 'lodash';
 
-import { CustomSider } from '../Layout';
 import { Sider } from './Sider';
 import {
   ConversationsQueryVariables,
@@ -10,7 +11,26 @@ import {
 } from '@/Panel/hooks/conversation';
 import { useCurrentUser } from '@/Panel/auth';
 import { Conversation } from './Conversation';
-import { useToggle } from 'react-use';
+import { ConversationList } from './ConversationList';
+
+const LIVE_CONVERSATION_LABELS: Record<string, ReactNode> = {
+  unassigned: (
+    <>
+      <span>未分配</span>
+    </>
+  ),
+  myOpen: (
+    <>
+      <span>我的</span>
+    </>
+  ),
+  solved: (
+    <>
+      <span>已解决</span>
+    </>
+  ),
+  allOperators: <span>全部</span>,
+};
 
 export default function Conversations() {
   const user = useCurrentUser();
@@ -40,32 +60,45 @@ export default function Conversations() {
 
   const setConvQueryData = useSetConversationQueryData();
 
-  const [showDetail, toggleDetail] = useToggle(false);
-
   return (
-    <>
-      <CustomSider>
-        <Sider
-          stream={stream}
-          onChangeStream={setStream}
-          conversations={conversations}
-          loading={isLoading}
-          onClickConversation={(conv) => {
-            setConversationId(conv.id);
-            setConvQueryData(conv);
-          }}
-          activeConversation={conversationId}
-        />
-      </CustomSider>
+    <div className="h-full flex">
+      <Sider stream={stream} onChangeStream={setStream} />
 
-      {conversationId && (
-        <Conversation
-          key={conversationId}
-          conversationId={conversationId}
-          showDetail={showDetail}
-          onToggleDetail={toggleDetail}
-        />
-      )}
-    </>
+      <div className="w-[300px] border-x flex flex-col bg-white rounded-l-2xl shrink-0">
+        <div className="px-5 border-b border-[#ededed]">
+          <div className="h-[70px] font-medium text-[20px] flex items-center">
+            <button className="mr-4 text-[#969696] p-1 rounded hover:bg-gray-100">
+              <MdMenuOpen className="w-[22px] h-[22px]" />
+            </button>
+            {LIVE_CONVERSATION_LABELS[stream]}
+          </div>
+        </div>
+        <div className="overflow-y-auto grow flex flex-col">
+          {isLoading && (
+            <div className="h-full flex justify-center items-center">
+              <Spin />
+            </div>
+          )}
+          {conversations?.length === 0 && (
+            <div className="py-20">
+              <Empty description="暂无会话" />
+            </div>
+          )}
+          <ConversationList
+            conversations={conversations}
+            onClick={(conv) => {
+              setConversationId(conv.id);
+              setConvQueryData(conv);
+            }}
+            activeConversation={conversationId}
+            unreadAlert={stream === 'myOpen'}
+          />
+        </div>
+      </div>
+
+      <div className="grow bg-white">
+        {conversationId && <Conversation key={conversationId} conversationId={conversationId} />}
+      </div>
+    </div>
   );
 }

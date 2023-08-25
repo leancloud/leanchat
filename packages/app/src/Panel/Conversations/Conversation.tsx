@@ -1,5 +1,7 @@
 import { PropsWithChildren, useEffect, useLayoutEffect, useRef, useState } from 'react';
 import { useMutation } from '@tanstack/react-query';
+import { AiOutlineClockCircle } from 'react-icons/ai';
+import { FiCheck } from 'react-icons/fi';
 import { Button, Input, message } from 'antd';
 import _ from 'lodash';
 
@@ -13,11 +15,9 @@ import { MessageList } from './MessageList';
 
 interface ConversationProps {
   conversationId: string;
-  showDetail: boolean;
-  onToggleDetail: () => void;
 }
 
-export function Conversation({ conversationId, showDetail, onToggleDetail }: ConversationProps) {
+export function Conversation({ conversationId }: ConversationProps) {
   const user = useCurrentUser();
   const socket = useSocket();
 
@@ -97,15 +97,28 @@ export function Conversation({ conversationId, showDetail, onToggleDetail }: Con
   return (
     <ConversationContext.Provider value={{ conversation }}>
       <div className="h-full flex">
-        <div className="h-full flex flex-col overflow-hidden relative grow">
+        <div className="h-full flex flex-col overflow-hidden relative grow bg-white">
+          <div className="shrink-0 h-[70px] box-content border-b flex items-center px-5">
+            <div className="text-[20px] font-medium truncate">{conversation.visitorId}</div>
+            <div className="ml-auto space-x-3 shrink-0">
+              <button className="text-[#969696] p-1 rounded transition-colors hover:bg-gray-100">
+                <AiOutlineClockCircle className="w-5 h-5" />
+              </button>
+              <button
+                className="text-[#969696] p-1 rounded transition-colors hover:bg-gray-100"
+                title="结束会话"
+                onClick={() => closeConversation()}
+              >
+                <FiCheck className="w-5 h-5" />
+              </button>
+            </div>
+          </div>
+
           <div ref={messageContainerRef} className="mt-auto overflow-y-auto">
             <MessageList messages={messages} />
           </div>
-          <div className="border-t-[3px] border-primary bg-white relative">
-            <div className="px-2 py-1 border-b space-x-1">
-              <Button size="small" onClick={() => closeConversation()}>
-                结束会话
-              </Button>
+          <div className="border-t border-[#ececec] relative">
+            <div className="p-2 border-b space-x-1">
               <Button size="small" onClick={() => inviteEvaluation()}>
                 邀请评价
               </Button>
@@ -113,9 +126,9 @@ export function Conversation({ conversationId, showDetail, onToggleDetail }: Con
             <div>
               <Input.TextArea
                 ref={textareaRef}
-                className="placeholder:!text-[#647491]"
+                className="placeholder:!text-[#a8a8a8]"
                 autoSize={{ maxRows: 25 }}
-                placeholder="Write your message or type / to pick a Canned Response"
+                placeholder="输入 / 选择快捷回复"
                 value={content}
                 onChange={(e) => setContent(e.target.value)}
                 onKeyDown={(e) => {
@@ -136,7 +149,7 @@ export function Conversation({ conversationId, showDetail, onToggleDetail }: Con
                 }}
               />
             </div>
-            <div className="px-4 py-[10px] flex justify-between">
+            <div className="p-5 flex justify-between">
               <div></div>
               <Button
                 className="h-[34px] border-none"
@@ -144,7 +157,7 @@ export function Conversation({ conversationId, showDetail, onToggleDetail }: Con
                 disabled={content.trim() === ''}
                 onClick={handleCreateMessage}
               >
-                Reply
+                发送
               </Button>
             </div>
 
@@ -166,16 +179,9 @@ export function Conversation({ conversationId, showDetail, onToggleDetail }: Con
 
             {conversation.status === 'solved' && <Mask>会话已结束</Mask>}
           </div>
-
-          <button
-            className="absolute top-0 right-0 bg-[#e2e8ef] h-[34px] text-xs px-2 rounded-bl-lg text-primary"
-            onClick={() => onToggleDetail()}
-          >
-            会话详情
-          </button>
         </div>
 
-        <ConversationDetail show={showDetail} />
+        <ConversationDetail />
       </div>
     </ConversationContext.Provider>
   );

@@ -23,7 +23,7 @@ interface DateDividerProps {
 function DateDivider({ date }: DateDividerProps) {
   return (
     <Divider style={{ margin: 0, padding: '10px 20px', fontSize: 14 }}>
-      {dayjs(date).format('MMM DD, YYYY')}
+      {dayjs(date).isToday() ? '今天' : dayjs(date).format('YYYY-MM-DD')}
     </Divider>
   );
 }
@@ -44,7 +44,7 @@ function TextMessage({ message, position }: TextMessageProps) {
       })}
     >
       <div
-        className={cx('text-xs px-1 mb-1 flex gap-4', {
+        className={cx('text-xs px-1 mb-1 flex gap-2', {
           'flex-row-reverse': !isLeft,
         })}
       >
@@ -53,10 +53,10 @@ function TextMessage({ message, position }: TextMessageProps) {
       </div>
       <div
         className={cx(
-          'text-sm px-[10px] py-2 inline-block whitespace-pre-line rounded-lg shadow-sm max-w-[85%]',
+          'text-sm text-[#646464] p-[10px] inline-block whitespace-pre-line rounded-lg max-w-[85%]',
           {
-            'bg-white': isLeft,
-            'bg-primary-500 text-white': !isLeft,
+            'border border-[#ececec]': isLeft,
+            'bg-[#e8f3fe]': !isLeft,
           },
         )}
       >
@@ -77,7 +77,7 @@ interface LogMessageProps {
 function LogMessage({ message }: LogMessageProps) {
   return (
     <div className="flex justify-center my-4">
-      <div className="text-xs bg-gray-300 rounded-full px-3 py-1">
+      <div className="text-xs bg-[#e7e7e7] rounded-full px-3 py-1">
         系统消息：{systemMessages[message.data.type]}
       </div>
     </div>
