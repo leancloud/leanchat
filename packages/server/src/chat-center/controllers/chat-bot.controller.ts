@@ -7,6 +7,7 @@ import {
   Param,
   Patch,
   Post,
+  UseGuards,
   UsePipes,
 } from '@nestjs/common';
 import { ZodValidationPipe } from 'nestjs-zod';
@@ -14,8 +15,10 @@ import { ZodValidationPipe } from 'nestjs-zod';
 import { ChatbotService } from 'src/chatbot';
 import { CreateChatbotDto } from '../dtos/chat-bot';
 import { UpdateChatbotDto } from '../dtos/chat-bot/update-chat-bot.dto';
+import { AuthGuard } from '../guards/auth.guard';
 
 @Controller('chat-bots')
+@UseGuards(AuthGuard)
 @UsePipes(ZodValidationPipe)
 export class ChatbotController {
   constructor(private chatbotService: ChatbotService) {}

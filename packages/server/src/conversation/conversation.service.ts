@@ -1,10 +1,11 @@
-import { Injectable } from '@nestjs/common';
+import { BadRequestException, Injectable } from '@nestjs/common';
 import { EventEmitter2 } from '@nestjs/event-emitter';
 import AV from 'leancloud-storage';
 import { LRUCache } from 'lru-cache';
 
 import { ConversationCreatedEvent } from 'src/event';
 import { MessageService } from 'src/message';
+import { CategoryService } from 'src/category';
 import { Conversation } from './conversation.entity';
 import {
   EvaluateConversationData,
@@ -22,6 +23,7 @@ export class ConversationService {
   constructor(
     private events: EventEmitter2,
     private messageService: MessageService,
+    private categoryService: CategoryService,
   ) {}
 
   async createConversation(visitorId: string) {
@@ -95,6 +97,14 @@ export class ConversationService {
     if (data.evaluation) {
       obj.set('evaluation', data.evaluation);
       newConv.evaluation = data.evaluation;
+    }
+    if (data.categoryId) {
+      const category = await this.categoryService.getCategory(data.categoryId);
+      if (!category) {
+        throw new BadRequestException(`分类 ${data.categoryId} 不存在`);
+      }
+      obj.set('categoryId', category.id);
+      newConv.categoryId = category.id;
     }
     await obj.save(null, { useMasterKey: true });
     if (this.cache.has(conv.id)) {

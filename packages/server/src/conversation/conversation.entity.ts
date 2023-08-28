@@ -20,6 +20,8 @@ export class Conversation {
     feedback: string;
   };
 
+  categoryId?: string;
+
   createdAt: Date;
 
   static fromAVObject(obj: { get(key: string): any }) {
@@ -32,6 +34,7 @@ export class Conversation {
     conv.queuedAt = obj.get('queuedAt');
     conv.visitorLastActivityAt = obj.get('visitorLastActivityAt');
     conv.evaluation = obj.get('evaluation');
+    conv.categoryId = obj.get('categoryId');
     conv.createdAt = obj.get('createdAt');
     return conv;
   }
@@ -44,6 +47,9 @@ export class Conversation {
     conv.lastMessage = this.lastMessage;
     conv.status = this.status;
     conv.queuedAt = this.queuedAt;
+    conv.visitorLastActivityAt = this.visitorLastActivityAt;
+    conv.evaluation = this.evaluation;
+    conv.categoryId = this.categoryId;
     conv.createdAt = this.createdAt;
     return conv;
   }

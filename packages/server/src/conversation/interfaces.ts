@@ -10,6 +10,7 @@ export interface UpdateConversationData {
     star: number;
     feedback: string;
   };
+  categoryId?: string;
 }
 
 export interface GetConversationOptions {

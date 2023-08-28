@@ -14,7 +14,10 @@ const GetConversationsSchema = z.object({
       return true;
     })
     .optional(),
-  cursor: z.dateString().transform((str) => new Date(str)),
+  cursor: z
+    .dateString()
+    .transform((str) => new Date(str))
+    .optional(),
 });
 
 export class GetConversationsDto extends createZodDto(GetConversationsSchema) {}

@@ -7,6 +7,7 @@ import { ConversationModule } from 'src/conversation/conversation.module';
 import { OperatorModule } from 'src/operator/operator.module';
 import { MessageModule } from 'src/message/message.module';
 import { ChatbotModule } from 'src/chatbot';
+import { CategoryModule } from 'src/category';
 import { ChatGateway } from './chat.gateway';
 import { AssignConversationProcessor } from './processors/assign-conversation.processor';
 import { CurrentOperatorMiddleware } from './middlewares/current-operator.middleware';
@@ -14,6 +15,7 @@ import { AssignService } from './assign.service';
 import { ChatService } from './chat.service';
 import { ChatConversationService } from './services/chat-conversation.service';
 import {
+  CategoryController,
   ChatbotController,
   ConversationController,
   OperatorController,
@@ -31,6 +33,7 @@ import {
     OperatorModule,
     MessageModule,
     ChatbotModule,
+    CategoryModule,
   ],
   providers: [
     ConversationService,
@@ -46,6 +49,7 @@ import {
     ConversationController,
     VisitorController,
     ChatbotController,
+    CategoryController,
   ],
   exports: [AssignService, ChatConversationService],
 })
