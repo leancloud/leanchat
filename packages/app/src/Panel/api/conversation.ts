@@ -24,3 +24,12 @@ export async function getConversationMessages(id: string) {
   const res = await client.get<Message[]>(`/conversations/${id}/messages`);
   return res.data;
 }
+
+export interface UpdateConversationData {
+  categoryId?: string;
+}
+
+export async function updateConversation(id: string, data: UpdateConversationData) {
+  const res = await client.patch<Conversation>(`/conversations/${id}`, data);
+  return res.data;
+}

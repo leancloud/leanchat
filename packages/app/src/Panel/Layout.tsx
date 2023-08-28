@@ -40,7 +40,7 @@ export function Layout({ navs, children }: LayoutProps) {
           <User />
         </div>
       </div>
-      <div className="grow overflow-hidden">{children}</div>
+      <div className="grow overflow-y-hidden">{children}</div>
     </div>
   );
 }

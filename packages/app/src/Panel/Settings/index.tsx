@@ -10,7 +10,7 @@ import {
   useNavigate,
   useResolvedPath,
 } from 'react-router-dom';
-import { HiUserGroup } from 'react-icons/hi2';
+import { HiUserGroup, HiTag } from 'react-icons/hi2';
 import { FaUserCheck } from 'react-icons/fa';
 import { MdAccountCircle } from 'react-icons/md';
 import { BiBot } from 'react-icons/bi';
@@ -19,6 +19,7 @@ import cx from 'classnames';
 import { NavButton, NavMenu } from '../components/NavMenu';
 import { ChatBots, NewChatBot, ChatBotDetail } from './ChatBots';
 import { Operators, NewOperator, EditOperator } from './Team/Operators';
+import { Categories } from './Categories';
 
 interface NavSection {
   name: string;
@@ -68,6 +69,11 @@ const navs: NavSection[] = [
             path: 'team/operators',
           },
         ],
+      },
+      {
+        icon: HiTag,
+        name: '分类',
+        path: 'categories',
       },
     ],
   },
@@ -172,6 +178,7 @@ export default function Settings() {
           <Route path="new" element={<NewOperator />} />
           <Route path=":id" element={<EditOperator />} />
         </Route>
+        <Route path="categories" element={<Categories />} />
       </Route>
       <Route path="chat-bots/new" element={<NewChatBot />} />
       <Route path="chat-bots/:id" element={<ChatBotDetail />} />

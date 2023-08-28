@@ -1,5 +1,5 @@
 import { useCallback, useEffect } from 'react';
-import { useQuery, useQueryClient } from '@tanstack/react-query';
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { Socket } from 'socket.io-client';
 import { produce } from 'immer';
 
@@ -8,6 +8,7 @@ import {
   getConversation,
   getConversationMessages,
   getConversations,
+  updateConversation,
 } from '@/Panel/api/conversation';
 
 export type ConversationsQueryVariables =
@@ -181,4 +182,17 @@ export function useSubscribeConversations(socket: Socket) {
       socket.off('conversationClosed', onConversationClosed);
     };
   }, [socket, queryClient]);
+}
+
+export function useUpdateConversation() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: (args: Parameters<typeof updateConversation>) => {
+      return updateConversation(...args);
+    },
+    onSuccess: (data) => {
+      queryClient.setQueryData(['Conversation', data.id], data);
+    },
+  });
 }

@@ -14,6 +14,7 @@ export interface Conversation {
   operatorId?: string;
   lastMessage?: Message;
   status: string;
+  categoryId?: string;
 }
 
 export interface Operator {
@@ -47,4 +48,10 @@ export interface ChatBot {
   name: string;
   nodes: ChatBotNode[];
   edges: ChatBotEdge[];
+}
+
+export interface Category {
+  id: string;
+  name: string;
+  parentId?: string;
 }

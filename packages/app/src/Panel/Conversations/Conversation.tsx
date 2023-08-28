@@ -135,7 +135,7 @@ export function Conversation({ conversationId }: ConversationProps) {
       <div className="h-full flex">
         <div className="h-full flex flex-col overflow-hidden relative grow bg-white">
           <div className="shrink-0 h-[70px] box-content border-b flex items-center px-5">
-            <div className="text-[20px] font-medium truncate mr-auto">{conversation.visitorId}</div>
+            <div className="text-[20px] font-medium truncate mr-auto">{conversation.id}</div>
             <div className="ml-2 shrink-0 flex items-center gap-3">
               {conversation.operatorId && (
                 <OperatorLabel operatorId={conversation.operatorId} onClick={toggleReassignModal} />
