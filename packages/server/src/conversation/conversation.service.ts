@@ -110,6 +110,7 @@ export class ConversationService {
     sort = 'createdAt',
     desc = false,
     limit,
+    cursor,
   }: GetConversationOptions) {
     const query = new AV.Query('ChatConversation');
     if (status) {
@@ -133,6 +134,9 @@ export class ConversationService {
 
     if (limit) {
       query.limit(limit);
+    }
+    if (cursor) {
+      query.greaterThan(sort, cursor);
     }
 
     const objs = await query.find({ useMasterKey: true });

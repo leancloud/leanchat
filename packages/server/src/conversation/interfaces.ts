@@ -20,6 +20,7 @@ export interface GetConversationOptions {
   sort?: string;
   desc?: boolean;
   limit?: number;
+  cursor?: Date;
 }
 
 export interface EvaluateConversationData {
