@@ -1,9 +1,10 @@
+import { BadRequestException, Injectable } from '@nestjs/common';
 import AV from 'leancloud-storage';
 
 import { Category } from './category.entity';
 import { CreateCategoryData, UpdateCategoryData } from './interfaces';
-import { BadRequestException } from '@nestjs/common';
 
+@Injectable()
 export class CategoryService {
   async getCategories() {
     const query = new AV.Query('ChatCategory');
