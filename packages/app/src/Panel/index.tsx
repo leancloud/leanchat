@@ -2,7 +2,8 @@ import { PropsWithChildren, Suspense, lazy, useState } from 'react';
 import { BrowserRouter, Navigate, Outlet, Route, Routes, useNavigate } from 'react-router-dom';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { RecoilRoot } from 'recoil';
-import { Spin } from 'antd';
+import { ConfigProvider, Spin } from 'antd';
+import zhCN from 'antd/locale/zh_CN';
 import { StyleProvider } from '@ant-design/cssinjs';
 import { MdSettings } from 'react-icons/md';
 import { BiSolidInbox } from 'react-icons/bi';
@@ -107,6 +108,7 @@ const Root = new Compose()
   .push(BrowserRouter)
   // https://github.com/ant-design/ant-design/issues/38794
   .push(StyleProvider, { hashPriority: 'high' })
+  .push(ConfigProvider, { locale: zhCN })
   .push(RecoilRoot)
   .push(PanelQueryClientProvider)
   .push(NowProvider, { interval: 1000 * 20 })
