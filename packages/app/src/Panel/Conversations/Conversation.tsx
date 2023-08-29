@@ -4,6 +4,7 @@ import { AiOutlineClockCircle } from 'react-icons/ai';
 import { FiCheck } from 'react-icons/fi';
 import { HiDotsHorizontal } from 'react-icons/hi';
 import { FaUserEdit } from 'react-icons/fa';
+import { useToggle } from 'react-use';
 import { Button, Dropdown, Input, message } from 'antd';
 import _ from 'lodash';
 
@@ -16,8 +17,9 @@ import { ConversationContext } from './ConversationContext';
 import { MessageList } from './MessageList';
 import { Avatar } from '../components/Avatar';
 import { useOperators } from '../hooks/operator';
-import { useToggle } from 'react-use';
+
 import { ReassignModal } from './ReassignModal';
+import { QuickReply, QuickReplyRef } from './QuickReply';
 
 interface OperatorLabelProps {
   operatorId: string;
@@ -74,6 +76,7 @@ export function Conversation({ conversationId }: ConversationProps) {
   });
 
   const [content, setContent] = useState('');
+  const [showQuickReply, setShowQuickReply] = useState(false);
 
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const messageContainerRef = useRef<HTMLDivElement>(null);
@@ -126,6 +129,10 @@ export function Conversation({ conversationId }: ConversationProps) {
 
   const [showReassignModal, toggleReassignModal] = useToggle(false);
 
+  const quickReplyRef = useRef<QuickReplyRef>(null);
+
+  const keyword = content.startsWith('/') ? content.slice(1) : undefined;
+
   if (!conversation) {
     return;
   }
@@ -174,7 +181,24 @@ export function Conversation({ conversationId }: ConversationProps) {
           <div ref={messageContainerRef} className="mt-auto overflow-y-auto">
             <MessageList messages={messages} />
           </div>
+
           <div className="border-t border-[#ececec] relative">
+            {showQuickReply && (
+              <QuickReply
+                ref={quickReplyRef}
+                onSelect={(content) => {
+                  setContent(content);
+                  setShowQuickReply(false);
+                  textareaRef.current?.focus();
+                }}
+                onClose={() => {
+                  setShowQuickReply(false);
+                  textareaRef.current?.focus();
+                }}
+                keyword={keyword}
+              />
+            )}
+
             <div className="p-2 border-b space-x-1">
               <Button size="small" onClick={() => inviteEvaluation()}>
                 邀请评价
@@ -187,8 +211,15 @@ export function Conversation({ conversationId }: ConversationProps) {
                 autoSize={{ maxRows: 25 }}
                 placeholder="输入 / 选择快捷回复"
                 value={content}
-                onChange={(e) => setContent(e.target.value)}
+                onChange={(e) => {
+                  setContent(e.target.value);
+                  setShowQuickReply(e.target.value.startsWith('/'));
+                }}
                 onKeyDown={(e) => {
+                  if (quickReplyRef.current?.handleKeyDown(e)) {
+                    e.preventDefault();
+                    return;
+                  }
                   if (e.key === 'Enter') {
                     if (e.shiftKey) {
                       return;
@@ -202,7 +233,7 @@ export function Conversation({ conversationId }: ConversationProps) {
                   border: 0,
                   borderRadius: 0,
                   boxShadow: 'unset',
-                  padding: '16px 64px 16px 14px',
+                  padding: '16px 14px',
                 }}
               />
             </div>

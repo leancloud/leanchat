@@ -55,3 +55,9 @@ export interface Category {
   name: string;
   parentId?: string;
 }
+
+export interface QuickReply {
+  id: string;
+  content: string;
+  tags?: string[];
+}

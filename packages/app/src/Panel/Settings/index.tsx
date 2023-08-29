@@ -14,12 +14,14 @@ import { HiUserGroup, HiTag } from 'react-icons/hi2';
 import { FaUserCheck } from 'react-icons/fa';
 import { MdAccountCircle } from 'react-icons/md';
 import { BiBot } from 'react-icons/bi';
+import { IoFlashOutline } from 'react-icons/io5';
 import cx from 'classnames';
 
 import { NavButton, NavMenu } from '../components/NavMenu';
 import { ChatBots, NewChatBot, ChatBotDetail } from './ChatBots';
 import { Operators, NewOperator, EditOperator } from './Team/Operators';
 import { Categories } from './Categories';
+import { QuickReplies } from './QuickReplies';
 
 interface NavSection {
   name: string;
@@ -74,6 +76,11 @@ const navs: NavSection[] = [
         icon: HiTag,
         name: '分类',
         path: 'categories',
+      },
+      {
+        icon: IoFlashOutline,
+        name: '快捷回复',
+        path: 'quick-replies',
       },
     ],
   },
@@ -179,6 +186,7 @@ export default function Settings() {
           <Route path=":id" element={<EditOperator />} />
         </Route>
         <Route path="categories" element={<Categories />} />
+        <Route path="quick-replies" element={<QuickReplies />} />
       </Route>
       <Route path="chat-bots/new" element={<NewChatBot />} />
       <Route path="chat-bots/:id" element={<ChatBotDetail />} />

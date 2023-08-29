@@ -27,6 +27,7 @@ export function ReassignModal({ open, onClose }: ReassignModalProps) {
           <div className="ml-2">{o.internalName}</div>
         </div>
       ),
+      name: o.internalName,
       value: o.id,
       disabled: o.status !== 'ready',
     }));
@@ -52,10 +53,12 @@ export function ReassignModal({ open, onClose }: ReassignModalProps) {
       onOk={() => assignConversation(operatorId!)}
       confirmLoading={isUpdating}
     >
-      <div className="mt-4 mb-2">将会话分配给：</div>
+      <div className="mb-2">将会话分配给：</div>
       <Select
+        showSearch
         size="large"
         options={operatorOptions}
+        optionFilterProp="name"
         value={operatorId}
         onChange={setOperatorId}
         style={{ width: '100%' }}
