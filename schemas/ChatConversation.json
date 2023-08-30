@@ -1,0 +1,86 @@
+{
+  "schema": {
+    "objectId": {
+      "type": "String"
+    },
+    "ACL": {
+      "type": "ACL"
+    },
+    "categoryId": {
+      "type": "String"
+    },
+    "evaluation": {
+      "type": "Object"
+    },
+    "lastMessage": {
+      "type": "Object"
+    },
+    "operatorId": {
+      "type": "String"
+    },
+    "queuedAt": {
+      "type": "Date"
+    },
+    "status": {
+      "type": "String"
+    },
+    "visitorId": {
+      "type": "String"
+    },
+    "visitorLastActivityAt": {
+      "type": "Date"
+    },
+    "createdAt": {
+      "type": "Date"
+    },
+    "updatedAt": {
+      "type": "Date"
+    }
+  },
+  "permissions": {
+    "add_fields": {
+      "roles": [],
+      "users": []
+    },
+    "create": {
+      "roles": [],
+      "users": []
+    },
+    "delete": {
+      "roles": [],
+      "users": []
+    },
+    "find": {
+      "roles": [],
+      "users": []
+    },
+    "get": {
+      "roles": [],
+      "users": []
+    },
+    "update": {
+      "roles": [],
+      "users": []
+    }
+  },
+  "indexes": [
+    {
+      "name": "-user-operatorId_1",
+      "key": {
+        "operatorId": 1
+      }
+    },
+    {
+      "name": "-user-status_1",
+      "key": {
+        "status": 1
+      }
+    },
+    {
+      "name": "-user-visitorId_1",
+      "key": {
+        "visitorId": 1
+      }
+    }
+  ]
+}

@@ -1,0 +1,66 @@
+{
+  "schema": {
+    "objectId": {
+      "type": "String"
+    },
+    "ACL": {
+      "type": "ACL"
+    },
+    "concurrency": {
+      "type": "Number"
+    },
+    "externalName": {
+      "type": "String"
+    },
+    "internalName": {
+      "type": "String"
+    },
+    "password": {
+      "type": "String"
+    },
+    "username": {
+      "type": "String"
+    },
+    "createdAt": {
+      "type": "Date"
+    },
+    "updatedAt": {
+      "type": "Date"
+    }
+  },
+  "permissions": {
+    "add_fields": {
+      "roles": [],
+      "users": []
+    },
+    "create": {
+      "roles": [],
+      "users": []
+    },
+    "delete": {
+      "roles": [],
+      "users": []
+    },
+    "find": {
+      "roles": [],
+      "users": []
+    },
+    "get": {
+      "roles": [],
+      "users": []
+    },
+    "update": {
+      "roles": [],
+      "users": []
+    }
+  },
+  "indexes": [
+    {
+      "name": "-user-username_1",
+      "key": {
+        "username": 1
+      },
+      "unique": true
+    }
+  ]
+}
