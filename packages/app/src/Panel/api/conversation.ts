@@ -20,8 +20,19 @@ export async function getConversation(id: string) {
   return res.data;
 }
 
-export async function getConversationMessages(id: string) {
-  const res = await client.get<Message[]>(`/conversations/${id}/messages`);
+interface GetConversationMessagesOptions {
+  desc?: boolean;
+  limit?: number;
+  cursor?: string;
+}
+
+export async function getConversationMessages(
+  id: string,
+  options?: GetConversationMessagesOptions,
+) {
+  const res = await client.get<Message[]>(`/conversations/${id}/messages`, {
+    params: options,
+  });
   return res.data;
 }
 

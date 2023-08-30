@@ -91,14 +91,14 @@ function LogMessage({ message }: LogMessageProps) {
 }
 
 interface MessageListProps {
-  messages: IMessage[];
+  messages?: IMessage[];
 }
 
 export function MessageList({ messages }: MessageListProps) {
   const messageItems = useMemo(() => {
     const items: IMessageItem[] = [];
     let lastDate: dayjs.Dayjs | undefined;
-    messages.forEach((message) => {
+    messages?.forEach((message) => {
       const date = dayjs(message.createdAt).startOf('day');
       if (lastDate && !lastDate.isSame(date)) {
         items.push({ type: 'dateDivider', date });

@@ -1,15 +1,10 @@
 import { useCallback, useEffect } from 'react';
-import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import { InfiniteData, useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { Socket } from 'socket.io-client';
 import { produce } from 'immer';
 
 import { Conversation, Message } from '@/Panel/types';
-import {
-  getConversation,
-  getConversationMessages,
-  getConversations,
-  updateConversation,
-} from '@/Panel/api/conversation';
+import { getConversation, getConversations, updateConversation } from '@/Panel/api/conversation';
 
 export type ConversationsQueryVariables =
   | {
@@ -80,23 +75,29 @@ export function useSetConversationQueryData() {
   );
 }
 
-export function useConversationMessages(conversationId: string) {
-  return useQuery({
-    queryKey: ['Messages', { conversationId }],
-    queryFn: () => getConversationMessages(conversationId),
-    staleTime: 1000 * 60 * 5,
-  });
-}
-
 export function useAutoPushNewMessage(socket: Socket) {
   const queryClient = useQueryClient();
   useEffect(() => {
     const onMessage = (message: Message) => {
-      queryClient.setQueryData<Message[] | undefined>(
+      queryClient.setQueryData<InfiniteData<Message[]> | undefined>(
         ['Messages', { conversationId: message.conversationId }],
-        (messages) => {
-          if (messages) {
-            return [...messages, message];
+        (data) => {
+          if (data) {
+            return {
+              pages: [[message, ...data.pages[0]], ...data.pages.slice(1)],
+              pageParams: [...data.pageParams],
+            };
+          }
+        },
+      );
+      queryClient.setQueryData<InfiniteData<Message[]> | undefined>(
+        ['Messages', { visitorId: message.visitorId }],
+        (data) => {
+          if (data) {
+            return {
+              pages: [[message, ...data.pages[0]], ...data.pages.slice(1)],
+              pageParams: [...data.pageParams],
+            };
           }
         },
       );

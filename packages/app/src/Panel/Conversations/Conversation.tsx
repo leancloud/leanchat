@@ -1,25 +1,26 @@
-import { PropsWithChildren, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
-import { useMutation } from '@tanstack/react-query';
+import { PropsWithChildren, useLayoutEffect, useMemo, useRef, useState } from 'react';
+import { useInfiniteQuery, useMutation } from '@tanstack/react-query';
 import { AiOutlineClockCircle } from 'react-icons/ai';
 import { FiCheck } from 'react-icons/fi';
 import { HiDotsHorizontal } from 'react-icons/hi';
 import { FaUserEdit } from 'react-icons/fa';
 import { useToggle } from 'react-use';
-import { Button, Dropdown, Input, message } from 'antd';
+import { Button, Dropdown, Input, Tooltip, message } from 'antd';
+import cx from 'classnames';
 import _ from 'lodash';
 
-import { callRpc, useEvent, useSocket } from '@/socket';
+import { callRpc, useSocket } from '@/socket';
 import { useCurrentUser } from '@/Panel/auth';
-import { useConversation, useConversationMessages } from '@/Panel/hooks/conversation';
-import { Message } from '@/Panel/types';
+import { useConversation } from '@/Panel/hooks/conversation';
 import { ConversationDetail } from './ConversationDetail';
 import { ConversationContext } from './ConversationContext';
 import { MessageList } from './MessageList';
 import { Avatar } from '../components/Avatar';
 import { useOperators } from '../hooks/operator';
-
 import { ReassignModal } from './ReassignModal';
 import { QuickReply, QuickReplyRef } from './QuickReply';
+import { getConversationMessages } from '../api/conversation';
+import { getVisitorMessages } from '../api/visitor';
 
 interface OperatorLabelProps {
   operatorId: string;
@@ -59,31 +60,93 @@ export function Conversation({ conversationId }: ConversationProps) {
 
   const { data: conversation } = useConversation(conversationId);
 
-  const { data: remoteMessages } = useConversationMessages(conversationId);
+  const [visitorMessageMode, setVisitorMessageMode] = useState(false);
 
-  const [messages, setMessages] = useState<Message[]>([]);
+  const pageSize = 50;
 
-  useEffect(() => {
-    if (remoteMessages && messages.length === 0) {
-      setMessages(remoteMessages);
-    }
-  }, [remoteMessages, messages]);
-
-  useEvent(socket, 'message', (message: Message) => {
-    if (message.conversationId === conversationId) {
-      setMessages((prev) => [...prev, message]);
-    }
+  const convMessagesQuery = useInfiniteQuery({
+    enabled: !visitorMessageMode,
+    queryKey: ['Messages', { conversationId }],
+    queryFn: ({ pageParam }) => {
+      return getConversationMessages(conversationId, {
+        desc: true,
+        limit: pageSize,
+        cursor: pageParam,
+      });
+    },
+    getNextPageParam: (lastPage) => {
+      return lastPage[lastPage.length - 1]?.createdAt;
+    },
+    staleTime: 1000 * 60 * 5,
   });
+
+  const visitorMessagesQuery = useInfiniteQuery({
+    enabled: !!conversation && visitorMessageMode,
+    queryKey: ['Messages', { visitorId: conversation?.visitorId }],
+    queryFn: ({ pageParam }) => {
+      return getVisitorMessages(conversation!.visitorId, {
+        desc: true,
+        limit: pageSize,
+        cursor: pageParam,
+      });
+    },
+    getNextPageParam: (lastPage) => {
+      return lastPage[lastPage.length - 1]?.createdAt;
+    },
+    staleTime: 1000 * 60 * 5,
+  });
+
+  const messages = useMemo(() => {
+    if (visitorMessageMode) {
+      return visitorMessagesQuery.data?.pages.flat().reverse();
+    } else {
+      return convMessagesQuery.data?.pages.flat().reverse();
+    }
+  }, [convMessagesQuery.data, visitorMessagesQuery.data, visitorMessageMode]);
+
+  const hasMoreMessages = useMemo(() => {
+    if (!messages || messages.length < pageSize) {
+      return false;
+    }
+    return visitorMessageMode ? visitorMessagesQuery.hasNextPage : convMessagesQuery.hasNextPage;
+  }, [
+    messages,
+    convMessagesQuery.hasNextPage,
+    visitorMessagesQuery.hasNextPage,
+    visitorMessageMode,
+  ]);
+
+  const fetchMoreMessages = () => {
+    convMessagesQuery.fetchNextPage();
+  };
 
   const [content, setContent] = useState('');
   const [showQuickReply, setShowQuickReply] = useState(false);
 
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const messageContainerRef = useRef<HTMLDivElement>(null);
+  const messageContainerScrollHeight = useRef(0);
 
   useLayoutEffect(() => {
     if (messageContainerRef.current) {
-      messageContainerRef.current.scrollTop = messageContainerRef.current.scrollHeight;
+      const { scrollHeight, scrollTop, clientHeight } = messageContainerRef.current;
+      console.log({
+        scrollHeight,
+        scrollTop,
+        clientHeight,
+        lastScrollHeight: messageContainerScrollHeight.current,
+      });
+      if (messageContainerScrollHeight.current) {
+        if (scrollTop + clientHeight === messageContainerScrollHeight.current) {
+          messageContainerRef.current.scrollTop = scrollHeight;
+        } else {
+          messageContainerRef.current.scrollTop +=
+            scrollHeight - messageContainerScrollHeight.current;
+        }
+      } else {
+        messageContainerRef.current.scrollTop = scrollHeight;
+      }
+      messageContainerScrollHeight.current = scrollHeight;
     }
   }, [messages]);
 
@@ -147,16 +210,26 @@ export function Conversation({ conversationId }: ConversationProps) {
               {conversation.operatorId && (
                 <OperatorLabel operatorId={conversation.operatorId} onClick={toggleReassignModal} />
               )}
-              <button className="text-[#969696] p-1 rounded transition-colors hover:bg-[#f7f7f7]">
-                <AiOutlineClockCircle className="w-5 h-5" />
-              </button>
-              <button
-                className="text-[#969696] p-1 rounded transition-colors hover:bg-[#f7f7f7]"
-                title="结束会话"
-                onClick={() => closeConversation()}
-              >
-                <FiCheck className="w-5 h-5" />
-              </button>
+              <Tooltip title="历史消息" placement="bottom" mouseEnterDelay={0.5}>
+                <button
+                  className={cx('text-[#969696] p-1 rounded transition-colors', {
+                    'bg-[#f0f0f0]': visitorMessageMode,
+                    'hover:bg-[#f7f7f7]': !visitorMessageMode,
+                  })}
+                  onClick={() => setVisitorMessageMode(!visitorMessageMode)}
+                >
+                  <AiOutlineClockCircle className="w-5 h-5" />
+                </button>
+              </Tooltip>
+              <Tooltip title="结束会话" placement="bottom" mouseEnterDelay={0.5}>
+                <button
+                  className="text-[#969696] p-1 rounded transition-colors hover:bg-[#f7f7f7]"
+                  onClick={() => closeConversation()}
+                >
+                  <FiCheck className="w-5 h-5" />
+                </button>
+              </Tooltip>
+
               <Dropdown
                 trigger={['click']}
                 placement="bottomRight"
@@ -179,6 +252,20 @@ export function Conversation({ conversationId }: ConversationProps) {
           </div>
 
           <div ref={messageContainerRef} className="mt-auto overflow-y-auto">
+            <div className="flex justify-center my-4">
+              {hasMoreMessages ? (
+                <button
+                  className="text-xs bg-primary-100 px-2 py-1 rounded flex items-center"
+                  onClick={fetchMoreMessages}
+                >
+                  <AiOutlineClockCircle className="w-3 h-3 mr-1" />
+                  加载更多
+                </button>
+              ) : (
+                <div className="text-sm text-[#969696]">没有更多</div>
+              )}
+            </div>
+
             <MessageList messages={messages} />
           </div>
 
