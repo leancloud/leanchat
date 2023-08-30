@@ -5,7 +5,7 @@ import { Redis } from 'ioredis';
 
 import { REDIS } from 'src/redis';
 import { Conversation } from 'src/conversation';
-import { AssignConversationJobData } from './interfaces/assign-job';
+import { AssignConversationJobData } from '../interfaces/assign-job';
 
 @Injectable()
 export class AssignService {

@@ -28,7 +28,7 @@ import { ConversationService } from 'src/conversation';
 import { OperatorService } from 'src/operator';
 import { MessageService } from 'src/message';
 import { CreateMessageDto } from './dtos/create-message.dto';
-import { ChatService } from './chat.service';
+import { ChatService } from './services/chat.service';
 import {
   ConversationAssignedEvent,
   ConversationClosedEvent,

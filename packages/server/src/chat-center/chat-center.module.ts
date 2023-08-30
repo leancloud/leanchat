@@ -12,9 +12,11 @@ import { QuickReplyModule } from 'src/quick-reply';
 import { ChatGateway } from './chat.gateway';
 import { AssignConversationProcessor } from './processors/assign-conversation.processor';
 import { CurrentOperatorMiddleware } from './middlewares/current-operator.middleware';
-import { AssignService } from './assign.service';
-import { ChatService } from './chat.service';
-import { ChatConversationService } from './services/chat-conversation.service';
+import {
+  AssignService,
+  ChatService,
+  ChatConversationService,
+} from './services';
 import {
   CategoryController,
   ChatbotController,

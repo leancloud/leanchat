@@ -12,7 +12,7 @@ import { Request } from 'express';
 import { ZodValidationPipe } from 'nestjs-zod';
 
 import { OperatorService } from 'src/operator';
-import { ChatService } from '../chat.service';
+import { ChatService } from '../services';
 import { OperatorDto } from '../dtos/operator.dto';
 import { CreateSessionDto } from '../dtos/create-session.dto';
 

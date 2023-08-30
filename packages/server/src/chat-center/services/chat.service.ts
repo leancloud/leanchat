@@ -4,7 +4,7 @@ import { Redis } from 'ioredis';
 
 import { REDIS } from 'src/redis';
 import { ConversationService } from 'src/conversation';
-import { OperatorStatusChangedEvent } from './events';
+import { OperatorStatusChangedEvent } from '../events';
 
 @Injectable()
 export class ChatService {
