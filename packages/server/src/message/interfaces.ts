@@ -1,7 +1,10 @@
 export interface IGetMessagesDto {
   visitorId?: string;
   conversationId?: string;
-  types?: string[];
+  type?: string | string[];
+  limit?: number;
+  desc?: boolean;
+  cursor?: Date;
 }
 
 export interface TextMessageData {

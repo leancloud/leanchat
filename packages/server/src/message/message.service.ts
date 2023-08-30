@@ -26,7 +26,14 @@ export class MessageService {
     return message;
   }
 
-  async getMessages({ visitorId, conversationId, types }: IGetMessagesDto) {
+  async getMessages({
+    visitorId,
+    conversationId,
+    type,
+    limit,
+    desc,
+    cursor,
+  }: IGetMessagesDto) {
     const query = new AV.Query('ChatMessage');
     if (visitorId) {
       query.equalTo('visitorId', visitorId);
@@ -34,8 +41,27 @@ export class MessageService {
     if (conversationId) {
       query.equalTo('conversationId', conversationId);
     }
-    if (types) {
-      query.containedIn('type', types);
+    if (type) {
+      if (Array.isArray(type)) {
+        query.containedIn('type', type);
+      } else {
+        query.equalTo('type', type);
+      }
+    }
+    if (limit) {
+      query.limit(limit);
+    }
+    if (desc) {
+      query.addDescending('createdAt');
+    } else {
+      query.addAscending('createdAt');
+    }
+    if (cursor) {
+      if (desc) {
+        query.lessThan('createdAt', cursor);
+      } else {
+        query.greaterThan('createdAt', cursor);
+      }
     }
     const objs = await query.find({ useMasterKey: true });
     return objs.map((obj) => Message.fromAVObject(obj));

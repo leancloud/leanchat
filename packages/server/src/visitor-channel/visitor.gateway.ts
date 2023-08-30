@@ -69,7 +69,7 @@ export class VisitorGateway implements OnModuleInit, OnGatewayConnection {
 
       const messages = await this.messageService.getMessages({
         visitorId: visitor.id,
-        types: ['message'],
+        type: ['message'],
       });
       socket.emit('messages', messages);
     }

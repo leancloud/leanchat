@@ -146,7 +146,11 @@ export class ConversationService {
       query.limit(limit);
     }
     if (cursor) {
-      query.greaterThan(sort, cursor);
+      if (desc) {
+        query.lessThan(sort, cursor);
+      } else {
+        query.greaterThan(sort, cursor);
+      }
     }
 
     const objs = await query.find({ useMasterKey: true });

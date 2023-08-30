@@ -16,6 +16,7 @@ import { MessageService } from 'src/message';
 import { AuthGuard } from '../guards/auth.guard';
 import { GetConversationsDto } from '../dtos/get-conversations.dto';
 import { UpdateConversationDto } from '../dtos/conversation/update-conversation.dto';
+import { GetMessagesDto } from '../dtos/message';
 
 @Controller('conversations')
 @UseGuards(AuthGuard)
@@ -41,8 +42,11 @@ export class ConversationController {
   }
 
   @Get(':id/messages')
-  getConversationMessages(@Param('id') id: string) {
-    return this.messageService.getMessages({ conversationId: id });
+  getConversationMessages(
+    @Param('id') id: string,
+    @Query() query: GetMessagesDto,
+  ) {
+    return this.messageService.getMessages({ ...query, conversationId: id });
   }
 
   @Patch(':id')
