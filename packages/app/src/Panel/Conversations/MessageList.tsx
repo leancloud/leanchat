@@ -59,7 +59,7 @@ function TextMessage({ message, position }: TextMessageProps) {
       </div>
       <div
         className={cx(
-          'text-sm text-[#646464] p-[10px] inline-block whitespace-pre-line rounded-lg max-w-[85%]',
+          'text-sm text-[#646464] p-[10px] inline-block whitespace-pre-line break-words rounded-lg max-w-[85%]',
           {
             'border border-[#ececec]': isLeft,
             'bg-[#e8f3fe]': !isLeft,

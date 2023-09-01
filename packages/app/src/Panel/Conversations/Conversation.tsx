@@ -1,5 +1,5 @@
-import { PropsWithChildren, useLayoutEffect, useMemo, useRef, useState } from 'react';
-import { useInfiniteQuery, useMutation } from '@tanstack/react-query';
+import { PropsWithChildren, useMemo, useRef, useState } from 'react';
+import { useMutation } from '@tanstack/react-query';
 import { AiOutlineClockCircle } from 'react-icons/ai';
 import { FiCheck } from 'react-icons/fi';
 import { HiDotsHorizontal } from 'react-icons/hi';
@@ -19,8 +19,7 @@ import { Avatar } from '../components/Avatar';
 import { useOperators } from '../hooks/operator';
 import { ReassignModal } from './ReassignModal';
 import { QuickReply, QuickReplyRef } from './QuickReply';
-import { getConversationMessages } from '../api/conversation';
-import { getVisitorMessages } from '../api/visitor';
+import { useConversationMessages, useVisitorMessages } from '../hooks/message';
 
 interface OperatorLabelProps {
   operatorId: string;
@@ -62,93 +61,27 @@ export function Conversation({ conversationId }: ConversationProps) {
 
   const [visitorMessageMode, setVisitorMessageMode] = useState(false);
 
-  const pageSize = 50;
-
-  const convMessagesQuery = useInfiniteQuery({
+  const conversationMessages = useConversationMessages(conversationId, {
     enabled: !visitorMessageMode,
-    queryKey: ['Messages', { conversationId }],
-    queryFn: ({ pageParam }) => {
-      return getConversationMessages(conversationId, {
-        desc: true,
-        limit: pageSize,
-        cursor: pageParam,
-      });
-    },
-    getNextPageParam: (lastPage) => {
-      return lastPage[lastPage.length - 1]?.createdAt;
-    },
-    staleTime: 1000 * 60 * 5,
+  });
+  const visitorMessages = useVisitorMessages(conversation?.visitorId || '', {
+    enabled: visitorMessageMode && !!conversation,
   });
 
-  const visitorMessagesQuery = useInfiniteQuery({
-    enabled: !!conversation && visitorMessageMode,
-    queryKey: ['Messages', { visitorId: conversation?.visitorId }],
-    queryFn: ({ pageParam }) => {
-      return getVisitorMessages(conversation!.visitorId, {
-        desc: true,
-        limit: pageSize,
-        cursor: pageParam,
-      });
-    },
-    getNextPageParam: (lastPage) => {
-      return lastPage[lastPage.length - 1]?.createdAt;
-    },
-    staleTime: 1000 * 60 * 5,
-  });
+  const messages = visitorMessageMode ? visitorMessages.messages : conversationMessages.messages;
 
-  const messages = useMemo(() => {
-    if (visitorMessageMode) {
-      return visitorMessagesQuery.data?.pages.flat().reverse();
-    } else {
-      return convMessagesQuery.data?.pages.flat().reverse();
-    }
-  }, [convMessagesQuery.data, visitorMessagesQuery.data, visitorMessageMode]);
+  const hasMoreMessages = visitorMessageMode
+    ? visitorMessages.hasMore
+    : conversationMessages.hasMore;
 
-  const hasMoreMessages = useMemo(() => {
-    if (!messages || messages.length < pageSize) {
-      return false;
-    }
-    return visitorMessageMode ? visitorMessagesQuery.hasNextPage : convMessagesQuery.hasNextPage;
-  }, [
-    messages,
-    convMessagesQuery.hasNextPage,
-    visitorMessagesQuery.hasNextPage,
-    visitorMessageMode,
-  ]);
-
-  const fetchMoreMessages = () => {
-    convMessagesQuery.fetchNextPage();
-  };
+  const fetchMoreMessages = visitorMessageMode
+    ? visitorMessages.loadMore
+    : conversationMessages.loadMore;
 
   const [content, setContent] = useState('');
   const [showQuickReply, setShowQuickReply] = useState(false);
 
   const textareaRef = useRef<HTMLTextAreaElement>(null);
-  const messageContainerRef = useRef<HTMLDivElement>(null);
-  const messageContainerScrollHeight = useRef(0);
-
-  useLayoutEffect(() => {
-    if (messageContainerRef.current) {
-      const { scrollHeight, scrollTop, clientHeight } = messageContainerRef.current;
-      console.log({
-        scrollHeight,
-        scrollTop,
-        clientHeight,
-        lastScrollHeight: messageContainerScrollHeight.current,
-      });
-      if (messageContainerScrollHeight.current) {
-        if (scrollTop + clientHeight === messageContainerScrollHeight.current) {
-          messageContainerRef.current.scrollTop = scrollHeight;
-        } else {
-          messageContainerRef.current.scrollTop +=
-            scrollHeight - messageContainerScrollHeight.current;
-        }
-      } else {
-        messageContainerRef.current.scrollTop = scrollHeight;
-      }
-      messageContainerScrollHeight.current = scrollHeight;
-    }
-  }, [messages]);
 
   const handleCreateMessage = async () => {
     const trimedContent = content.trim();
@@ -251,12 +184,12 @@ export function Conversation({ conversationId }: ConversationProps) {
             </div>
           </div>
 
-          <div ref={messageContainerRef} className="mt-auto overflow-y-auto">
+          <div className="mt-auto overflow-y-auto">
             <div className="flex justify-center my-4">
               {hasMoreMessages ? (
                 <button
                   className="text-xs bg-primary-100 px-2 py-1 rounded flex items-center"
-                  onClick={fetchMoreMessages}
+                  onClick={() => fetchMoreMessages()}
                 >
                   <AiOutlineClockCircle className="w-3 h-3 mr-1" />
                   加载更多

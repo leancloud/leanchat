@@ -134,7 +134,7 @@ export default function Conversations() {
         </div>
       </div>
 
-      <div className="grow bg-white">
+      <div className="grow bg-white overflow-hidden">
         {conversationId && <Conversation key={conversationId} conversationId={conversationId} />}
       </div>
     </div>
