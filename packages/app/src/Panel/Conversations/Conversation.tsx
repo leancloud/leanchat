@@ -14,12 +14,11 @@ import { useCurrentUser } from '@/Panel/auth';
 import { useConversation } from '@/Panel/hooks/conversation';
 import { ConversationDetail } from './ConversationDetail';
 import { ConversationContext } from './ConversationContext';
-import { MessageList } from './MessageList';
+import { MessageList, MessageListRef } from './MessageList';
 import { Avatar } from '../components/Avatar';
 import { useOperators } from '../hooks/operator';
 import { ReassignModal } from './ReassignModal';
 import { QuickReply, QuickReplyRef } from './QuickReply';
-import { useConversationMessages, useVisitorMessages } from '../hooks/message';
 
 interface OperatorLabelProps {
   operatorId: string;
@@ -61,23 +60,6 @@ export function Conversation({ conversationId }: ConversationProps) {
 
   const [visitorMessageMode, setVisitorMessageMode] = useState(false);
 
-  const conversationMessages = useConversationMessages(conversationId, {
-    enabled: !visitorMessageMode,
-  });
-  const visitorMessages = useVisitorMessages(conversation?.visitorId || '', {
-    enabled: visitorMessageMode && !!conversation,
-  });
-
-  const messages = visitorMessageMode ? visitorMessages.messages : conversationMessages.messages;
-
-  const hasMoreMessages = visitorMessageMode
-    ? visitorMessages.hasMore
-    : conversationMessages.hasMore;
-
-  const fetchMoreMessages = visitorMessageMode
-    ? visitorMessages.loadMore
-    : conversationMessages.loadMore;
-
   const [content, setContent] = useState('');
   const [showQuickReply, setShowQuickReply] = useState(false);
 
@@ -97,6 +79,7 @@ export function Conversation({ conversationId }: ConversationProps) {
     });
     setContent('');
     textareaRef.current?.focus();
+    messageListRef.current?.setScrollBehavior('attachBottom');
   };
 
   const { mutate: joinConversation } = useMutation({
@@ -125,6 +108,7 @@ export function Conversation({ conversationId }: ConversationProps) {
 
   const [showReassignModal, toggleReassignModal] = useToggle(false);
 
+  const messageListRef = useRef<MessageListRef>(null);
   const quickReplyRef = useRef<QuickReplyRef>(null);
 
   const keyword = content.startsWith('/') ? content.slice(1) : undefined;
@@ -184,23 +168,7 @@ export function Conversation({ conversationId }: ConversationProps) {
             </div>
           </div>
 
-          <div className="mt-auto overflow-y-auto">
-            <div className="flex justify-center my-4">
-              {hasMoreMessages ? (
-                <button
-                  className="text-xs bg-primary-100 px-2 py-1 rounded flex items-center"
-                  onClick={() => fetchMoreMessages()}
-                >
-                  <AiOutlineClockCircle className="w-3 h-3 mr-1" />
-                  加载更多
-                </button>
-              ) : (
-                <div className="text-sm text-[#969696]">没有更多</div>
-              )}
-            </div>
-
-            <MessageList messages={messages} />
-          </div>
+          <MessageList ref={messageListRef} history={visitorMessageMode} />
 
           <div className="border-t border-[#ececec] relative">
             {showQuickReply && (

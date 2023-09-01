@@ -1,0 +1,12 @@
+.messageList::-webkit-scrollbar {
+  width: 6px;
+}
+
+.messageList::-webkit-scrollbar-track {
+  width: 6px;
+}
+
+.messageList::-webkit-scrollbar-thumb {
+  background-color: #969696;
+  border-radius: 6px;
+}
