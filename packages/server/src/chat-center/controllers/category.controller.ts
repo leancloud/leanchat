@@ -13,7 +13,11 @@ import { ZodValidationPipe } from 'nestjs-zod';
 
 import { CategoryService } from 'src/category';
 import { AuthGuard } from '../guards/auth.guard';
-import { CreateCategoryDto, UpdateCategoryDto } from '../dtos/category';
+import {
+  CategoryDto,
+  CreateCategoryDto,
+  UpdateCategoryDto,
+} from '../dtos/category';
 
 @Controller('categories')
 @UseGuards(AuthGuard)
@@ -22,13 +26,15 @@ export class CategoryController {
   constructor(private categoryService: CategoryService) {}
 
   @Get()
-  getCategories() {
-    return this.categoryService.getCategories();
+  async getCategories() {
+    const categories = await this.categoryService.getCategories();
+    return categories.map((category) => new CategoryDto(category));
   }
 
   @Post()
-  createCategory(@Body() data: CreateCategoryDto) {
-    return this.categoryService.createCategory(data);
+  async createCategory(@Body() data: CreateCategoryDto) {
+    const category = await this.categoryService.createCategory(data);
+    return new CategoryDto(category);
   }
 
   @Patch(':id')
@@ -41,5 +47,6 @@ export class CategoryController {
       throw new NotFoundException('分类不存在');
     }
     await this.categoryService.updateCategory(category, data);
+    return new CategoryDto(category);
   }
 }

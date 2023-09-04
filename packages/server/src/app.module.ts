@@ -6,6 +6,7 @@ import { EventEmitterModule } from '@nestjs/event-emitter';
 import { BullModule } from '@nestjs/bull';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { ScheduleModule } from '@nestjs/schedule';
+import { MongooseModule } from '@nestjs/mongoose';
 
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
@@ -23,6 +24,7 @@ import { parseRedisUrl } from './redis/utils';
     ConfigModule.forRoot({
       isGlobal: true,
       cache: true,
+      expandVariables: true,
     }),
     EventEmitterModule.forRoot(),
     BullModule.forRootAsync({
@@ -39,6 +41,16 @@ import { parseRedisUrl } from './redis/utils';
       },
     }),
     ScheduleModule.forRoot(),
+    MongooseModule.forRootAsync({
+      inject: [ConfigService],
+      useFactory: (config: ConfigService) => {
+        return {
+          dbName: 'chat',
+          autoIndex: false,
+          uri: config.getOrThrow('MONGODB_URL'),
+        };
+      },
+    }),
 
     LeanCloudModule,
     RedisModule,
