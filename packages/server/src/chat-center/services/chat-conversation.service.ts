@@ -1,7 +1,7 @@
 import { Inject, Injectable } from '@nestjs/common';
 import { EventEmitter2 } from '@nestjs/event-emitter';
 import { Redis } from 'ioredis';
-import { Conversation, ConversationService } from 'src/conversation';
+import { ConversationDocument, ConversationService } from 'src/conversation';
 import { Operator } from 'src/operator';
 
 import { REDIS } from 'src/redis';
@@ -21,7 +21,7 @@ export class ChatConversationService {
     private conversationService: ConversationService,
   ) {}
 
-  async enqueue(conv: Conversation) {
+  async enqueue(conv: ConversationDocument) {
     const score = await this.redis.zscore('conversation_queue', conv.id);
     if (!score) {
       return;
@@ -35,7 +35,7 @@ export class ChatConversationService {
     } satisfies ConversationQueuedEvent);
   }
 
-  async assign(conv: Conversation, operator: Operator) {
+  async assign(conv: ConversationDocument, operator: Operator) {
     const newConv = await this.conversationService.updateConversation(conv, {
       status: 'inProgress',
       operatorId: operator.id,
@@ -52,13 +52,17 @@ export class ChatConversationService {
     } satisfies ConversationAssignedEvent);
   }
 
-  async close(conv: Conversation) {
+  async close(conv: ConversationDocument) {
     const newConv = await this.conversationService.updateConversation(conv, {
       status: 'solved',
     });
 
-    if (conv.operatorId) {
-      await this.redis.hincrby('operator_concurrency', conv.operatorId, -1);
+    if (conv.operator) {
+      await this.redis.hincrby(
+        'operator_concurrency',
+        conv.operator._id.toString(),
+        -1,
+      );
     }
 
     this.events.emit('conversation.closed', {

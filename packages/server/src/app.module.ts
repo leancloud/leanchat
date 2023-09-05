@@ -1,6 +1,5 @@
 import path from 'node:path';
-import { APP_INTERCEPTOR } from '@nestjs/core';
-import { ClassSerializerInterceptor, Module } from '@nestjs/common';
+import { Module } from '@nestjs/common';
 import { ServeStaticModule } from '@nestjs/serve-static';
 import { EventEmitterModule } from '@nestjs/event-emitter';
 import { BullModule } from '@nestjs/bull';
@@ -58,12 +57,6 @@ import { parseRedisUrl } from './redis/utils';
     VisitorChannelModule,
   ],
   controllers: [AppController],
-  providers: [
-    AppService,
-    {
-      provide: APP_INTERCEPTOR,
-      useClass: ClassSerializerInterceptor,
-    },
-  ],
+  providers: [AppService],
 })
 export class AppModule {}

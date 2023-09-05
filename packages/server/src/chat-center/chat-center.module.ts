@@ -2,7 +2,6 @@ import { MiddlewareConsumer, Module, NestModule } from '@nestjs/common';
 import { BullModule } from '@nestjs/bull';
 
 import { VisitorModule } from 'src/visitor/visitor.module';
-import { ConversationService } from 'src/conversation';
 import { ConversationModule } from 'src/conversation/conversation.module';
 import { OperatorModule } from 'src/operator/operator.module';
 import { MessageModule } from 'src/message/message.module';
@@ -41,7 +40,6 @@ import {
     QuickReplyModule,
   ],
   providers: [
-    ConversationService,
     ChatGateway,
     AssignConversationProcessor,
     AssignService,

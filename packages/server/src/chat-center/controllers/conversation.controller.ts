@@ -15,8 +15,8 @@ import { ConversationService } from 'src/conversation';
 import { MessageService } from 'src/message';
 import { AuthGuard } from '../guards/auth.guard';
 import { GetConversationsDto } from '../dtos/get-conversations.dto';
-import { UpdateConversationDto } from '../dtos/conversation/update-conversation.dto';
 import { GetMessagesDto } from '../dtos/message';
+import { ConversationDto, UpdateConversationDto } from '../dtos/conversation';
 
 @Controller('conversations')
 @UseGuards(AuthGuard)
@@ -28,8 +28,11 @@ export class ConversationController {
   ) {}
 
   @Get()
-  getConversations(@Query() query: GetConversationsDto) {
-    return this.conversationService.getConversations(query);
+  async getConversations(@Query() query: GetConversationsDto) {
+    const conversations = await this.conversationService.getConversations(
+      query,
+    );
+    return conversations.map(ConversationDto.fromDocument);
   }
 
   @Get(':id')
@@ -38,7 +41,7 @@ export class ConversationController {
     if (!conversation) {
       throw new NotFoundException(`会话 ${id} 不存在`);
     }
-    return conversation;
+    return ConversationDto.fromDocument(conversation);
   }
 
   @Get(':id/messages')
@@ -58,6 +61,7 @@ export class ConversationController {
     if (!conversation) {
       throw new NotFoundException(`会话 ${id} 不存在`);
     }
-    return this.conversationService.updateConversation(conversation, data);
+    await this.conversationService.updateConversation(conversation, data);
+    return ConversationDto.fromDocument(conversation);
   }
 }

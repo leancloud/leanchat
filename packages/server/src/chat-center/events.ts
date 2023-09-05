@@ -1,15 +1,15 @@
-import { Conversation } from 'src/conversation';
+import { ConversationDocument } from 'src/conversation';
 
 export interface ConversationAssignedEvent {
-  conversation: Conversation;
+  conversation: ConversationDocument;
 }
 
 export interface ConversationClosedEvent {
-  conversation: Conversation;
+  conversation: ConversationDocument;
 }
 
 export interface ConversationQueuedEvent {
-  conversation: Conversation;
+  conversation: ConversationDocument;
 }
 
 export interface OperatorStatusChangedEvent {

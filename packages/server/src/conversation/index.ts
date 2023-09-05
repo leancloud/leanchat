@@ -1,2 +1,2 @@
-export * from './conversation.entity';
+export * from './conversation.model';
 export * from './conversation.service';

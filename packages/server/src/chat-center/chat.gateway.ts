@@ -39,6 +39,7 @@ import { ChatConversationService } from './services/chat-conversation.service';
 import { AssignConversationDto } from './dtos/assign-conversation.dto';
 import { CloseConversationDto } from './dtos/close-conversation.dto';
 import { InviteEvaluationDto } from './dtos/invite-evaluation.dto';
+import { ConversationDto } from './dtos/conversation';
 
 @WebSocketGateway({ namespace: 'o' })
 @UseFilters(WsFilter)
@@ -140,7 +141,7 @@ export class ChatGateway
     }
 
     const message = await this.messageService.createMessage({
-      visitorId: conv.visitorId,
+      visitorId: conv.visitor._id.toString(),
       conversationId: conv.id,
       type: 'message',
       from: { type: 'operator', id: operatorId },
@@ -176,21 +177,21 @@ export class ChatGateway
   @OnEvent('conversation.queued', { async: true })
   dispatchConversationQueued(payload: ConversationQueuedEvent) {
     this.server.emit('conversationQueued', {
-      conversation: payload.conversation,
+      conversation: ConversationDto.fromDocument(payload.conversation),
     });
   }
 
   @OnEvent('conversation.assigned', { async: true })
   dispatchConversationAssigned(payload: ConversationAssignedEvent) {
     this.server.emit('conversationAssigned', {
-      conversation: payload.conversation,
+      conversation: ConversationDto.fromDocument(payload.conversation),
     });
   }
 
   @OnEvent('conversation.closed', { async: true })
   dispatchConversationClosed(payload: ConversationClosedEvent) {
     this.server.emit('conversationClosed', {
-      conversation: payload.conversation,
+      conversation: ConversationDto.fromDocument(payload.conversation),
     });
   }
 

@@ -1,8 +1,8 @@
-import type { Conversation } from 'src/conversation';
+import type { ConversationDocument } from 'src/conversation';
 import type { Message } from 'src/message';
 
 export interface ConversationCreatedEvent {
-  conversation: Conversation;
+  conversation: ConversationDocument;
 }
 
 export interface MessageCreatedEvent {

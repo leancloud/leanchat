@@ -1,5 +1,5 @@
-import { IConversation } from './interfaces';
+import { ConversationDocument } from './conversation';
 
 export interface ConversationEvaluationInvitedEvent {
-  conversation: IConversation;
+  conversation: ConversationDocument;
 }

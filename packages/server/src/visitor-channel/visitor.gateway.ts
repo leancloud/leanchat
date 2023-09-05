@@ -16,7 +16,7 @@ import { Message, MessageService } from 'src/message';
 import { MessageCreatedEvent } from 'src/event';
 import { ConversationEvaluationInvitedEvent } from 'src/events';
 import { AssignService } from 'src/chat-center';
-import { Conversation, ConversationService } from 'src/conversation';
+import { ConversationDocument, ConversationService } from 'src/conversation';
 import { VisitorService } from 'src/visitor';
 import { WsInterceptor } from 'src/common/interceptors';
 import { CreateMessageDto } from './dtos/create-message.dto';
@@ -88,7 +88,7 @@ export class VisitorGateway implements OnModuleInit, OnGatewayConnection {
       throw new WsException('账户已被删除');
     }
 
-    let conv: Conversation | undefined;
+    let conv: ConversationDocument | null | undefined;
     if (visitor.currentConversationId) {
       conv = await this.conversationService.getConversation(
         visitor.currentConversationId,
@@ -168,7 +168,8 @@ export class VisitorGateway implements OnModuleInit, OnGatewayConnection {
   @OnEvent('conversation.evaluationInvited', { async: true })
   dispatchEvaluationInvitation(payload: ConversationEvaluationInvitedEvent) {
     const { conversation } = payload;
-    this.server.to(conversation.visitorId).emit('inviteEvaluation', {
+    const visitorId = conversation.visitor._id.toString();
+    this.server.to(visitorId).emit('inviteEvaluation', {
       conversationId: conversation.id,
     });
   }

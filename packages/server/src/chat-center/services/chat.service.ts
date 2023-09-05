@@ -23,7 +23,7 @@ export class ChatService {
 
   async setOperatorStatus(operatorId: string, status: string) {
     if (status === 'ready') {
-      const count = await this.conversationService.countOperatorConversations(
+      const count = await this.conversationService.getAssignedConversationCount(
         operatorId,
       );
       await this.redis
