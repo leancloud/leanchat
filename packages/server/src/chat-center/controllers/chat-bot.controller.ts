@@ -13,7 +13,7 @@ import {
 import { ZodValidationPipe } from 'nestjs-zod';
 
 import { ChatbotService } from 'src/chatbot';
-import { CreateChatbotDto } from '../dtos/chat-bot';
+import { ChatbotDto, CreateChatbotDto } from '../dtos/chat-bot';
 import { UpdateChatbotDto } from '../dtos/chat-bot/update-chat-bot.dto';
 import { AuthGuard } from '../guards/auth.guard';
 
@@ -24,7 +24,7 @@ export class ChatbotController {
   constructor(private chatbotService: ChatbotService) {}
 
   @Post()
-  createChatbot(@Body() data: CreateChatbotDto) {
+  async createChatbot(@Body() data: CreateChatbotDto) {
     const result = this.chatbotService.validateChatbotNodes(
       data.nodes,
       data.edges,
@@ -32,12 +32,14 @@ export class ChatbotController {
     if (!result) {
       throw new BadRequestException('机器人配置不合法');
     }
-    return this.chatbotService.createChatbot(data);
+    const chatbot = await this.chatbotService.createChatbot(data);
+    return ChatbotDto.fromDocument(chatbot);
   }
 
   @Get()
-  getChatbots() {
-    return this.chatbotService.getChatbots();
+  async getChatbots() {
+    const chatbots = await this.chatbotService.getChatbots();
+    return chatbots.map(ChatbotDto.fromDocument);
   }
 
   @Get(':id')
@@ -46,7 +48,7 @@ export class ChatbotController {
     if (!chatbot) {
       throw new NotFoundException(`聊天机器人 ${id} 不存在`);
     }
-    return chatbot;
+    return ChatbotDto.fromDocument(chatbot);
   }
 
   @Patch(':id')
@@ -56,5 +58,6 @@ export class ChatbotController {
       throw new NotFoundException(`聊天机器人 ${id} 不存在`);
     }
     await this.chatbotService.updateChatbot(chatbot, data);
+    return ChatbotDto.fromDocument(chatbot);
   }
 }

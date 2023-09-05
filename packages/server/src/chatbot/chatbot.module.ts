@@ -1,5 +1,6 @@
 import { Module, forwardRef } from '@nestjs/common';
 import { BullModule } from '@nestjs/bull';
+import { TypegooseModule } from '@m8a/nestjs-typegoose';
 
 import { ConversationModule } from 'src/conversation/conversation.module';
 import { MessageModule } from 'src/message/message.module';
@@ -11,9 +12,11 @@ import {
   ChatbotProcessProcessor,
 } from './processors';
 import { EventHandler } from './event-handler';
+import { Chatbot } from './chatbot.model';
 
 @Module({
   imports: [
+    TypegooseModule.forFeature([Chatbot]),
     BullModule.registerQueue(
       {
         name: QUEUE_CHATBOT_DISPATCH,
