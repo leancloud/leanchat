@@ -1,27 +1,32 @@
 import { Injectable } from '@nestjs/common';
 import { EventEmitter2 } from '@nestjs/event-emitter';
-import AV from 'leancloud-storage';
+import { InjectModel } from '@m8a/nestjs-typegoose';
+import { ReturnModelType } from '@typegoose/typegoose';
 
-import { Message } from './message.entity';
+import { MessageCreatedEvent } from 'src/event';
+import { Message } from './message.model';
 import { CreateMessageData, IGetMessagesDto } from './interfaces';
 
 @Injectable()
 export class MessageService {
+  @InjectModel(Message)
+  private messageModel: ReturnModelType<typeof Message>;
+
   constructor(private events: EventEmitter2) {}
 
   async createMessage(data: CreateMessageData) {
-    const obj = new AV.Object('ChatMessage', {
-      visitorId: data.visitorId,
-      conversationId: data.conversationId,
+    const message = new this.messageModel({
+      visitor: data.visitorId,
+      conversation: data.conversationId,
       type: data.type,
       from: data.from,
       data: data.data,
     });
-    await obj.save(null, { useMasterKey: true });
+    await message.save();
 
-    const message = Message.fromAVObject(obj);
-
-    this.events.emit('message.created', { message });
+    this.events.emit('message.created', {
+      message,
+    } satisfies MessageCreatedEvent);
 
     return message;
   }
@@ -34,36 +39,34 @@ export class MessageService {
     desc,
     cursor,
   }: IGetMessagesDto) {
-    const query = new AV.Query('ChatMessage');
+    const query = this.messageModel.find();
     if (visitorId) {
-      query.equalTo('visitorId', visitorId);
+      query.where({ visitor: visitorId });
     }
     if (conversationId) {
-      query.equalTo('conversationId', conversationId);
+      query.where({ conversation: conversationId });
     }
     if (type) {
       if (Array.isArray(type)) {
-        query.containedIn('type', type);
+        query.in('type', type);
       } else {
-        query.equalTo('type', type);
+        query.where({ type });
       }
     }
     if (limit) {
       query.limit(limit);
     }
-    if (desc) {
-      query.addDescending('createdAt');
-    } else {
-      query.addAscending('createdAt');
-    }
+
+    query.sort({ createdAt: desc ? -1 : 1 });
+
     if (cursor) {
       if (desc) {
-        query.lessThan('createdAt', cursor);
+        query.lt('createdAt', cursor);
       } else {
-        query.greaterThan('createdAt', cursor);
+        query.gt('createdAt', cursor);
       }
     }
-    const objs = await query.find({ useMasterKey: true });
-    return objs.map((obj) => Message.fromAVObject(obj));
+
+    return query.exec();
   }
 }

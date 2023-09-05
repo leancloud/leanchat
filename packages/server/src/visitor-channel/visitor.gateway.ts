@@ -161,7 +161,8 @@ export class VisitorGateway implements OnModuleInit, OnGatewayConnection {
   dispatchMessage(payload: MessageCreatedEvent) {
     const { message } = payload;
     if (this.shouldDispatchMessage(message)) {
-      this.server.to(message.visitorId).emit('message', message);
+      const visitorId = message.visitor._id.toString();
+      this.server.to(visitorId).emit('message', message);
     }
   }
 

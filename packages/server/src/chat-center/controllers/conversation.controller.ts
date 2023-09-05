@@ -15,7 +15,7 @@ import { ConversationService } from 'src/conversation';
 import { MessageService } from 'src/message';
 import { AuthGuard } from '../guards/auth.guard';
 import { GetConversationsDto } from '../dtos/get-conversations.dto';
-import { GetMessagesDto } from '../dtos/message';
+import { GetMessagesDto, MessageDto } from '../dtos/message';
 import { ConversationDto, UpdateConversationDto } from '../dtos/conversation';
 
 @Controller('conversations')
@@ -45,11 +45,15 @@ export class ConversationController {
   }
 
   @Get(':id/messages')
-  getConversationMessages(
+  async getConversationMessages(
     @Param('id') id: string,
     @Query() query: GetMessagesDto,
   ) {
-    return this.messageService.getMessages({ ...query, conversationId: id });
+    const messages = await this.messageService.getMessages({
+      ...query,
+      conversationId: id,
+    });
+    return messages.map(MessageDto.fromDocument);
   }
 
   @Patch(':id')

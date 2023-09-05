@@ -40,6 +40,7 @@ import { AssignConversationDto } from './dtos/assign-conversation.dto';
 import { CloseConversationDto } from './dtos/close-conversation.dto';
 import { InviteEvaluationDto } from './dtos/invite-evaluation.dto';
 import { ConversationDto } from './dtos/conversation';
+import { MessageDto } from './dtos/message';
 
 @WebSocketGateway({ namespace: 'o' })
 @UseFilters(WsFilter)
@@ -171,7 +172,7 @@ export class ChatGateway
 
   @OnEvent('message.created', { async: true })
   dispatchMessage(payload: MessageCreatedEvent) {
-    this.server.emit('message', payload.message);
+    this.server.emit('message', MessageDto.fromDocument(payload.message));
   }
 
   @OnEvent('conversation.queued', { async: true })

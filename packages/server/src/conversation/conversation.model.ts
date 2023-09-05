@@ -2,7 +2,6 @@ import { DocumentType, Ref, modelOptions, prop } from '@typegoose/typegoose';
 import { SchemaTypes, Types } from 'mongoose';
 
 import { Category } from 'src/category';
-import { Message } from 'src/message';
 
 @modelOptions({
   schemaOptions: {
@@ -18,7 +17,7 @@ export class Conversation {
   operator?: Types.ObjectId;
 
   @prop({ type: () => SchemaTypes.Mixed })
-  lastMessage?: Message;
+  lastMessage?: any;
 
   @prop()
   status: string;
