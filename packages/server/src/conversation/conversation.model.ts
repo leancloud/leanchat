@@ -1,6 +1,7 @@
-import { DocumentType, modelOptions, prop } from '@typegoose/typegoose';
+import { DocumentType, Ref, modelOptions, prop } from '@typegoose/typegoose';
 import { SchemaTypes, Types } from 'mongoose';
 
+import { Category } from 'src/category';
 import { Message } from 'src/message';
 
 @modelOptions({
@@ -34,8 +35,8 @@ export class Conversation {
     feedback: string;
   };
 
-  @prop()
-  category?: Types.ObjectId;
+  @prop({ ref: () => Category })
+  category?: Ref<Category>;
 
   createdAt: Date;
 

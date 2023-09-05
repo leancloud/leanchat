@@ -1,5 +1,4 @@
 import { DocumentType, Ref, modelOptions, prop } from '@typegoose/typegoose';
-import { Types } from 'mongoose';
 
 @modelOptions({
   schemaOptions: {
@@ -8,10 +7,6 @@ import { Types } from 'mongoose';
   },
 })
 export class Category {
-  _id: Types.ObjectId;
-
-  id: string;
-
   @prop()
   name: string;
 

@@ -1,4 +1,4 @@
-import { Category } from 'src/category';
+import { CategoryDocument } from 'src/category';
 
 export class CategoryDto {
   id: string;
@@ -11,7 +11,7 @@ export class CategoryDto {
 
   updatedAt: string;
 
-  static fromModel(category: Category) {
+  static fromDocument(category: CategoryDocument) {
     const dto = new CategoryDto();
     dto.id = category.id;
     dto.name = category.name;

@@ -39,7 +39,7 @@ export class ConversationService {
   }
 
   getConversation(id: string) {
-    return this.conversationModel.findById(id);
+    return this.conversationModel.findById(id).exec();
   }
 
   async updateConversation(
