@@ -1,33 +1,23 @@
-import { Exclude, Expose } from 'class-transformer';
+import { Category } from 'src/category';
 
-import { CategoryDocument } from 'src/category';
-
-@Exclude()
 export class CategoryDto {
-  constructor(private category: CategoryDocument) {}
+  id: string;
 
-  @Expose()
-  get id() {
-    return this.category.id;
-  }
+  name: string;
 
-  @Expose()
-  get name() {
-    return this.category.name;
-  }
+  parentId?: string;
 
-  @Expose()
-  get parentId() {
-    return this.category.parent?._id.toString();
-  }
+  createdAt: string;
 
-  @Expose()
-  get createdAt() {
-    return this.category.createdAt;
-  }
+  updatedAt: string;
 
-  @Expose()
-  get updatedAt() {
-    return this.category.updatedAt;
+  static fromModel(category: Category) {
+    const dto = new CategoryDto();
+    dto.id = category.id;
+    dto.name = category.name;
+    dto.parentId = category.parent?._id.toString();
+    dto.createdAt = category.createdAt.toISOString();
+    dto.updatedAt = category.updatedAt.toISOString();
+    return dto;
   }
 }

@@ -28,13 +28,13 @@ export class CategoryController {
   @Get()
   async getCategories() {
     const categories = await this.categoryService.getCategories();
-    return categories.map((category) => new CategoryDto(category));
+    return categories.map(CategoryDto.fromModel);
   }
 
   @Post()
   async createCategory(@Body() data: CreateCategoryDto) {
     const category = await this.categoryService.createCategory(data);
-    return new CategoryDto(category);
+    return CategoryDto.fromModel(category);
   }
 
   @Patch(':id')
@@ -47,6 +47,6 @@ export class CategoryController {
       throw new NotFoundException('分类不存在');
     }
     await this.categoryService.updateCategory(category, data);
-    return new CategoryDto(category);
+    return CategoryDto.fromModel(category);
   }
 }

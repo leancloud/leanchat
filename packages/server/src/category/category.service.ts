@@ -1,14 +1,14 @@
 import { BadRequestException, Injectable } from '@nestjs/common';
-import { InjectModel } from '@nestjs/mongoose';
-import { Model } from 'mongoose';
+import { InjectModel } from '@m8a/nestjs-typegoose';
+import { ReturnModelType } from '@typegoose/typegoose';
 
-import { Category, CategoryDocument } from './category.schema';
+import { Category, CategoryDocument } from './category.model';
 import { CreateCategoryData, UpdateCategoryData } from './interfaces';
 
 @Injectable()
 export class CategoryService {
-  @InjectModel(Category.name)
-  private categoryModel: Model<Category>;
+  @InjectModel(Category)
+  private categoryModel: ReturnModelType<typeof Category>;
 
   getCategories() {
     return this.categoryModel.find().exec();
@@ -27,7 +27,7 @@ export class CategoryService {
       if (!parent) {
         throw new BadRequestException('父分类不存在');
       }
-      category.parent = parent._id;
+      category.parent = parent.id;
     }
     return category.save();
   }
