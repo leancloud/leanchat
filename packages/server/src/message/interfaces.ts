@@ -1,3 +1,5 @@
+import { Types } from 'mongoose';
+
 export interface IGetMessagesDto {
   visitorId?: string;
   conversationId?: string;
@@ -28,7 +30,7 @@ export interface LogMessageData {
 export type MessageData = TextMessageData | FileMessageData | LogMessageData;
 
 export interface CreateMessageData {
-  visitorId: string;
+  visitorId: Types.ObjectId | string;
   conversationId: string;
   type: string;
   from: {

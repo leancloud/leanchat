@@ -30,14 +30,14 @@ export class ConversationDto {
   static fromDocument(conv: ConversationDocument) {
     const dto = new ConversationDto();
     dto.id = conv.id;
-    dto.visitorId = conv.visitor._id.toString();
-    dto.operatorId = conv.operator?._id.toString();
+    dto.visitorId = conv.visitorId.toString();
+    dto.operatorId = conv.operatorId?.toString();
     dto.lastMessage = conv.lastMessage;
     dto.status = conv.status;
     dto.queuedAt = conv.queuedAt?.toISOString();
     dto.visitorLastActivityAt = conv.visitorLastActivityAt?.toISOString();
     dto.evaluation = conv.evaluation;
-    dto.categoryId = conv.category?._id.toString();
+    dto.categoryId = conv.categoryId?.toString();
     dto.createdAt = conv.createdAt.toISOString();
     dto.updatedAt = conv.updatedAt.toISOString();
     return dto;

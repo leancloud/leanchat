@@ -176,7 +176,7 @@ export class VisitorGateway implements OnModuleInit, OnGatewayConnection {
   @OnEvent('conversation.evaluationInvited', { async: true })
   dispatchEvaluationInvitation(payload: ConversationEvaluationInvitedEvent) {
     const { conversation } = payload;
-    const visitorId = conversation.visitor._id.toString();
+    const visitorId = conversation.visitorId.toString();
     this.server.to(visitorId).emit('inviteEvaluation', {
       conversationId: conversation.id,
     });

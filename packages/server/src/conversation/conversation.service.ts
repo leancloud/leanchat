@@ -30,7 +30,7 @@ export class ConversationService {
   async createConversation(data: CreateConversationData) {
     const conversation = new this.conversationModel({
       channel: data.channel,
-      visitor: data.visitorId,
+      visitorId: data.visitorId,
       status: ConversationStatus.New,
     });
     await conversation.save();
@@ -51,7 +51,7 @@ export class ConversationService {
     data: UpdateConversationData,
   ) {
     if (data.operatorId) {
-      conv.set('operator', data.operatorId);
+      conv.set('operatorId', data.operatorId);
     }
     if (data.status) {
       conv.status = data.status;
@@ -73,7 +73,7 @@ export class ConversationService {
       if (!category) {
         throw new BadRequestException(`分类 ${data.categoryId} 不存在`);
       }
-      conv.category = category._id;
+      conv.categoryId = category._id;
     }
     return conv.save();
   }
@@ -89,16 +89,16 @@ export class ConversationService {
   }: GetConversationOptions) {
     const query = this.conversationModel.find();
     if (status) {
-      query.where('status').equals(status);
+      query.where({ status });
     }
     if (visitorId) {
-      query.where('visitor').equals(visitorId);
+      query.where({ visitorId });
     }
     if (operatorId) {
-      query.where('operator').equals(operatorId);
+      query.where({ operatorId });
     }
     if (operatorId === null) {
-      query.where('operator').exists(false);
+      query.where('operatorId').exists(false);
     }
 
     query.sort({ [sort]: desc ? -1 : 1 });
@@ -132,7 +132,7 @@ export class ConversationService {
       evaluation,
     });
     await this.messageService.createMessage({
-      visitorId: conv.visitor._id.toString(),
+      visitorId: conv.visitorId,
       conversationId: conv.id,
       type: 'log',
       from: {

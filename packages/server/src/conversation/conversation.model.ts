@@ -1,7 +1,5 @@
-import { DocumentType, ModelOptions, Prop, Ref } from '@typegoose/typegoose';
+import { DocumentType, ModelOptions, Prop } from '@typegoose/typegoose';
 import { SchemaTypes, Types } from 'mongoose';
-
-import { Category } from 'src/category';
 
 @ModelOptions({
   schemaOptions: {
@@ -18,12 +16,12 @@ export class Conversation {
   channel: string;
 
   @Prop()
-  visitor: Types.ObjectId;
+  visitorId: Types.ObjectId;
 
   @Prop()
-  operator?: Types.ObjectId;
+  operatorId?: Types.ObjectId;
 
-  @Prop({ type: () => SchemaTypes.Mixed })
+  @Prop({ type: SchemaTypes.Mixed })
   lastMessage?: any;
 
   @Prop()
@@ -35,14 +33,14 @@ export class Conversation {
   @Prop()
   visitorLastActivityAt?: Date;
 
-  @Prop()
+  @Prop({ type: SchemaTypes.Mixed })
   evaluation?: {
     star: number;
     feedback: string;
   };
 
-  @Prop({ ref: () => Category })
-  category?: Ref<Category>;
+  @Prop()
+  categoryId?: Types.ObjectId;
 
   createdAt: Date;
 

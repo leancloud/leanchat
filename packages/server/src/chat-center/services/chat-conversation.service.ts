@@ -61,12 +61,9 @@ export class ChatConversationService {
       status: ConversationStatus.Solved,
     });
 
-    if (conv.operator) {
-      await this.redis.hincrby(
-        'operator_concurrency',
-        conv.operator._id.toString(),
-        -1,
-      );
+    if (conv.operatorId) {
+      const operatorId = conv.operatorId.toString();
+      await this.redis.hincrby('operator_concurrency', operatorId, -1);
     }
 
     this.events.emit('conversation.closed', {

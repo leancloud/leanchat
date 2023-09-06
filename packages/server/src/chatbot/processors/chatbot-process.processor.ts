@@ -100,7 +100,7 @@ export class ChatbotProcessProcessor {
     const conv = await this.conversationService.getConversation(conversationId);
     if (conv) {
       const message = await this.messageService.createMessage({
-        visitorId: conv.visitor._id.toString(),
+        visitorId: conv.visitorId,
         conversationId: conv.id,
         type: 'message',
         from: { type: 'chatbot', id: chatbotId },

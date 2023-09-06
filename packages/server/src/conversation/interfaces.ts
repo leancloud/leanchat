@@ -1,8 +1,10 @@
+import { Types } from 'mongoose';
+
 import { Message } from 'src/message';
 
 export interface CreateConversationData {
   channel: string;
-  visitorId: string;
+  visitorId: Types.ObjectId | string;
 }
 
 export interface UpdateConversationData {
