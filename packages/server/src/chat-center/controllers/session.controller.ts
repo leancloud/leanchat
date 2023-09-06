@@ -28,6 +28,7 @@ export class SessionController {
   async createSession(@Req() req: Request, @Body() data: CreateSessionDto) {
     const operator = await this.operatorService.getOperatorByUsername(
       data.username,
+      true,
     );
     if (!operator) {
       throw new UnauthorizedException(`客服 ${data.username} 不存在`);
@@ -43,7 +44,7 @@ export class SessionController {
     await promisify(req.session.regenerate).call(req.session);
     req.session.uid = operator.id;
 
-    const operatorDto = OperatorDto.fromEntity(operator);
+    const operatorDto = OperatorDto.fromDocument(operator);
     operatorDto.status = await this.chatService.getOperatorStatus(operator.id);
 
     return operatorDto;

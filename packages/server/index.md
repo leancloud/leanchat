@@ -9,3 +9,6 @@
 - operator
 - visitor
 - status
+
+## operator
+- username

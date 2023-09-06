@@ -13,7 +13,7 @@ export class OperatorDto {
 
   status?: string;
 
-  static fromEntity(operator: Operator) {
+  static fromDocument(operator: Operator) {
     const dto = new OperatorDto();
     dto.id = operator.id;
     dto.username = operator.username;

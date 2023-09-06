@@ -1,15 +1,11 @@
 import { Module } from '@nestjs/common';
-import { CacheModule } from '@nestjs/cache-manager';
+import { TypegooseModule } from '@m8a/nestjs-typegoose';
 
+import { Operator } from './operator.model';
 import { OperatorService } from './operator.service';
 
 @Module({
-  imports: [
-    CacheModule.register({
-      max: 100,
-      ttl: 60 * 60, // 1 hour
-    }),
-  ],
+  imports: [TypegooseModule.forFeature([Operator])],
   providers: [OperatorService],
   exports: [OperatorService],
 })

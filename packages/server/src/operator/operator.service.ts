@@ -1,22 +1,19 @@
 import {
   ConflictException,
-  Inject,
   Injectable,
   NotFoundException,
 } from '@nestjs/common';
-import { CACHE_MANAGER } from '@nestjs/cache-manager';
 import { hash, verify } from '@node-rs/argon2';
-import AV from 'leancloud-storage';
-import { Cache } from 'cache-manager';
-import _ from 'lodash';
+import { InjectModel } from '@m8a/nestjs-typegoose';
+import { ReturnModelType } from '@typegoose/typegoose';
 
 import { ICreateOperator, IUpdateOperator } from './interfaces';
-import { Operator } from './operator.entity';
+import { Operator } from './operator.model';
 
 @Injectable()
 export class OperatorService {
-  @Inject(CACHE_MANAGER)
-  private cache: Cache;
+  @InjectModel(Operator)
+  private operatorModel: ReturnModelType<typeof Operator>;
 
   async createOperator(data: ICreateOperator) {
     const existOperator = await this.getOperatorByUsername(data.username);
@@ -25,82 +22,56 @@ export class OperatorService {
     }
 
     const hashedPassword = await hash(data.password);
-    const obj = new AV.Object('ChatOperator', {
+    const operator = new this.operatorModel({
       username: data.username,
       password: hashedPassword,
       externalName: data.externalName,
       internalName: data.internalName,
       concurrency: data.concurrency,
     });
-    await obj.save(null, { useMasterKey: true });
-    return Operator.fromAVObject(obj);
+    return operator.save();
   }
 
-  private getOperatorObject(id: string) {
-    const query = new AV.Query('ChatOperator');
-    query.equalTo('objectId', id);
-    return query.first({ useMasterKey: true }) as Promise<
-      AV.Object | undefined
-    >;
+  getOperator(id: string) {
+    return this.operatorModel.findById(id);
   }
 
-  async getOperator(id: string) {
-    const cacheKey = `operator:${id}`;
-    const cacheValue = await this.cache.get<Operator>(cacheKey);
-    if (cacheValue) {
-      return cacheValue;
+  getOperatorByUsername(username: string, selectPassword?: boolean) {
+    const query = this.operatorModel.findOne({ username });
+    if (selectPassword) {
+      query.select('password');
     }
-
-    const obj = await this.getOperatorObject(id);
-    if (obj) {
-      const operator = Operator.fromAVObject(obj as AV.Object);
-      await this.cache.set(cacheKey, operator);
-      return operator;
-    }
-  }
-
-  async getOperatorByUsername(username: string) {
-    const query = new AV.Query('ChatOperator');
-    query.equalTo('username', username);
-    const obj = await query.first({ useMasterKey: true });
-    return obj && Operator.fromAVObject(obj as AV.Object);
+    return query.exec();
   }
 
   comparePassword(hashedPassword: string, password: string) {
     return verify(hashedPassword, password);
   }
 
-  async getOperators() {
-    const query = new AV.Query('ChatOperator');
-    query.addAscending('createdAt');
-    query.limit(1000);
-    const objs = await query.find({ useMasterKey: true });
-    return objs.map((obj) => Operator.fromAVObject(obj as AV.Object));
+  getOperators() {
+    return this.operatorModel.find();
   }
 
   async updateOperator(id: string, data: IUpdateOperator) {
-    const obj = await this.getOperatorObject(id);
-    if (!obj) {
+    const operator = await this.getOperator(id);
+    if (!operator) {
       throw new NotFoundException(`operator ${id} not exists`);
     }
 
-    if (!_.isEmpty(data)) {
-      if (data.password) {
-        const hashedPassword = await hash(data.password);
-        obj.set('password', hashedPassword);
-      }
-      if (data.externalName) {
-        obj.set('externalName', data.externalName);
-      }
-      if (data.internalName) {
-        obj.set('internalName', data.internalName);
-      }
-      if (data.concurrency !== undefined) {
-        obj.set('concurrency', data.concurrency);
-      }
-      await obj.save(null, { useMasterKey: true });
+    if (data.password) {
+      const hashedPassword = await hash(data.password);
+      operator.set('password', hashedPassword);
+    }
+    if (data.externalName) {
+      operator.set('externalName', data.externalName);
+    }
+    if (data.internalName) {
+      operator.set('internalName', data.internalName);
+    }
+    if (data.concurrency !== undefined) {
+      operator.set('concurrency', data.concurrency);
     }
 
-    return Operator.fromAVObject(obj);
+    return operator.save();
   }
 }
