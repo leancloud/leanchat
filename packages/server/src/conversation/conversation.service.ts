@@ -2,6 +2,7 @@ import { BadRequestException, Injectable } from '@nestjs/common';
 import { EventEmitter2 } from '@nestjs/event-emitter';
 import { InjectModel } from '@m8a/nestjs-typegoose';
 import { ReturnModelType } from '@typegoose/typegoose';
+import { Types } from 'mongoose';
 
 import { ConversationCreatedEvent } from 'src/event';
 import { MessageService } from 'src/message';
@@ -38,7 +39,7 @@ export class ConversationService {
     return conversation;
   }
 
-  getConversation(id: string) {
+  getConversation(id: string | Types.ObjectId) {
     return this.conversationModel.findById(id).exec();
   }
 

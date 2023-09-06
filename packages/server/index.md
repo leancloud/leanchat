@@ -12,3 +12,6 @@
 
 ## operator
 - username
+
+## visitor
+- chatId

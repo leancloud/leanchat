@@ -9,7 +9,7 @@ import {
 import { ZodValidationPipe } from 'nestjs-zod';
 
 import { MessageService } from 'src/message';
-import { GetMessagesDto } from '../dtos/message';
+import { GetMessagesDto, MessageDto } from '../dtos/message';
 import { AuthGuard } from '../guards/auth.guard';
 
 @Controller('visitors')
@@ -19,7 +19,14 @@ export class VisitorController {
   constructor(private messageService: MessageService) {}
 
   @Get(':id/messages')
-  getVisitorMessages(@Param('id') id: string, @Query() query: GetMessagesDto) {
-    return this.messageService.getMessages({ ...query, visitorId: id });
+  async getVisitorMessages(
+    @Param('id') id: string,
+    @Query() query: GetMessagesDto,
+  ) {
+    const messages = await this.messageService.getMessages({
+      ...query,
+      visitorId: id,
+    });
+    return messages.map(MessageDto.fromDocument);
   }
 }
