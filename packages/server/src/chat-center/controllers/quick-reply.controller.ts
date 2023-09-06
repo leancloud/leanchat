@@ -14,7 +14,11 @@ import { ZodValidationPipe } from 'nestjs-zod';
 
 import { QuickReplyService } from 'src/quick-reply';
 import { AuthGuard } from '../guards/auth.guard';
-import { CreateQuickReplyDto, UpdateQuickReplyDto } from '../dtos/quick-reply';
+import {
+  CreateQuickReplyDto,
+  QuickReplyDto,
+  UpdateQuickReplyDto,
+} from '../dtos/quick-reply';
 
 @Controller('quick-replies')
 @UseGuards(AuthGuard)
@@ -23,13 +27,15 @@ export class QuickReplyController {
   constructor(private quickReplyService: QuickReplyService) {}
 
   @Post()
-  createQuickReply(@Body() data: CreateQuickReplyDto) {
-    return this.quickReplyService.createQuickReply(data);
+  async createQuickReply(@Body() data: CreateQuickReplyDto) {
+    const quickReply = await this.quickReplyService.createQuickReply(data);
+    return QuickReplyDto.fromDocument(quickReply);
   }
 
   @Get()
-  getQuickReplies() {
-    return this.quickReplyService.getQuickReplies();
+  async getQuickReplies() {
+    const quickReplies = await this.quickReplyService.getQuickReplies();
+    return quickReplies.map(QuickReplyDto.fromDocument);
   }
 
   @Patch(':id')
@@ -42,6 +48,7 @@ export class QuickReplyController {
       throw new NotFoundException(`快捷回复 ${id} 不存在`);
     }
     await this.quickReplyService.updateQuickReply(quickReply, data);
+    return QuickReplyDto.fromDocument(quickReply);
   }
 
   @Delete(':id')

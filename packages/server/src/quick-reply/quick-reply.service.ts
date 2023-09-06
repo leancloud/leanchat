@@ -1,49 +1,42 @@
 import { Injectable } from '@nestjs/common';
-import AV from 'leancloud-storage';
+import { InjectModel } from '@m8a/nestjs-typegoose';
+import { ReturnModelType } from '@typegoose/typegoose';
 
 import { CreateQuickReplyData, UpdateQuickReplyData } from './interfaces';
-import { QuickReply } from './quick-reply.entity';
+import { QuickReply, QuickReplyDocument } from './quick-reply.model';
 
 @Injectable()
 export class QuickReplyService {
-  async createQuickReply(data: CreateQuickReplyData) {
-    const obj = new AV.Object('ChatQuickReply', {
+  @InjectModel(QuickReply)
+  private quickReplyModel: ReturnModelType<typeof QuickReply>;
+
+  createQuickReply(data: CreateQuickReplyData) {
+    const quickReply = new this.quickReplyModel({
       content: data.content,
       tags: data.tags,
     });
-    await obj.save(null, { useMasterKey: true });
-    return QuickReply.fromAVObject(obj);
+    return quickReply.save();
   }
 
-  async getQuickReplies() {
-    const query = new AV.Query('ChatQuickReply');
-    query.limit(1000);
-    const objs = await query.find({ useMasterKey: true });
-    return objs.map(QuickReply.fromAVObject);
+  getQuickReplies() {
+    return this.quickReplyModel.find().exec();
   }
 
-  async getQuickReply(id: string) {
-    const query = new AV.Query('ChatQuickReply');
-    query.equalTo('objectId', id);
-    const obj = await query.first({ useMasterKey: true });
-    if (obj) {
-      return QuickReply.fromAVObject(obj);
-    }
+  getQuickReply(id: string) {
+    return this.quickReplyModel.findById(id).exec();
   }
 
-  async updateQuickReply(quickReply: QuickReply, data: UpdateQuickReplyData) {
-    const obj = AV.Object.createWithoutData('ChatQuickReply', quickReply.id);
+  updateQuickReply(quickReply: QuickReplyDocument, data: UpdateQuickReplyData) {
     if (data.content) {
-      obj.set('content', data.content);
+      quickReply.set('content', data.content);
     }
     if (data.tags) {
-      obj.set('tags', data.tags);
+      quickReply.set('tags', data.tags);
     }
-    await obj.save(null, { useMasterKey: true });
+    return quickReply.save();
   }
 
-  async deleteQuickReply(quickReply: QuickReply) {
-    const obj = AV.Object.createWithoutData('ChatQuickReply', quickReply.id);
-    await obj.destroy({ useMasterKey: true });
+  async deleteQuickReply(quickReply: QuickReplyDocument) {
+    return quickReply.deleteOne();
   }
 }
