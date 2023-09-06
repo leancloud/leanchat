@@ -9,10 +9,12 @@ import { MessageService } from 'src/message';
 import { CategoryService } from 'src/category';
 import { Conversation, ConversationDocument } from './conversation.model';
 import {
+  CreateConversationData,
   EvaluateConversationData,
   GetConversationOptions,
   UpdateConversationData,
 } from './interfaces';
+import { ConversationStatus } from './constants';
 
 @Injectable()
 export class ConversationService {
@@ -25,10 +27,11 @@ export class ConversationService {
     private categoryService: CategoryService,
   ) {}
 
-  async createConversation(visitorId: string) {
+  async createConversation(data: CreateConversationData) {
     const conversation = new this.conversationModel({
-      visitor: visitorId,
-      status: 'new',
+      channel: data.channel,
+      visitor: data.visitorId,
+      status: ConversationStatus.New,
     });
     await conversation.save();
 
@@ -117,7 +120,7 @@ export class ConversationService {
   getAssignedConversationCount(operatorId: string) {
     return this.conversationModel.count({
       operator: operatorId,
-      status: 'inProgress',
+      status: ConversationStatus.InProgress,
     });
   }
 

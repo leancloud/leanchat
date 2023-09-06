@@ -8,7 +8,7 @@ import _ from 'lodash';
 
 import { ConversationCreatedEvent } from 'src/event';
 import { REDIS } from 'src/redis';
-import { ConversationService } from 'src/conversation';
+import { ConversationService, ConversationStatus } from 'src/conversation';
 import { QUEUE_CHATBOT_DISPATCH, QUEUE_CHATBOT_PROCESS } from './constants';
 import { ChatbotDispatchJobData, ChatbotProcessJobData } from './interfaces';
 import { ChatbotService } from './chatbot.service';
@@ -52,7 +52,7 @@ export class EventHandler {
     }
 
     const convs = await this.conversationService.getConversations({
-      status: 'inProgress',
+      status: ConversationStatus.InProgress,
       limit: 1000,
     });
     if (convs.length === 0) {

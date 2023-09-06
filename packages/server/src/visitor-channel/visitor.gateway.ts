@@ -16,7 +16,11 @@ import { Message, MessageService } from 'src/message';
 import { MessageCreatedEvent } from 'src/event';
 import { ConversationEvaluationInvitedEvent } from 'src/events';
 import { AssignService } from 'src/chat-center';
-import { ConversationDocument, ConversationService } from 'src/conversation';
+import {
+  ConversationDocument,
+  ConversationService,
+  ConversationStatus,
+} from 'src/conversation';
 import { VisitorService } from 'src/visitor';
 import { WsInterceptor } from 'src/common/interceptors';
 import { CreateMessageDto } from './dtos/create-message.dto';
@@ -83,7 +87,7 @@ export class VisitorGateway implements OnModuleInit, OnGatewayConnection {
   ) {
     const { id } = socket.data;
 
-    let visitor = await this.visitorService.getVisitor(id);
+    const visitor = await this.visitorService.getVisitor(id);
     if (!visitor) {
       throw new WsException('账户已被删除');
     }
@@ -94,9 +98,12 @@ export class VisitorGateway implements OnModuleInit, OnGatewayConnection {
         visitor.currentConversation._id,
       );
     }
-    if (!conv || conv.status === 'solved') {
-      conv = await this.conversationService.createConversation(id);
-      visitor = await this.visitorService.updateVisitor(visitor, {
+    if (!conv || conv.status === ConversationStatus.Solved) {
+      conv = await this.conversationService.createConversation({
+        channel: 'chat',
+        visitorId: visitor.id,
+      });
+      await this.visitorService.updateVisitor(visitor, {
         currentConversationId: conv.id,
       });
       socket.emit('currentConversation', conv);
@@ -115,7 +122,7 @@ export class VisitorGateway implements OnModuleInit, OnGatewayConnection {
       visitorLastActivityAt: message.createdAt,
     });
 
-    if (conv.status === 'new') {
+    if (conv.status === ConversationStatus.New) {
       await this.assignService.assignConversation(conv);
     }
 

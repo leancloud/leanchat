@@ -1,5 +1,10 @@
 import { Message } from 'src/message';
 
+export interface CreateConversationData {
+  channel: string;
+  visitorId: string;
+}
+
 export interface UpdateConversationData {
   status?: string;
   operatorId?: string;

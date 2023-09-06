@@ -1,9 +1,13 @@
 import { Inject, Injectable } from '@nestjs/common';
 import { EventEmitter2 } from '@nestjs/event-emitter';
 import { Redis } from 'ioredis';
-import { ConversationDocument, ConversationService } from 'src/conversation';
-import { Operator } from 'src/operator';
 
+import {
+  ConversationDocument,
+  ConversationService,
+  ConversationStatus,
+} from 'src/conversation';
+import { Operator } from 'src/operator';
 import { REDIS } from 'src/redis';
 import {
   ConversationAssignedEvent,
@@ -37,7 +41,7 @@ export class ChatConversationService {
 
   async assign(conv: ConversationDocument, operator: Operator) {
     const newConv = await this.conversationService.updateConversation(conv, {
-      status: 'inProgress',
+      status: ConversationStatus.InProgress,
       operatorId: operator.id,
     });
 
@@ -54,7 +58,7 @@ export class ChatConversationService {
 
   async close(conv: ConversationDocument) {
     const newConv = await this.conversationService.updateConversation(conv, {
-      status: 'solved',
+      status: ConversationStatus.Solved,
     });
 
     if (conv.operator) {

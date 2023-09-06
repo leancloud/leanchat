@@ -24,7 +24,7 @@ import { WsFilter } from 'src/common/filters';
 import { MessageCreatedEvent } from 'src/event';
 import { ConversationEvaluationInvitedEvent } from 'src/events';
 import { WsInterceptor } from 'src/common/interceptors';
-import { ConversationService } from 'src/conversation';
+import { ConversationService, ConversationStatus } from 'src/conversation';
 import { OperatorService } from 'src/operator';
 import { MessageService } from 'src/message';
 import { CreateMessageDto } from './dtos/create-message.dto';
@@ -137,7 +137,7 @@ export class ChatGateway
     if (!conv) {
       throw new WsException(`对话 ${data.conversationId} 不存在`);
     }
-    if (conv.status === 'solved') {
+    if (conv.status === ConversationStatus.Solved) {
       throw new WsException('对话已结束');
     }
 

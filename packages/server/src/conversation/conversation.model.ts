@@ -1,40 +1,47 @@
-import { DocumentType, Ref, modelOptions, prop } from '@typegoose/typegoose';
+import { DocumentType, ModelOptions, Prop, Ref } from '@typegoose/typegoose';
 import { SchemaTypes, Types } from 'mongoose';
 
 import { Category } from 'src/category';
 
-@modelOptions({
+@ModelOptions({
   schemaOptions: {
     collection: 'conversation',
     timestamps: true,
   },
 })
 export class Conversation {
-  @prop()
+  _id: Types.ObjectId;
+
+  id: string;
+
+  @Prop()
+  channel: string;
+
+  @Prop()
   visitor: Types.ObjectId;
 
-  @prop()
+  @Prop()
   operator?: Types.ObjectId;
 
-  @prop({ type: () => SchemaTypes.Mixed })
+  @Prop({ type: () => SchemaTypes.Mixed })
   lastMessage?: any;
 
-  @prop()
+  @Prop()
   status: string;
 
-  @prop()
+  @Prop()
   queuedAt?: Date;
 
-  @prop()
+  @Prop()
   visitorLastActivityAt?: Date;
 
-  @prop()
+  @Prop()
   evaluation?: {
     star: number;
     feedback: string;
   };
 
-  @prop({ ref: () => Category })
+  @Prop({ ref: () => Category })
   category?: Ref<Category>;
 
   createdAt: Date;
