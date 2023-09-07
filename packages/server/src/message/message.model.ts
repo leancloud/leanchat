@@ -9,6 +9,10 @@ import { Conversation } from 'src/conversation/conversation.model';
   },
 })
 export class Message {
+  _id: Types.ObjectId;
+
+  id: string;
+
   @prop()
   visitor: Types.ObjectId;
 

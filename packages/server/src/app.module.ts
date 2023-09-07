@@ -45,7 +45,7 @@ import { parseRedisUrl } from './redis/utils';
       useFactory: (config: ConfigService) => {
         return {
           uri: config.getOrThrow('MONGODB_URL'),
-          autoIndex: false,
+          // autoIndex: false,
           dbName: 'chat',
         };
       },

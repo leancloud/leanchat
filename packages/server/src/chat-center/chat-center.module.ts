@@ -23,6 +23,7 @@ import {
   OperatorController,
   QuickReplyController,
   SessionController,
+  StatisticsController,
   VisitorController,
 } from './controllers';
 
@@ -54,6 +55,7 @@ import {
     ChatbotController,
     CategoryController,
     QuickReplyController,
+    StatisticsController,
   ],
   exports: [AssignService, ChatConversationService],
 })

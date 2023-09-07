@@ -5,6 +5,7 @@ import { Redis } from 'ioredis';
 import {
   ConversationDocument,
   ConversationService,
+  ConversationStatsService,
   ConversationStatus,
 } from 'src/conversation';
 import { Operator } from 'src/operator';
@@ -23,6 +24,7 @@ export class ChatConversationService {
   constructor(
     private events: EventEmitter2,
     private conversationService: ConversationService,
+    private convStatsService: ConversationStatsService,
   ) {}
 
   async enqueue(conv: ConversationDocument) {
@@ -30,10 +32,14 @@ export class ChatConversationService {
     if (!score) {
       return;
     }
+
+    const queuedAt = new Date(Number(score));
     const newConv = await this.conversationService.updateConversation(conv, {
       status: 'queued',
-      queuedAt: new Date(Number(score)),
+      queuedAt,
     });
+    await this.convStatsService.setQueuedAt(conv.id, queuedAt);
+
     this.events.emit('conversation.queued', {
       conversation: newConv,
     } satisfies ConversationQueuedEvent);
@@ -44,6 +50,9 @@ export class ChatConversationService {
       status: ConversationStatus.InProgress,
       operatorId: operator.id,
     });
+
+    await this.convStatsService.setOperatorJoinedAt(conv.id, new Date());
+    await this.convStatsService.pushOperatorIds(conv.id, operator.id);
 
     await this.redis
       .pipeline()
@@ -57,6 +66,10 @@ export class ChatConversationService {
   }
 
   async close(conv: ConversationDocument) {
+    if (conv.status === ConversationStatus.Solved) {
+      return;
+    }
+
     const newConv = await this.conversationService.updateConversation(conv, {
       status: ConversationStatus.Solved,
     });
@@ -69,5 +82,10 @@ export class ChatConversationService {
     this.events.emit('conversation.closed', {
       conversation: newConv,
     } satisfies ConversationClosedEvent);
+
+    await this.convStatsService.addStatsJob({
+      conversationId: conv.id,
+      closedAt: Date.now(),
+    });
   }
 }

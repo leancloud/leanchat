@@ -35,3 +35,8 @@ export interface EvaluateConversationData {
   star: number;
   feedback: string;
 }
+
+export interface ConversationStatsJobData {
+  conversationId: string;
+  closedAt: number;
+}

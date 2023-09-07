@@ -4,9 +4,9 @@ import { z } from 'nestjs-zod/z';
 export const CreateOperatorSchema = z.object({
   username: z
     .string()
-    .regex(/^[a-zA-Z0-9_]$/)
     .min(6)
-    .max(24),
+    .max(24)
+    .regex(/^[a-zA-Z0-9_]+$/),
   password: z.string().min(6).max(64),
   externalName: z.string().max(16),
   internalName: z.string().max(16),
