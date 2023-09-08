@@ -1,8 +1,7 @@
-import { DocumentType, Ref, modelOptions, prop } from '@typegoose/typegoose';
+import { DocumentType, ModelOptions, Prop } from '@typegoose/typegoose';
 import { SchemaTypes, Types } from 'mongoose';
-import { Conversation } from 'src/conversation/conversation.model';
 
-@modelOptions({
+@ModelOptions({
   schemaOptions: {
     collection: 'message',
     timestamps: true,
@@ -13,22 +12,22 @@ export class Message {
 
   id: string;
 
-  @prop()
-  visitor: Types.ObjectId;
+  @Prop()
+  visitorId: Types.ObjectId;
 
-  @prop({ ref: () => Conversation })
-  conversation: Ref<Conversation>;
+  @Prop()
+  conversationId: Types.ObjectId;
 
-  @prop()
+  @Prop()
   type: string;
 
-  @prop({ type: SchemaTypes.Mixed })
+  @Prop({ type: SchemaTypes.Mixed })
   from: {
     type: string;
     id: string;
   };
 
-  @prop()
+  @Prop()
   data: any;
 
   createdAt: Date;

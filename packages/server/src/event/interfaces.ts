@@ -1,10 +1,10 @@
-import type { ConversationDocument } from 'src/conversation';
-import type { MessageDocument } from 'src/message';
+import type { Conversation } from 'src/conversation';
+import type { Message } from 'src/message';
 
 export interface ConversationCreatedEvent {
-  conversation: ConversationDocument;
+  conversation: Conversation;
 }
 
 export interface MessageCreatedEvent {
-  message: MessageDocument;
+  message: Message;
 }

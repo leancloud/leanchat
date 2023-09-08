@@ -16,8 +16,8 @@ export class MessageService {
 
   async createMessage(data: CreateMessageData) {
     const message = new this.messageModel({
-      visitor: data.visitorId,
-      conversation: data.conversationId,
+      visitorId: data.visitorId,
+      conversationId: data.conversationId,
       type: data.type,
       from: data.from,
       data: data.data,
@@ -41,10 +41,10 @@ export class MessageService {
   }: IGetMessagesDto) {
     const query = this.messageModel.find();
     if (visitorId) {
-      query.where({ visitor: visitorId });
+      query.where({ visitorId });
     }
     if (conversationId) {
-      query.where({ conversation: conversationId });
+      query.where({ conversationId });
     }
     if (type) {
       if (Array.isArray(type)) {
