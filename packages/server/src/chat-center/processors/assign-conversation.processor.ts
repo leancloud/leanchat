@@ -38,22 +38,27 @@ export class AssignConversationProcessor {
   }
 
   async selectOperator() {
-    const operators = await this.operatorService.getOperators();
-    if (operators.length === 0) {
+    const operatorStatus = await this.redis.hgetall('operator_status');
+    const readyOperatorIds = Object.entries(operatorStatus)
+      .filter(([, status]) => status === 'ready')
+      .map(([id]) => id);
+    if (readyOperatorIds.length === 0) {
       return;
     }
-    const operatorStatus = await this.redis.hgetall('operator_status');
-    const readyOperators = operators.filter(
-      (o) => operatorStatus[o.id] === 'ready',
-    );
+
+    const readyOperators = await this.operatorService.getOperators({
+      ids: readyOperatorIds,
+    });
     if (readyOperators.length === 0) {
       return;
     }
-    const readyOperatorIds = readyOperators.map((o) => o.id);
+
+    const operatorIds = readyOperators.map((o) => o.id);
     const operatorConcurrency = await this.redis.hmget(
       'operator_concurrency',
-      ...readyOperatorIds,
+      ...operatorIds,
     );
+
     const entries = _.zip(readyOperators, operatorConcurrency);
     for (const [operator, concurrency] of entries) {
       if (!operator || !concurrency) {

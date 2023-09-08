@@ -7,7 +7,11 @@ import { hash, verify } from '@node-rs/argon2';
 import { InjectModel } from '@m8a/nestjs-typegoose';
 import { ReturnModelType } from '@typegoose/typegoose';
 
-import { ICreateOperator, IUpdateOperator } from './interfaces';
+import {
+  GetOperatorsOptions,
+  ICreateOperator,
+  IUpdateOperator,
+} from './interfaces';
 import { Operator } from './operator.model';
 
 @Injectable()
@@ -48,8 +52,12 @@ export class OperatorService {
     return verify(hashedPassword, password);
   }
 
-  getOperators() {
-    return this.operatorModel.find();
+  getOperators({ ids }: GetOperatorsOptions = {}) {
+    const query = this.operatorModel.find();
+    if (ids) {
+      query.in('_id', ids);
+    }
+    return query.exec();
   }
 
   async updateOperator(id: string, data: IUpdateOperator) {

@@ -11,3 +11,7 @@ export interface ICreateOperator {
 }
 
 export type IUpdateOperator = Partial<Omit<ICreateOperator, 'username'>>;
+
+export interface GetOperatorsOptions {
+  ids?: string[];
+}
