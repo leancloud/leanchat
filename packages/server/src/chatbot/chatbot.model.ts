@@ -1,21 +1,21 @@
-import { DocumentType, modelOptions, prop } from '@typegoose/typegoose';
+import { DocumentType, ModelOptions, Prop } from '@typegoose/typegoose';
 
 import { ChatbotEdge, ChatbotNode } from './interfaces';
 
-@modelOptions({
+@ModelOptions({
   schemaOptions: {
     collection: 'chatbot',
     timestamps: true,
   },
 })
 export class Chatbot {
-  @prop()
+  @Prop()
   name: string;
 
-  @prop()
+  @Prop()
   nodes: ChatbotNode[];
 
-  @prop()
+  @Prop()
   edges: ChatbotEdge[];
 
   createdAt: Date;
