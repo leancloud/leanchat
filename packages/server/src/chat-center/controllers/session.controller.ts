@@ -34,12 +34,13 @@ export class SessionController {
       throw new UnauthorizedException(`客服 ${data.username} 不存在`);
     }
     const passwordMatch = await this.operatorService.comparePassword(
-      operator.password,
+      operator.password!,
       data.password,
     );
     if (!passwordMatch) {
       throw new UnauthorizedException('用户名密码不匹配');
     }
+    delete operator.password;
 
     await promisify(req.session.regenerate).call(req.session);
     req.session.uid = operator.id;

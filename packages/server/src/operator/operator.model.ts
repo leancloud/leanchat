@@ -16,7 +16,7 @@ export class Operator {
   username: string;
 
   @Prop({ select: false })
-  password: string;
+  password?: string;
 
   @Prop()
   externalName: string;
