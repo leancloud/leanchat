@@ -67,7 +67,14 @@ export class EventHandler {
           .filter((node) => {
             if (node.type === 'onVisitorInactive') {
               const visitorLastActivityAt =
-                conv.visitorLastActivityAt || conv.createdAt;
+                conv.timestamps.visitorLastMessageAt || conv.createdAt;
+              if (
+                !conv.timestamps.operatorLastMessageAt ||
+                conv.timestamps.operatorLastMessageAt.getTime() <
+                  visitorLastActivityAt.getTime()
+              ) {
+                return false;
+              }
               const time =
                 visitorLastActivityAt.getTime() + node.inactiveDuration * 1000;
               return Date.now() >= time;

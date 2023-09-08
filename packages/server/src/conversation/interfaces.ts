@@ -1,6 +1,7 @@
 import { Types } from 'mongoose';
 
 import { Message } from 'src/message';
+import { Conversation } from './conversation.model';
 
 export interface CreateConversationData {
   channel: string;
@@ -11,13 +12,12 @@ export interface UpdateConversationData {
   status?: string;
   operatorId?: string;
   lastMessage?: Message;
-  queuedAt?: Date;
-  visitorLastActivityAt?: Date;
   evaluation?: {
     star: number;
     feedback: string;
   };
   categoryId?: string;
+  timestamps?: Conversation['timestamps'];
 }
 
 export interface GetConversationOptions {
@@ -38,5 +38,11 @@ export interface EvaluateConversationData {
 
 export interface ConversationStatsJobData {
   conversationId: string;
-  closedAt: number;
+}
+
+export interface GetConversationStatsOptions {
+  from: Date;
+  to: Date;
+  channel?: string;
+  operatorId?: string | string[];
 }

@@ -4,7 +4,17 @@ import { z } from 'nestjs-zod/z';
 const GetConversationsSchema = z.object({
   status: z.enum(['queued', 'inProgress', 'solved']).optional(),
   operatorId: z.string().optional(),
-  sort: z.enum(['createdAt', 'queuedAt']).optional(),
+  sort: z
+    .enum(['createdAt', 'queuedAt'])
+    .transform((sort) => {
+      switch (sort) {
+        case 'createdAt':
+          return sort;
+        default:
+          return 'timestamps.' + sort;
+      }
+    })
+    .optional(),
   desc: z
     .string()
     .transform((s) => {

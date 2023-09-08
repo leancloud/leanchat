@@ -85,7 +85,7 @@ export class ChatbotProcessProcessor {
       return;
     }
 
-    const lastActAt = conv.visitorLastActivityAt || conv.createdAt;
+    const lastActAt = conv.timestamps.visitorLastMessageAt || conv.createdAt;
     const inactiveAt = lastActAt.getTime() + node.inactiveDuration * 1000;
     if (Date.now() < inactiveAt) {
       return;

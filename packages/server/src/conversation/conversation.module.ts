@@ -5,7 +5,6 @@ import { BullModule } from '@nestjs/bull';
 import { MessageModule } from 'src/message/message.module';
 import { CategoryModule } from 'src/category';
 import { Conversation } from './conversation.model';
-import { ConversationStats } from './conversation-stats.model';
 import { ConversationService } from './conversation.service';
 import { ConversationStatsService } from './conversation-stats.service';
 import { CONVERSATION_STATS_QUEUE } from './constants';
@@ -13,7 +12,7 @@ import { ConversationStatsProcessor } from './conversation-stats.processor';
 
 @Module({
   imports: [
-    TypegooseModule.forFeature([Conversation, ConversationStats]),
+    TypegooseModule.forFeature([Conversation]),
     BullModule.registerQueue({
       name: CONVERSATION_STATS_QUEUE,
     }),

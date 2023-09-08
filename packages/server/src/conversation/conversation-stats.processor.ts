@@ -6,7 +6,6 @@ import { Message, MessageService } from 'src/message';
 import { CONVERSATION_STATS_QUEUE } from './constants';
 import { ConversationService } from './conversation.service';
 import { ConversationStatsJobData } from './interfaces';
-import { ConversationStatsService } from './conversation-stats.service';
 
 interface TimeScale {
   type: 'operatorJoin' | 'visitor' | 'operator';
@@ -17,13 +16,12 @@ interface TimeScale {
 export class ConversationStatsProcessor {
   constructor(
     private conversationService: ConversationService,
-    private conversationStatsService: ConversationStatsService,
     private messageService: MessageService,
   ) {}
 
   @Process()
   async processConversationStats(job: Job<ConversationStatsJobData>) {
-    const { conversationId, closedAt } = job.data;
+    const { conversationId } = job.data;
 
     const conversation = await this.conversationService.getConversation(
       conversationId,
@@ -31,16 +29,6 @@ export class ConversationStatsProcessor {
     if (!conversation) {
       return;
     }
-
-    const conversationStats =
-      await this.conversationStatsService.getConversationStatsForConversation(
-        conversation.id,
-      );
-    if (!conversationStats) {
-      return;
-    }
-
-    conversationStats.closedAt = new Date(closedAt);
 
     let messages = await this.messageService.getMessages({
       conversationId,
@@ -54,23 +42,23 @@ export class ConversationStatsProcessor {
     );
 
     const messageCount = _.countBy(messages, (message) => message.from.type);
-    conversationStats.visitorMessageCount = messageCount.visitor || 0;
-    conversationStats.operatorMessageCount = messageCount.operator || 0;
+    conversation.stats.visitorMessageCount = messageCount.visitor || 0;
+    conversation.stats.operatorMessageCount = messageCount.operator || 0;
 
-    if (conversationStats.operatorJoinedAt) {
+    if (conversation.timestamps.operatorJoinedAt) {
       const reactionTimeList = this.getReactionTimeList(
         messages,
-        conversationStats.operatorJoinedAt,
+        conversation.timestamps.operatorJoinedAt,
       );
       if (reactionTimeList.length) {
-        conversationStats.firstResponseTime = reactionTimeList[0];
+        conversation.stats.firstResponseTime = reactionTimeList[0];
       }
-      conversationStats.totalResponseTime = _.sum(reactionTimeList);
-      conversationStats.totalResponseCount = reactionTimeList.length;
+      conversation.stats.totalResponseTime = _.sum(reactionTimeList);
+      conversation.stats.totalResponseCount = reactionTimeList.length;
     }
 
     if (messages.length) {
-      conversationStats.receptionTime =
+      conversation.stats.receptionTime =
         _.last(messages)!.createdAt.getTime() - messages[0].createdAt.getTime();
     }
 
@@ -78,10 +66,11 @@ export class ConversationStatsProcessor {
       (message) => message.from.type === 'operator',
     );
     if (firstOperatorMessage) {
-      conversationStats.firstOperatorMessageAt = firstOperatorMessage.createdAt;
+      conversation.timestamps.operatorFirstMessageAt =
+        firstOperatorMessage.createdAt;
     }
 
-    await conversationStats.save();
+    await conversation.save();
   }
 
   getReactionTimeList(messages: Message[], operatorJoinedAt: Date) {

@@ -119,7 +119,9 @@ export class VisitorGateway implements OnModuleInit, OnGatewayConnection {
 
     await this.conversationService.updateConversation(conv, {
       lastMessage: message,
-      visitorLastActivityAt: message.createdAt,
+      timestamps: {
+        visitorLastMessageAt: message.createdAt,
+      },
     });
 
     if (conv.status === ConversationStatus.New) {

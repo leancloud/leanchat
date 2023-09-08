@@ -52,18 +52,13 @@ export class ConversationService {
   ) {
     if (data.operatorId) {
       conv.set('operatorId', data.operatorId);
+      conv.operatorIds.addToSet(data.operatorId);
     }
     if (data.status) {
       conv.status = data.status;
     }
-    if (data.queuedAt) {
-      conv.queuedAt = data.queuedAt;
-    }
     if (data.lastMessage) {
       conv.lastMessage = data.lastMessage;
-    }
-    if (data.visitorLastActivityAt) {
-      conv.visitorLastActivityAt = data.visitorLastActivityAt;
     }
     if (data.evaluation) {
       conv.evaluation = data.evaluation;
@@ -74,6 +69,9 @@ export class ConversationService {
         throw new BadRequestException(`分类 ${data.categoryId} 不存在`);
       }
       conv.categoryId = category._id;
+    }
+    if (data.timestamps) {
+      Object.assign(conv.timestamps, data.timestamps);
     }
     return conv.save();
   }

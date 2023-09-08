@@ -12,10 +12,6 @@ export class ConversationDto {
 
   status: string;
 
-  queuedAt?: string;
-
-  visitorLastActivityAt?: string;
-
   evaluation?: {
     star: number;
     feedback: string;
@@ -34,8 +30,6 @@ export class ConversationDto {
     dto.operatorId = conv.operatorId?.toString();
     dto.lastMessage = conv.lastMessage;
     dto.status = conv.status;
-    dto.queuedAt = conv.queuedAt?.toISOString();
-    dto.visitorLastActivityAt = conv.visitorLastActivityAt?.toISOString();
     dto.evaluation = conv.evaluation;
     dto.categoryId = conv.categoryId?.toString();
     dto.createdAt = conv.createdAt.toISOString();

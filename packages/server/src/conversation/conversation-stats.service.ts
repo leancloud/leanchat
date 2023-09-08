@@ -1,95 +1,61 @@
 import { Injectable } from '@nestjs/common';
 import { InjectModel } from '@m8a/nestjs-typegoose';
 import { ReturnModelType } from '@typegoose/typegoose';
+import { FilterQuery, Types } from 'mongoose';
 import { InjectQueue } from '@nestjs/bull';
 import { Queue } from 'bull';
 
-import { ConversationStats } from './conversation-stats.model';
-import { CONVERSATION_STATS_QUEUE } from './constants';
-import { ConversationStatsJobData } from './interfaces';
+import { CONVERSATION_STATS_QUEUE, ConversationStatus } from './constants';
+import {
+  ConversationStatsJobData,
+  GetConversationStatsOptions,
+} from './interfaces';
+import { Conversation } from './conversation.model';
 
 @Injectable()
 export class ConversationStatsService {
-  @InjectModel(ConversationStats)
-  private conversationStatsModel: ReturnModelType<typeof ConversationStats>;
+  @InjectModel(Conversation)
+  private conversationModel: ReturnModelType<typeof Conversation>;
 
   constructor(
     @InjectQueue(CONVERSATION_STATS_QUEUE)
     private conversationStatsQueue: Queue<ConversationStatsJobData>,
   ) {}
 
-  async getConversationStatsForConversation(conversationId: string) {
-    const conversationStats = await this.conversationStatsModel.findOne({
-      conversationId,
-    });
-    if (conversationStats) {
-      return conversationStats;
-    }
-    return this.conversationStatsModel.create({ conversationId });
-  }
-
-  private async setFieldWhenNotExists<Field extends keyof ConversationStats>(
-    conversationId: string,
-    field: Field,
-    value: ConversationStats[Field],
-  ) {
-    try {
-      await this.conversationStatsModel.updateOne(
-        {
-          conversationId,
-          [field]: { $exists: false },
-        },
-        {
-          $set: { [field]: value },
-        },
-        {
-          upsert: true,
-        },
-      );
-    } catch (error) {
-      // ignore
-    }
-  }
-
-  async setQueuedAt(conversationId: string, queuedAt: Date) {
-    await this.setFieldWhenNotExists(conversationId, 'queuedAt', queuedAt);
-  }
-
-  async setOperatorJoinedAt(conversationId: string, operatorJoinedAt: Date) {
-    await this.setFieldWhenNotExists(
-      conversationId,
-      'operatorJoinedAt',
-      operatorJoinedAt,
-    );
-  }
-
-  async pushOperatorIds(conversationId: string, operatorId: string) {
-    await this.conversationStatsModel.updateOne(
-      { conversationId },
-      {
-        $addToSet: {
-          operatorIds: operatorId,
-        },
-      },
-      { upsert: true },
-    );
-  }
-
   async addStatsJob(data: ConversationStatsJobData) {
     await this.conversationStatsQueue.add(data);
   }
 
-  async getConversationStats(from: Date, to: Date) {
-    const results = await this.conversationStatsModel
+  async getConversationStats({
+    from,
+    to,
+    channel,
+    operatorId,
+  }: GetConversationStatsOptions) {
+    const $match: FilterQuery<Conversation> = {
+      createdAt: {
+        $gte: from,
+        $lte: to,
+      },
+      status: ConversationStatus.Solved,
+    };
+
+    if (channel) {
+      $match.channel = channel;
+    }
+    if (operatorId) {
+      if (Array.isArray(operatorId)) {
+        $match.operatorId = {
+          $in: operatorId.map((id) => new Types.ObjectId(id)),
+        };
+      } else {
+        $match.operatorId = new Types.ObjectId(operatorId);
+      }
+    }
+
+    const results = await this.conversationModel
       .aggregate([
-        {
-          $match: {
-            closedAt: {
-              $gte: from,
-              $lte: to,
-            },
-          },
-        },
+        { $match },
         {
           $group: {
             _id: null,
@@ -97,7 +63,7 @@ export class ConversationStatsService {
             queued: {
               $sum: {
                 $cond: {
-                  if: { $gt: ['$queuedAt', null] },
+                  if: { $gt: ['$timestamps.queuedAt', null] },
                   then: 1,
                   else: 0,
                 },
@@ -106,7 +72,7 @@ export class ConversationStatsService {
             processed: {
               $sum: {
                 $cond: {
-                  if: { $gt: ['$operatorJoinedAt', null] },
+                  if: { $gt: ['$timestamps.operatorJoinedAt', null] },
                   then: 1,
                   else: 0,
                 },
@@ -115,7 +81,7 @@ export class ConversationStatsService {
             operatorCommunicated: {
               $sum: {
                 $cond: {
-                  if: { $gt: ['$operatorMessageCount', 0] },
+                  if: { $gt: ['$stats.operatorMessageCount', 0] },
                   then: 1,
                   else: 0,
                 },
@@ -126,7 +92,7 @@ export class ConversationStatsService {
                 $cond: {
                   if: {
                     $and: [
-                      { $gt: ['$operatorMessageCount', 0] },
+                      { $gt: ['$stats.operatorMessageCount', 0] },
                       { $eq: [{ $size: '$operatorIds' }, 1] },
                     ],
                   },
@@ -140,8 +106,8 @@ export class ConversationStatsService {
                 $cond: {
                   if: {
                     $and: [
-                      { $gt: ['$operatorMessageCount', 0] },
-                      { $gt: ['$visitorMessageCount', 0] },
+                      { $gt: ['$stats.operatorMessageCount', 0] },
+                      { $gt: ['$stats.visitorMessageCount', 0] },
                     ],
                   },
                   then: 1,
@@ -154,8 +120,8 @@ export class ConversationStatsService {
                 $cond: {
                   if: {
                     $and: [
-                      { $gt: ['$operatorMessageCount', 0] },
-                      { $eq: ['$visitorMessageCount', 0] },
+                      { $gt: ['$stats.operatorMessageCount', 0] },
+                      { $eq: ['$stats.visitorMessageCount', 0] },
                     ],
                   },
                   then: 1,
@@ -166,28 +132,28 @@ export class ConversationStatsService {
             noResponse: {
               $sum: {
                 $cond: {
-                  if: { $eq: ['$operatorMessageCount', 0] },
+                  if: { $eq: ['$stats.operatorMessageCount', 0] },
                   then: 1,
                   else: 0,
                 },
               },
             },
-            firstReactionTime: { $sum: '$firstReactionTime' },
-            firstReactionCount: {
+            firstResponseTime: { $sum: '$stats.firstResponseTime' },
+            firstResponseCount: {
               $sum: {
                 $cond: {
-                  if: { $gt: ['$firstReactionTime', 0] },
+                  if: { $gt: ['$stats.firstResponseTime', 0] },
                   then: 1,
                   else: 0,
                 },
               },
             },
-            reactionTime: { $sum: '$reactionTime' },
-            reactionCount: { $sum: '$reactionCount' },
+            totalResponseTime: { $sum: '$stats.totalResponseTime' },
+            totalResponseCount: { $sum: '$stats.totalResponseCount' },
             overtime: {
               $sum: {
                 $cond: {
-                  if: { $gt: ['$firstReactionTime', 60 * 3] },
+                  if: { $gt: ['$stats.firstReactionTime', 60 * 3] },
                   then: 1,
                   else: 0,
                 },
@@ -195,7 +161,10 @@ export class ConversationStatsService {
             },
             queuedTime: {
               $sum: {
-                $subtract: ['$operatorJoinedAt', '$queuedAt'],
+                $subtract: [
+                  '$timestamps.operatorJoinedAt',
+                  '$timestamps.queuedAt',
+                ],
               },
             },
           },

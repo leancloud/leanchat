@@ -151,6 +151,9 @@ export class ChatGateway
 
     await this.conversationService.updateConversation(conv, {
       lastMessage: message,
+      timestamps: {
+        operatorLastMessageAt: message.createdAt,
+      },
     });
   }
 

@@ -36,9 +36,10 @@ export class ChatConversationService {
     const queuedAt = new Date(Number(score));
     const newConv = await this.conversationService.updateConversation(conv, {
       status: 'queued',
-      queuedAt,
+      timestamps: {
+        queuedAt,
+      },
     });
-    await this.convStatsService.setQueuedAt(conv.id, queuedAt);
 
     this.events.emit('conversation.queued', {
       conversation: newConv,
@@ -49,10 +50,10 @@ export class ChatConversationService {
     const newConv = await this.conversationService.updateConversation(conv, {
       status: ConversationStatus.InProgress,
       operatorId: operator.id,
+      timestamps: {
+        operatorJoinedAt: new Date(),
+      },
     });
-
-    await this.convStatsService.setOperatorJoinedAt(conv.id, new Date());
-    await this.convStatsService.pushOperatorIds(conv.id, operator.id);
 
     await this.redis
       .pipeline()
@@ -70,8 +71,11 @@ export class ChatConversationService {
       return;
     }
 
-    const newConv = await this.conversationService.updateConversation(conv, {
+    await this.conversationService.updateConversation(conv, {
       status: ConversationStatus.Solved,
+      timestamps: {
+        closedAt: new Date(),
+      },
     });
 
     if (conv.operatorId) {
@@ -80,12 +84,11 @@ export class ChatConversationService {
     }
 
     this.events.emit('conversation.closed', {
-      conversation: newConv,
+      conversation: conv,
     } satisfies ConversationClosedEvent);
 
     await this.convStatsService.addStatsJob({
       conversationId: conv.id,
-      closedAt: Date.now(),
     });
   }
 }
