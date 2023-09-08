@@ -62,9 +62,9 @@ export class VisitorGateway implements OnModuleInit, OnGatewayConnection {
 
     const visitor = await this.visitorService.getVisitor(socket.data.id);
     if (visitor) {
-      if (visitor.currentConversation) {
+      if (visitor.currentConversationId) {
         const conv = await this.conversationService.getConversation(
-          visitor.currentConversation._id,
+          visitor.currentConversationId,
         );
         if (conv) {
           socket.emit('currentConversation', conv);
@@ -93,9 +93,9 @@ export class VisitorGateway implements OnModuleInit, OnGatewayConnection {
     }
 
     let conv: ConversationDocument | null | undefined;
-    if (visitor.currentConversation) {
+    if (visitor.currentConversationId) {
       conv = await this.conversationService.getConversation(
-        visitor.currentConversation._id,
+        visitor.currentConversationId,
       );
     }
     if (!conv || conv.status === ConversationStatus.Solved) {
@@ -139,11 +139,11 @@ export class VisitorGateway implements OnModuleInit, OnGatewayConnection {
     if (!visitor) {
       throw new WsException('账户不存在');
     }
-    if (!visitor.currentConversation) {
+    if (!visitor.currentConversationId) {
       throw new WsException('当前未在会话中');
     }
     const conv = await this.conversationService.getConversation(
-      visitor.currentConversation._id,
+      visitor.currentConversationId,
     );
     if (!conv) {
       throw new WsException('当前会话不存在');

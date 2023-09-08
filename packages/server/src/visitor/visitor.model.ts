@@ -1,7 +1,5 @@
-import { DocumentType, ModelOptions, Prop, Ref } from '@typegoose/typegoose';
+import { DocumentType, ModelOptions, Prop } from '@typegoose/typegoose';
 import { Types } from 'mongoose';
-
-import { Conversation } from 'src/conversation/conversation.model';
 
 @ModelOptions({
   schemaOptions: {
@@ -20,8 +18,8 @@ export class Visitor {
   @Prop()
   chatId?: string;
 
-  @Prop({ ref: () => Conversation })
-  currentConversation?: Ref<Conversation>;
+  @Prop()
+  currentConversationId?: Types.ObjectId;
 
   createdAt: Date;
 

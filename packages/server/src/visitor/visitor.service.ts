@@ -29,7 +29,7 @@ export class VisitorService {
 
   updateVisitor(visitor: VisitorDocument, data: UpdateVisitorData) {
     if (data.currentConversationId) {
-      visitor.set('currentConversation', data.currentConversationId);
+      visitor.set('currentConversationId', data.currentConversationId);
     }
     return visitor.save();
   }
