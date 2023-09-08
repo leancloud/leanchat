@@ -1,17 +1,22 @@
-import { DocumentType, Ref, modelOptions, prop } from '@typegoose/typegoose';
+import { DocumentType, ModelOptions, Prop } from '@typegoose/typegoose';
+import { Types } from 'mongoose';
 
-@modelOptions({
+@ModelOptions({
   schemaOptions: {
     collection: 'category',
     timestamps: true,
   },
 })
 export class Category {
-  @prop()
+  _id: Types.ObjectId;
+
+  id: string;
+
+  @Prop()
   name: string;
 
-  @prop({ ref: () => Category })
-  parent?: Ref<Category>;
+  @Prop()
+  parentId?: Types.ObjectId;
 
   createdAt: Date;
 

@@ -27,7 +27,7 @@ export class CategoryService {
       if (!parent) {
         throw new BadRequestException('父分类不存在');
       }
-      category.parent = parent.id;
+      category.parentId = parent.id;
     }
     return category.save();
   }

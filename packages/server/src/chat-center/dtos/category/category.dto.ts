@@ -1,4 +1,4 @@
-import { CategoryDocument } from 'src/category';
+import { Category } from 'src/category';
 
 export class CategoryDto {
   id: string;
@@ -11,11 +11,11 @@ export class CategoryDto {
 
   updatedAt: string;
 
-  static fromDocument(category: CategoryDocument) {
+  static fromDocument(category: Category) {
     const dto = new CategoryDto();
     dto.id = category.id;
     dto.name = category.name;
-    dto.parentId = category.parent?._id.toString();
+    dto.parentId = category.parentId?.toString();
     dto.createdAt = category.createdAt.toISOString();
     dto.updatedAt = category.updatedAt.toISOString();
     return dto;
