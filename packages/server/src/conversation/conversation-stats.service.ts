@@ -199,7 +199,7 @@ export class ConversationStatsService {
             overtime: {
               $sum: {
                 $cond: {
-                  if: { $gt: ['$stats.firstResponseTime', 60 * 3] },
+                  if: { $gt: ['$stats.firstResponseTime', 60 * 1000 * 3] },
                   then: 1,
                   else: 0,
                 },
