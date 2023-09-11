@@ -6,7 +6,7 @@ import { ConfigProvider, Spin } from 'antd';
 import zhCN from 'antd/locale/zh_CN';
 import { StyleProvider } from '@ant-design/cssinjs';
 import { MdSettings } from 'react-icons/md';
-import { BiSolidInbox } from 'react-icons/bi';
+import { BiSolidInbox, BiSolidDoughnutChart } from 'react-icons/bi';
 import axios from 'axios';
 
 import { SocketProvider, useSocket } from '@/socket';
@@ -20,12 +20,17 @@ import { useSubscribeOperatorsStatus } from './hooks/operator';
 import { NowProvider } from './contexts/NowContext';
 
 const Login = lazy(() => import('./Login'));
+const Statistics = lazy(() => import('./Statistics'));
 const Settings = lazy(() => import('./Settings'));
 
 const navs = [
   {
     to: 'conversations',
     icon: BiSolidInbox,
+  },
+  {
+    to: 'statistics',
+    icon: BiSolidDoughnutChart,
   },
   {
     to: 'settings',
@@ -130,6 +135,7 @@ export default function Panel() {
               }
             >
               <Route path="conversations" element={<Conversations />} />
+              <Route path="statistics/*" element={<Statistics />} />
               <Route path="settings/*" element={<Settings />} />
             </Route>
           </Routes>
