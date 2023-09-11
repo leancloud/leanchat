@@ -79,6 +79,12 @@ export class ConversationStatsProcessor {
       type: 'operatorJoin',
       date: operatorJoinedAt,
     };
+    const indexAfterOperatorJoined = messages.findIndex(
+      (message) => message.createdAt.getTime() > operatorJoinedAt.getTime(),
+    );
+    if (indexAfterOperatorJoined !== -1) {
+      messages = messages.slice(indexAfterOperatorJoined);
+    }
     messages.forEach((message) => {
       switch (message.from.type) {
         case 'visitor':

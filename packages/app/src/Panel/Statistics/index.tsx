@@ -1,6 +1,7 @@
 import { Tabs } from 'antd';
 
 import { ConversationStatistics } from './ConversationStatistics';
+import { ConversationMessageStatistics } from './MessageStatistics';
 
 export default function Statistics() {
   return (
@@ -16,6 +17,7 @@ export default function Statistics() {
           {
             key: 'message',
             label: '消息统计',
+            children: <ConversationMessageStatistics />,
           },
         ]}
       />

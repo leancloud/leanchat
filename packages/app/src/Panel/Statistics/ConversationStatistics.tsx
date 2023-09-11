@@ -1,4 +1,4 @@
-import { ReactNode, useEffect, useMemo, useRef, useState } from 'react';
+import { useMemo, useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { Button, DatePicker, Form, Select, Spin } from 'antd';
 import dayjs from 'dayjs';
@@ -8,8 +8,10 @@ import {
   ConversationStatistics as ConversationStatisticsSchema,
   getConversationStatistics,
 } from '../api/statistics';
+import { StatsCard } from './components/StatsCard';
+import { StatsGroup } from './components/StatsGroup';
 
-interface FiltersFormData {
+export interface FiltersFormData {
   dateRange: [dayjs.Dayjs, dayjs.Dayjs];
   channel?: string;
   operatorId?: string[];
@@ -20,7 +22,7 @@ interface FiltersFormProps {
   onChange: (data: FiltersFormData) => void;
 }
 
-function FiltersForm({ initData, onChange }: FiltersFormProps) {
+export function FiltersForm({ initData, onChange }: FiltersFormProps) {
   return (
     <Form layout="inline" initialValues={initData} onFinish={onChange}>
       <Form.Item name="dateRange" rules={[{ required: true }]}>
@@ -50,51 +52,6 @@ function FiltersForm({ initData, onChange }: FiltersFormProps) {
         </Button>
       </Form.Item>
     </Form>
-  );
-}
-
-interface StatsCardProps {
-  title: string;
-  value: ReactNode;
-}
-
-function StatsCard({ title, value }: StatsCardProps) {
-  const cardRef = useRef<HTMLDivElement>(null!);
-  const valueRef = useRef<HTMLDivElement>(null!);
-
-  useEffect(() => {
-    const valueElement = valueRef.current;
-    const cardElement = cardRef.current;
-    if (valueElement.offsetWidth < cardElement.clientWidth) {
-      return;
-    }
-    valueElement.style.transform = `scale(${cardElement.clientWidth / valueElement.offsetWidth})`;
-  }, [value]);
-
-  return (
-    <div
-      ref={cardRef}
-      className="border bg-[#f7f7f7] w-[180px] h-[100px] flex flex-col justify-center items-center"
-    >
-      <div className="text-sm leading-[14px]">{title}</div>
-      <div ref={valueRef} className="text-[28px] leading-[28px] mt-[10px] break-keep">
-        {value}
-      </div>
-    </div>
-  );
-}
-
-interface StatsGroup {
-  title: string;
-  children?: ReactNode;
-}
-
-function StatsGroup({ title, children }: StatsGroup) {
-  return (
-    <div className="mb-6">
-      <h2 className="text-base font-bold mb-4">{title}</h2>
-      <div className="flex flex-wrap gap-4">{children}</div>
-    </div>
   );
 }
 

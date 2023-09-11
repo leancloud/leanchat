@@ -40,3 +40,20 @@ export async function getConversationStatistics(options: GetConversationStatisti
   });
   return res.data;
 }
+
+export interface ConversationMessageStatistics {
+  operatorMessageCount: number;
+  visitorMessageCount: number;
+}
+
+export async function getConversationMessageStatistics(options: GetConversationStatisticsFilters) {
+  const res = await client.get<ConversationMessageStatistics>('/statistics/conversation-message', {
+    params: {
+      from: options.from.toISOString(),
+      to: options.to.toISOString(),
+      channel: options.channel,
+      operatorId: options.operatorId?.join(',') || undefined,
+    },
+  });
+  return res.data;
+}
