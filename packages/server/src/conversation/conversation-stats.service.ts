@@ -7,6 +7,7 @@ import { Queue } from 'bull';
 
 import { CONVERSATION_STATS_QUEUE, ConversationStatus } from './constants';
 import {
+  ConversationMessageStatistics,
   ConversationStatistics,
   ConversationStatsJobData,
   GetConversationStatsOptions,
@@ -27,7 +28,7 @@ export class ConversationStatsService {
     await this.conversationStatsQueue.add(data);
   }
 
-  async getConversationStats({
+  async getConversationStatistics({
     from,
     to,
     channel,
@@ -264,5 +265,54 @@ export class ConversationStatsService {
         queuedAndProcessedTime: 0,
       };
     }
+  }
+
+  async getConversationMessageStatistics({
+    from,
+    to,
+    channel,
+    operatorId,
+  }: GetConversationStatsOptions): Promise<ConversationMessageStatistics> {
+    const $match: FilterQuery<Conversation> = {
+      createdAt: {
+        $gte: from,
+        $lte: to,
+      },
+      status: ConversationStatus.Solved,
+    };
+
+    if (channel) {
+      $match.channel = channel;
+    }
+    if (operatorId) {
+      if (Array.isArray(operatorId)) {
+        $match.operatorId = {
+          $in: operatorId.map((id) => new Types.ObjectId(id)),
+        };
+      } else {
+        $match.operatorId = new Types.ObjectId(operatorId);
+      }
+    }
+
+    const [result] = await this.conversationModel.aggregate([
+      { $match },
+      {
+        $group: {
+          _id: null,
+          operatorMessageCount: { $sum: '$stats.operatorMessageCount' },
+          visitorMessageCount: { $sum: '$stats.visitorMessageCount' },
+        },
+      },
+    ]);
+
+    if (result) {
+      delete result._id;
+      return result;
+    }
+
+    return {
+      operatorMessageCount: 0,
+      visitorMessageCount: 0,
+    };
   }
 }

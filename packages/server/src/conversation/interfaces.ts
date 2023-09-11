@@ -87,3 +87,14 @@ export interface ConversationStatistics {
   // 排队离开时长
   queuedAndProcessedTime: number;
 }
+
+export interface ConversationMessageStatistics {
+  /**
+   * 客服消息数
+   */
+  operatorMessageCount: number;
+  /**
+   * 用户消息数
+   */
+  visitorMessageCount: number;
+}

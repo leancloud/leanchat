@@ -12,7 +12,14 @@ export class StatisticsController {
   constructor(private conversationStatsService: ConversationStatsService) {}
 
   @Get('conversation')
-  getConversationStats(@Query() query: GetConversationStatsDto) {
-    return this.conversationStatsService.getConversationStats(query);
+  getConversationStatistics(@Query() query: GetConversationStatsDto) {
+    return this.conversationStatsService.getConversationStatistics(query);
+  }
+
+  @Get('conversation-message')
+  getConversationMessageStatistics(@Query() query: GetConversationStatsDto) {
+    return this.conversationStatsService.getConversationMessageStatistics(
+      query,
+    );
   }
 }
