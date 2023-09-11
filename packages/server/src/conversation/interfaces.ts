@@ -46,3 +46,44 @@ export interface GetConversationStatsOptions {
   channel?: string;
   operatorId?: string | string[];
 }
+
+export interface ConversationStatistics {
+  // 总进线量
+  incoming: number;
+  // 排队会话数
+  queued: number;
+  // 排队离开会话数
+  queuedAndLeft: number;
+  // 排队接通会话数
+  queuedAndProcessed: number;
+  // 未排队会话
+  notQueued: number;
+  // 人工接待用户数
+  operatorCommunicated: number;
+  // 人工独立接待会话数
+  oneOperatorCommunicated: number;
+  // 人工有效会话
+  valid: number;
+  // 人工无效会话
+  invalid: number;
+  // 客服无应答会话
+  noResponse: number;
+  // 人工接待时长
+  receptionTime: number;
+  // 人工接待次数
+  receptionCount: number;
+  // 首次响应时长(ms)
+  firstResponseTime: number;
+  // 首次响应次数
+  firstResponseCount: number;
+  // 响应时长
+  responseTime: number;
+  // 响应次数
+  responseCount: number;
+  // 首次回复超时数量
+  overtime: number;
+  // 排队接通时长
+  queuedAndLeftTime: number;
+  // 排队离开时长
+  queuedAndProcessedTime: number;
+}

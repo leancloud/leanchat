@@ -7,6 +7,7 @@ import { Queue } from 'bull';
 
 import { CONVERSATION_STATS_QUEUE, ConversationStatus } from './constants';
 import {
+  ConversationStatistics,
   ConversationStatsJobData,
   GetConversationStatsOptions,
 } from './interfaces';
@@ -31,7 +32,7 @@ export class ConversationStatsService {
     to,
     channel,
     operatorId,
-  }: GetConversationStatsOptions) {
+  }: GetConversationStatsOptions): Promise<ConversationStatistics> {
     const $match: FilterQuery<Conversation> = {
       createdAt: {
         $gte: from,
@@ -63,16 +64,50 @@ export class ConversationStatsService {
             queued: {
               $sum: {
                 $cond: {
-                  if: { $gt: ['$timestamps.queuedAt', null] },
+                  if: '$timestamps.queuedAt',
                   then: 1,
                   else: 0,
                 },
               },
             },
-            processed: {
+            queuedAndLeft: {
               $sum: {
                 $cond: {
-                  if: { $gt: ['$timestamps.operatorJoinedAt', null] },
+                  if: {
+                    $and: [
+                      '$timestamps.queuedAt',
+                      '$timestamps.visitorClosedAt',
+                      { $not: ['$timestamps.operatorJoinedAt'] },
+                    ],
+                  },
+                  then: 1,
+                  else: 0,
+                },
+              },
+            },
+            queuedAndProcessed: {
+              $sum: {
+                $cond: {
+                  if: {
+                    $and: [
+                      '$timestamps.queuedAt',
+                      '$timestamps.operatorJoinedAt',
+                    ],
+                  },
+                  then: 1,
+                  else: 0,
+                },
+              },
+            },
+            notQueued: {
+              $sum: {
+                $cond: {
+                  if: {
+                    $and: [
+                      { $not: ['$timestamps.queuedAt'] },
+                      '$timestamps.operatorJoinedAt',
+                    ],
+                  },
                   then: 1,
                   else: 0,
                 },
@@ -138,6 +173,16 @@ export class ConversationStatsService {
                 },
               },
             },
+            receptionTime: { $sum: '$stats.receptionTime' },
+            receptionCount: {
+              $sum: {
+                $cond: {
+                  if: { $gt: ['$stats.receptionTime', 0] },
+                  then: 1,
+                  else: 0,
+                },
+              },
+            },
             firstResponseTime: { $sum: '$stats.firstResponseTime' },
             firstResponseCount: {
               $sum: {
@@ -148,18 +193,38 @@ export class ConversationStatsService {
                 },
               },
             },
-            totalResponseTime: { $sum: '$stats.totalResponseTime' },
-            totalResponseCount: { $sum: '$stats.totalResponseCount' },
+            responseTime: { $sum: '$stats.responseTime' },
+            responseCount: { $sum: '$stats.responseCount' },
             overtime: {
               $sum: {
                 $cond: {
-                  if: { $gt: ['$stats.firstReactionTime', 60 * 3] },
+                  if: { $gt: ['$stats.firstResponseTime', 60 * 3] },
                   then: 1,
                   else: 0,
                 },
               },
             },
-            queuedTime: {
+            queuedAndLeftTime: {
+              $sum: {
+                $cond: {
+                  if: {
+                    $and: [
+                      '$timestamps.queuedAt',
+                      '$timestamps.visitorClosedAt',
+                      { $not: ['$timestamps.operatorJoinedAt'] },
+                    ],
+                  },
+                  then: {
+                    $subtract: [
+                      '$timestamps.visitorClosedAt',
+                      '$timestamps.queuedAt',
+                    ],
+                  },
+                  else: 0,
+                },
+              },
+            },
+            queuedAndProcessedTime: {
               $sum: {
                 $subtract: [
                   '$timestamps.operatorJoinedAt',
@@ -177,7 +242,27 @@ export class ConversationStatsService {
       delete result._id;
       return result;
     } else {
-      return {};
+      return {
+        incoming: 0,
+        queued: 0,
+        queuedAndLeft: 0,
+        queuedAndProcessed: 0,
+        notQueued: 0,
+        operatorCommunicated: 0,
+        oneOperatorCommunicated: 0,
+        valid: 0,
+        invalid: 0,
+        noResponse: 0,
+        receptionTime: 0,
+        receptionCount: 0,
+        firstResponseTime: 0,
+        firstResponseCount: 0,
+        responseTime: 0,
+        responseCount: 0,
+        overtime: 0,
+        queuedAndLeftTime: 0,
+        queuedAndProcessedTime: 0,
+      };
     }
   }
 }

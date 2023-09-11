@@ -19,6 +19,12 @@ class Timestamps {
 
   @Prop()
   closedAt?: Date;
+
+  @Prop()
+  operatorClosedAt?: Date;
+
+  @Prop()
+  visitorClosedAt?: Date;
 }
 
 class Stats {
@@ -32,10 +38,10 @@ class Stats {
   firstResponseTime?: number;
 
   @Prop()
-  totalResponseTime?: number;
+  responseTime?: number;
 
   @Prop()
-  totalResponseCount?: number;
+  responseCount?: number;
 
   @Prop()
   receptionTime?: number;

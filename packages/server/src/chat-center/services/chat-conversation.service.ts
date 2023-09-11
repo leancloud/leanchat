@@ -71,10 +71,12 @@ export class ChatConversationService {
       return;
     }
 
+    const closedAt = new Date();
     await this.conversationService.updateConversation(conv, {
       status: ConversationStatus.Solved,
       timestamps: {
-        closedAt: new Date(),
+        closedAt,
+        operatorClosedAt: closedAt,
       },
     });
 

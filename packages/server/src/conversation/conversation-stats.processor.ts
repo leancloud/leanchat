@@ -53,11 +53,11 @@ export class ConversationStatsProcessor {
       if (reactionTimeList.length) {
         conversation.stats.firstResponseTime = reactionTimeList[0];
       }
-      conversation.stats.totalResponseTime = _.sum(reactionTimeList);
-      conversation.stats.totalResponseCount = reactionTimeList.length;
+      conversation.stats.responseTime = _.sum(reactionTimeList);
+      conversation.stats.responseCount = reactionTimeList.length;
     }
 
-    if (messages.length) {
+    if (messageCount.visitor && messageCount.operator) {
       conversation.stats.receptionTime =
         _.last(messages)!.createdAt.getTime() - messages[0].createdAt.getTime();
     }
