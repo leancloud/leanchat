@@ -1,6 +1,7 @@
-import { DocumentType, ModelOptions, Prop } from '@typegoose/typegoose';
+import { DocumentType, Index, ModelOptions, Prop } from '@typegoose/typegoose';
 import { Types } from 'mongoose';
 
+@Index({ username: 1 }, { unique: true })
 @ModelOptions({
   schemaOptions: {
     collection: 'operator',

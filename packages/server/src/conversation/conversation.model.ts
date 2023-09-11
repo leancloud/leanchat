@@ -1,4 +1,4 @@
-import { DocumentType, ModelOptions, Prop } from '@typegoose/typegoose';
+import { DocumentType, Index, ModelOptions, Prop } from '@typegoose/typegoose';
 import { SchemaTypes, Types } from 'mongoose';
 
 class Timestamps {
@@ -47,6 +47,8 @@ class Stats {
   receptionTime?: number;
 }
 
+@Index({ visitorId: 1 })
+@Index({ operatorId: 1 })
 @ModelOptions({
   schemaOptions: {
     collection: 'conversation',
@@ -75,9 +77,6 @@ export class Conversation {
 
   @Prop()
   status: string;
-
-  @Prop()
-  queuedAt?: Date;
 
   @Prop({ type: SchemaTypes.Mixed })
   evaluation?: {

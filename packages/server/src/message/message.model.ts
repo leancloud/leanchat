@@ -1,6 +1,9 @@
-import { DocumentType, ModelOptions, Prop } from '@typegoose/typegoose';
+import { DocumentType, Index, ModelOptions, Prop } from '@typegoose/typegoose';
 import { SchemaTypes, Types } from 'mongoose';
 
+@Index({ visitorId: 1 })
+@Index({ conversationId: 1 })
+@Index({ createdAt: 1 })
 @ModelOptions({
   schemaOptions: {
     collection: 'message',
