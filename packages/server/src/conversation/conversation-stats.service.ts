@@ -201,7 +201,17 @@ export class ConversationStatsService {
             overtime: {
               $sum: {
                 $cond: {
-                  if: { $gt: ['$stats.firstResponseTime', 60 * 1000 * 3] },
+                  if: {
+                    $gt: [
+                      {
+                        $subtract: [
+                          '$timestamps.operatorFirstMessageAt',
+                          '$timestamps.operatorJoinedAt',
+                        ],
+                      },
+                      60 * 1000 * 3,
+                    ],
+                  },
                   then: 1,
                   else: 0,
                 },
