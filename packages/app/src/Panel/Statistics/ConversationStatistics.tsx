@@ -1,6 +1,6 @@
 import { useMemo, useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
-import { Button, DatePicker, Form, Select, Spin } from 'antd';
+import { Button, DatePicker, Form, Select } from 'antd';
 import dayjs from 'dayjs';
 
 import { OperatorSelect } from '../components/OperatorSelect';
@@ -8,6 +8,7 @@ import {
   ConversationStatistics as ConversationStatisticsSchema,
   getConversationStatistics,
 } from '../api/statistics';
+import { LoadingCover } from '../components/LoadingCover';
 import { StatsCard } from './components/StatsCard';
 import { StatsGroup } from './components/StatsGroup';
 
@@ -149,15 +150,19 @@ export function ConversationStatistics() {
     };
   }, [filtersFormData]);
 
-  const { data } = useQuery({
+  const { data, isFetching } = useQuery({
     queryKey: ['ConversationStatistics', filters],
     queryFn: () => getConversationStatistics(filters),
+    keepPreviousData: true,
   });
 
   return (
     <>
       <FiltersForm initData={filtersFormData} onChange={setFilters} />
-      <div className="mt-6">{data ? <StatsList data={data} /> : <Spin />}</div>
+      <div className="mt-6">
+        {isFetching && <LoadingCover minHeight={400} />}
+        {data && <StatsList data={data} />}
+      </div>
     </>
   );
 }

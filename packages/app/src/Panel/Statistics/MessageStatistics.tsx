@@ -1,12 +1,12 @@
 import { useMemo, useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
-import { Spin } from 'antd';
 import dayjs from 'dayjs';
 
 import {
   ConversationMessageStatistics as StatsData,
   getConversationMessageStatistics,
 } from '../api/statistics';
+import { LoadingCover } from '../components/LoadingCover';
 import { FiltersForm, FiltersFormData } from './ConversationStatistics';
 import { StatsGroup } from './components/StatsGroup';
 import { StatsCard } from './components/StatsCard';
@@ -49,7 +49,7 @@ export function ConversationMessageStatistics() {
     };
   }, [filtersFormData]);
 
-  const { data } = useQuery({
+  const { data, isFetching } = useQuery({
     queryKey: ['ConversationMessageStatistics', filters],
     queryFn: () => getConversationMessageStatistics(filters),
   });
@@ -57,7 +57,10 @@ export function ConversationMessageStatistics() {
   return (
     <>
       <FiltersForm initData={filtersFormData} onChange={setFilters} />
-      <div className="mt-6">{data ? <StatsList data={data} /> : <Spin />}</div>
+      <div className="mt-6 relative">
+        {isFetching && <LoadingCover minHeight={400} />}
+        {data && <StatsList data={data} />}
+      </div>
     </>
   );
 }
