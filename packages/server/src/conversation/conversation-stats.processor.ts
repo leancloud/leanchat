@@ -55,6 +55,9 @@ export class ConversationStatsProcessor {
       }
       conversation.stats.responseTime = _.sum(reactionTimeList);
       conversation.stats.responseCount = reactionTimeList.length;
+      conversation.stats.averageResponseTime = conversation.stats.responseCount
+        ? conversation.stats.responseTime / conversation.stats.responseCount
+        : 0;
     }
 
     if (messageCount.visitor && messageCount.operator) {
@@ -68,6 +71,12 @@ export class ConversationStatsProcessor {
     if (firstOperatorMessage) {
       conversation.timestamps.operatorFirstMessageAt =
         firstOperatorMessage.createdAt;
+    }
+
+    if (conversation.timestamps.closedAt) {
+      conversation.stats.duration =
+        conversation.createdAt.getTime() -
+        conversation.timestamps.closedAt.getTime();
     }
 
     await conversation.save();

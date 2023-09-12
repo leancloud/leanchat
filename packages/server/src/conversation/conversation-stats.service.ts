@@ -1,7 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import { InjectModel } from '@m8a/nestjs-typegoose';
 import { ReturnModelType } from '@typegoose/typegoose';
-import { FilterQuery, Types } from 'mongoose';
+import { FilterQuery, PipelineStage, Types } from 'mongoose';
 import { InjectQueue } from '@nestjs/bull';
 import { Queue } from 'bull';
 
@@ -10,7 +10,9 @@ import {
   ConversationMessageStatistics,
   ConversationStatistics,
   ConversationStatsJobData,
+  GetConversationRecordStatsOptions,
   GetConversationStatsOptions,
+  NumberCondition,
 } from './interfaces';
 import { Conversation } from './conversation.model';
 
@@ -28,7 +30,7 @@ export class ConversationStatsService {
     await this.conversationStatsQueue.add(data);
   }
 
-  async getConversationStatistics({
+  async getConversationStats({
     from,
     to,
     channel,
@@ -267,7 +269,7 @@ export class ConversationStatsService {
     }
   }
 
-  async getConversationMessageStatistics({
+  async getConversationMessageStats({
     from,
     to,
     channel,
@@ -314,5 +316,110 @@ export class ConversationStatsService {
       operatorMessageCount: 0,
       visitorMessageCount: 0,
     };
+  }
+
+  async getConversationRecordStats({
+    from,
+    to,
+    channel,
+    visitorId,
+    operatorId,
+    keyword,
+    duration,
+    averageResponseTime,
+    evaluationStar,
+    limit = 10,
+    desc,
+  }: GetConversationRecordStatsOptions) {
+    const $match: FilterQuery<Conversation> = {
+      createdAt: {
+        $gte: from,
+        $lte: to,
+      },
+    };
+
+    const addNumberCondition = (path: string, cond: NumberCondition) => {
+      if (cond.gt) {
+        $match[path] = { $gt: cond.gt };
+      }
+      if (cond.lt) {
+        $match[path] = { $lt: cond.lt };
+      }
+    };
+
+    if (channel) {
+      $match.channel = channel;
+    }
+    if (visitorId) {
+      $match.visitorId = new Types.ObjectId(visitorId);
+    }
+    if (operatorId) {
+      $match.operatorId = new Types.ObjectId(operatorId);
+    }
+    if (evaluationStar) {
+      $match['evaluation.star'] = evaluationStar;
+    }
+    if (duration) {
+      addNumberCondition('stats.duration', duration);
+    }
+    if (averageResponseTime) {
+      addNumberCondition('stats.averageResponseTime', averageResponseTime);
+    }
+
+    const pipeline: PipelineStage[] = [
+      { $match },
+      { $sort: { createdAt: desc ? -1 : 1 } },
+    ];
+
+    if (keyword) {
+      pipeline.push(
+        {
+          $lookup: {
+            from: 'message',
+            let: {
+              cid: '$_id',
+            },
+            pipeline: [
+              {
+                $match: {
+                  $expr: {
+                    $eq: ['$conversationId', '$$cid'],
+                  },
+                  type: 'message',
+                },
+              },
+              { $limit: 10 },
+            ],
+            as: 'messages',
+          },
+        },
+        {
+          $match: {
+            'messages.data.content': {
+              $regex: keyword,
+            },
+          },
+        },
+      );
+    }
+
+    return await this.conversationModel.aggregate([
+      ...pipeline,
+      { $limit: limit },
+      {
+        $project: {
+          _id: 0,
+          id: '$_id',
+          visitorid: 1,
+          operatorId: 1,
+          categoryId: 1,
+          evaluation: 1,
+          timestamps: 1,
+          stats: 1,
+          duration: 1,
+          createdAt: 1,
+        },
+      },
+    ]);
   }
 }

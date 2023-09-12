@@ -2,7 +2,10 @@ import { Controller, Get, Query, UseGuards, UsePipes } from '@nestjs/common';
 import { ZodValidationPipe } from 'nestjs-zod';
 
 import { ConversationStatsService } from 'src/conversation';
-import { GetConversationStatsDto } from '../dtos/conversation';
+import {
+  GetConversationStatsDto,
+  GetConversationRecordStatsDto,
+} from '../dtos/conversation';
 import { AuthGuard } from '../guards/auth.guard';
 
 @Controller('statistics')
@@ -13,13 +16,16 @@ export class StatisticsController {
 
   @Get('conversation')
   getConversationStatistics(@Query() query: GetConversationStatsDto) {
-    return this.conversationStatsService.getConversationStatistics(query);
+    return this.conversationStatsService.getConversationStats(query);
   }
 
   @Get('conversation-message')
   getConversationMessageStatistics(@Query() query: GetConversationStatsDto) {
-    return this.conversationStatsService.getConversationMessageStatistics(
-      query,
-    );
+    return this.conversationStatsService.getConversationMessageStats(query);
+  }
+
+  @Get('conversation-record')
+  queryConversations(@Query() query: GetConversationRecordStatsDto) {
+    return this.conversationStatsService.getConversationRecordStats(query);
   }
 }

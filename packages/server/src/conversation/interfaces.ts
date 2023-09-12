@@ -98,3 +98,23 @@ export interface ConversationMessageStatistics {
    */
   visitorMessageCount: number;
 }
+
+export interface NumberCondition {
+  gt?: number;
+  lt?: number;
+}
+
+export interface GetConversationRecordStatsOptions {
+  from: Date;
+  to: Date;
+  channel?: string;
+  visitorId?: string;
+  operatorId?: string;
+  keyword?: string;
+  duration?: NumberCondition;
+  averageResponseTime?: NumberCondition;
+  evaluationStar?: number;
+  limit?: number;
+  cursor?: Date;
+  desc?: boolean;
+}

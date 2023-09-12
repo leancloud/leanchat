@@ -44,7 +44,13 @@ class Stats {
   responseCount?: number;
 
   @Prop()
+  averageResponseTime?: number;
+
+  @Prop()
   receptionTime?: number;
+
+  @Prop()
+  duration?: number;
 }
 
 @Index({ visitorId: 1 })

@@ -1,16 +1,10 @@
 import { createZodDto } from 'nestjs-zod';
 import { z } from 'nestjs-zod/z';
 
+import { BooleanStringSchema } from 'src/common/schemas';
+
 const GetMessagesSchema = z.object({
-  desc: z
-    .string()
-    .transform((s) => {
-      if (s === 'false' || s === '0') {
-        return false;
-      }
-      return true;
-    })
-    .optional(),
+  desc: BooleanStringSchema.optional(),
   cursor: z
     .dateString()
     .transform((str) => new Date(str))
