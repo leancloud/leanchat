@@ -73,6 +73,14 @@ export class ConversationStatsProcessor {
         firstOperatorMessage.createdAt;
     }
 
+    const firstVisitorMessage = messages.find(
+      (message) => message.from.type === 'visitor',
+    );
+    if (firstVisitorMessage) {
+      conversation.timestamps.visitorFirstMessageAt =
+        firstVisitorMessage.createdAt;
+    }
+
     if (conversation.timestamps.closedAt) {
       conversation.stats.duration =
         conversation.createdAt.getTime() -

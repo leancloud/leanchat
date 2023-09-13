@@ -15,6 +15,9 @@ class Timestamps {
   operatorLastMessageAt?: Date;
 
   @Prop()
+  visitorFirstMessageAt?: Date;
+
+  @Prop()
   visitorLastMessageAt?: Date;
 
   @Prop()

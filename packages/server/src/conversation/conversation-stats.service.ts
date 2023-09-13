@@ -420,7 +420,7 @@ export class ConversationStatsService {
         $project: {
           _id: 0,
           id: '$_id',
-          visitorid: 1,
+          visitorId: 1,
           operatorId: 1,
           categoryId: 1,
           evaluation: 1,
