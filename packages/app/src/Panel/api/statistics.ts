@@ -57,3 +57,19 @@ export async function getConversationMessageStatistics(options: GetConversationS
   });
   return res.data;
 }
+
+export interface ConversationRecord {
+  id: string;
+}
+
+export interface GetConversationRecordStatsOptions {
+  from: string;
+  to: string;
+}
+
+export async function getConversationRecordStats(options: GetConversationRecordStatsOptions) {
+  const res = await client.get<ConversationRecord[]>('/statistics/conversation-record', {
+    params: options,
+  });
+  return res.data;
+}

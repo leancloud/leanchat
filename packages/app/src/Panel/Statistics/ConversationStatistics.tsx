@@ -1,6 +1,6 @@
 import { useMemo, useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
-import { Button, DatePicker, Form, Select } from 'antd';
+import { Button, DatePicker, Form } from 'antd';
 import dayjs from 'dayjs';
 
 import { OperatorSelect } from '../components/OperatorSelect';
@@ -11,6 +11,7 @@ import {
 import { LoadingCover } from '../components/LoadingCover';
 import { StatsCard } from './components/StatsCard';
 import { StatsGroup } from './components/StatsGroup';
+import { ChannelSelect } from './components/ChannelSelect';
 
 export interface FiltersFormData {
   dateRange: [dayjs.Dayjs, dayjs.Dayjs];
@@ -30,16 +31,7 @@ export function FiltersForm({ initData, onChange }: FiltersFormProps) {
         <DatePicker.RangePicker />
       </Form.Item>
       <Form.Item name="channel">
-        <Select
-          allowClear
-          placeholder="咨询渠道"
-          options={[
-            {
-              label: '在线聊天',
-              value: 'chat',
-            },
-          ]}
-        />
+        <ChannelSelect allowClear />
       </Form.Item>
       <Form.Item name="operatorId">
         <OperatorSelect mode="multiple" placeholder="人工客服" style={{ minWidth: 120 }} />
