@@ -73,6 +73,7 @@ function MessageGroup({ from, isLeft, messages }: MessageGroupProps) {
       <div className={cx('text-xs px-1 mb-1')}>{isLeft ? '用户' : from.id}</div>
       {messages.map((message) => (
         <div
+          key={message.id}
           className={cx('flex items-end gap-2 mb-1', {
             'flex-row-reverse': !isLeft,
           })}
@@ -324,7 +325,7 @@ export const MessageList = forwardRef<MessageListRef, MessageListProps>((props, 
               if (item.type === 'messageGroup') {
                 return (
                   <MessageGroup
-                    key={item.from.id}
+                    key={item.messages[0].id}
                     isLeft={item.from.type === 'visitor'}
                     from={item.from}
                     messages={item.messages}
