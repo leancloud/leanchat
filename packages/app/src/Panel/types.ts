@@ -61,3 +61,9 @@ export interface QuickReply {
   content: string;
   tags?: string[];
 }
+
+export interface SkillGroup {
+  id: string;
+  name: string;
+  memberIds: string[];
+}
