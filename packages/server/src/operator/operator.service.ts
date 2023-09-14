@@ -1,7 +1,9 @@
+import crypto from 'node:crypto';
 import {
   ConflictException,
   Injectable,
   NotFoundException,
+  OnApplicationBootstrap,
 } from '@nestjs/common';
 import { hash, verify } from '@node-rs/argon2';
 import { InjectModel } from '@m8a/nestjs-typegoose';
@@ -15,9 +17,39 @@ import {
 import { Operator } from './operator.model';
 
 @Injectable()
-export class OperatorService {
+export class OperatorService implements OnApplicationBootstrap {
   @InjectModel(Operator)
   private operatorModel: ReturnModelType<typeof Operator>;
+
+  private generateRandomPassword(length: number) {
+    if (length <= 0) {
+      throw new Error('Password length must be greater than 0');
+    }
+
+    // Define the character set for the password
+    const charset =
+      'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789!@#$%^&*()-_=+';
+
+    // Create a buffer to store random bytes
+    const randomBytes = crypto.randomBytes(length);
+
+    // Initialize an empty password string
+    let password = '';
+
+    for (let i = 0; i < length; i++) {
+      // Generate a random index within the charset length
+      const randomIndex = randomBytes[i] % charset.length;
+
+      // Append the character at the random index to the password
+      password += charset[randomIndex];
+    }
+
+    return password;
+  }
+
+  onApplicationBootstrap() {
+    this.createDefaultOperator();
+  }
 
   async createOperator(data: ICreateOperator) {
     const existOperator = await this.getOperatorByUsername(data.username);
@@ -34,6 +66,30 @@ export class OperatorService {
       concurrency: data.concurrency,
     });
     return operator.save();
+  }
+
+  async createDefaultOperator() {
+    const existAdmin = await this.getOperatorByUsername('admin');
+    if (existAdmin) {
+      return;
+    }
+
+    const password = this.generateRandomPassword(10);
+    const hashedPassword = await hash(password);
+    const admin = new this.operatorModel({
+      username: 'admin',
+      password: hashedPassword,
+      externalName: '管理员',
+      internalName: '管理员',
+      concurrency: 0,
+    });
+    try {
+      await admin.save();
+      console.log('admin account created', {
+        username: admin.username,
+        password,
+      });
+    } catch {}
   }
 
   getOperator(id: string) {
