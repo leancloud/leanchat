@@ -83,8 +83,8 @@ export class ConversationStatsProcessor {
 
     if (conversation.timestamps.closedAt) {
       conversation.stats.duration =
-        conversation.createdAt.getTime() -
-        conversation.timestamps.closedAt.getTime();
+        conversation.timestamps.closedAt.getTime() -
+        conversation.createdAt.getTime();
     }
 
     await conversation.save();
