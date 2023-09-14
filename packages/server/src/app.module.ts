@@ -14,6 +14,7 @@ import { ChatCenterModule } from './chat-center/chat-center.module';
 import { VisitorChannelModule } from './visitor-channel/visitor-channel.module';
 import { LeanCloudModule } from './leancloud/leancloud.module';
 import { parseRedisUrl } from './redis/utils';
+import { expandedEnvFactory } from './config';
 
 @Module({
   imports: [
@@ -24,6 +25,7 @@ import { parseRedisUrl } from './redis/utils';
       isGlobal: true,
       cache: true,
       expandVariables: true,
+      load: [expandedEnvFactory],
     }),
     EventEmitterModule.forRoot(),
     BullModule.forRootAsync({
