@@ -1,5 +1,11 @@
-import { DocumentType, Index, ModelOptions, Prop } from '@typegoose/typegoose';
-import { SchemaTypes, Types } from 'mongoose';
+import {
+  DocumentType,
+  Index,
+  ModelOptions,
+  Prop,
+  Severity,
+} from '@typegoose/typegoose';
+import { Types } from 'mongoose';
 
 @Index({ visitorId: 1 })
 @Index({ conversationId: 1 })
@@ -8,6 +14,9 @@ import { SchemaTypes, Types } from 'mongoose';
   schemaOptions: {
     collection: 'message',
     timestamps: true,
+  },
+  options: {
+    allowMixed: Severity.ALLOW,
   },
 })
 export class Message {
@@ -24,7 +33,7 @@ export class Message {
   @Prop()
   type: string;
 
-  @Prop({ type: SchemaTypes.Mixed })
+  @Prop()
   from: {
     type: string;
     id: string;

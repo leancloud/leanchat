@@ -1,5 +1,5 @@
 import { DocumentType, Index, ModelOptions, Prop } from '@typegoose/typegoose';
-import { Types } from 'mongoose';
+import { SchemaTypes, Types } from 'mongoose';
 
 @Index({ memberIds: 1 })
 @Index({ createdAt: 1 })
@@ -17,7 +17,7 @@ export class SkillGroup {
   @Prop()
   name: string;
 
-  @Prop({ default: [] })
+  @Prop({ type: SchemaTypes.ObjectId, default: [] })
   memberIds: Types.ObjectId[];
 
   createdAt: Date;
