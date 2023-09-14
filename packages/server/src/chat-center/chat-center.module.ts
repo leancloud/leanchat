@@ -8,6 +8,7 @@ import { MessageModule } from 'src/message/message.module';
 import { ChatbotModule } from 'src/chatbot';
 import { CategoryModule } from 'src/category';
 import { QuickReplyModule } from 'src/quick-reply';
+import { SkillGroupModule } from 'src/skill-group';
 import { ChatGateway } from './chat.gateway';
 import { AssignConversationProcessor } from './processors/assign-conversation.processor';
 import { CurrentOperatorMiddleware } from './middlewares/current-operator.middleware';
@@ -23,6 +24,7 @@ import {
   OperatorController,
   QuickReplyController,
   SessionController,
+  SkillGroupController,
   StatisticsController,
   VisitorController,
 } from './controllers';
@@ -39,6 +41,7 @@ import {
     ChatbotModule,
     CategoryModule,
     QuickReplyModule,
+    SkillGroupModule,
   ],
   providers: [
     ChatGateway,
@@ -56,6 +59,7 @@ import {
     CategoryController,
     QuickReplyController,
     StatisticsController,
+    SkillGroupController,
   ],
   exports: [AssignService, ChatConversationService],
 })
