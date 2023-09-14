@@ -1,4 +1,4 @@
-function expand(
+export function expand(
   value: string,
   env: Record<string, string | undefined>,
   depth = 0,
@@ -7,13 +7,13 @@ function expand(
     return '';
   }
 
-  const regex = /\${([^}]+)}/g;
+  const regex = /(?<!\\)\${([^}]+)}/g;
   let result = value;
   let match: RegExpExecArray | null = null;
 
   while ((match = regex.exec(value)) !== null) {
-    const variableName = match[1];
-    const varValue = env[variableName];
+    const varName = match[1];
+    const varValue = env[varName];
     if (varValue) {
       result =
         result.slice(0, match.index) +
@@ -24,22 +24,6 @@ function expand(
 
   if (regex.test(result)) {
     result = expand(result, env, depth + 1);
-  }
-
-  return result;
-}
-
-export function expandEnv(keys?: string[]) {
-  const env = { ...process.env };
-  const result: Record<string, string | undefined> = {};
-
-  if (!keys) {
-    keys = Object.keys(env);
-  }
-
-  for (const key of keys) {
-    const value = env[key];
-    result[key] = value && expand(value, env);
   }
 
   return result;

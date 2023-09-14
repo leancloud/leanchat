@@ -16,7 +16,7 @@ async function bootstrap() {
 
   const config = app.get(ConfigService);
 
-  const client = new Redis(config.getOrThrow('REDIS_URL_CACHE'), {
+  const client = new Redis(config.getOrThrow('redis.cache'), {
     lazyConnect: true,
   });
   await client.connect();

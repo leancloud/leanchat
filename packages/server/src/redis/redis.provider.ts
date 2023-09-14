@@ -8,7 +8,7 @@ export const redisProvider: FactoryProvider = {
   provide: REDIS,
   inject: [ConfigService],
   useFactory: (config: ConfigService) => {
-    return new Redis(config.getOrThrow('REDIS_URL_CACHE'), {
+    return new Redis(config.getOrThrow('redis.cache'), {
       keyPrefix: 'chat:',
     });
   },

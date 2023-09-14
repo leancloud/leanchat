@@ -14,7 +14,7 @@ import { ChatCenterModule } from './chat-center/chat-center.module';
 import { VisitorChannelModule } from './visitor-channel/visitor-channel.module';
 import { LeanCloudModule } from './leancloud/leancloud.module';
 import { parseRedisUrl } from './redis/utils';
-import { expandedEnvFactory } from './config';
+import { mongodbConfig, redisConfig } from './config';
 
 @Module({
   imports: [
@@ -25,7 +25,7 @@ import { expandedEnvFactory } from './config';
       isGlobal: true,
       cache: true,
       expandVariables: true,
-      load: [expandedEnvFactory],
+      load: [redisConfig, mongodbConfig],
     }),
     EventEmitterModule.forRoot(),
     BullModule.forRootAsync({
@@ -33,7 +33,7 @@ import { expandedEnvFactory } from './config';
       useFactory: (config: ConfigService) => {
         return {
           prefix: 'chat:queue',
-          redis: parseRedisUrl(config.getOrThrow('REDIS_URL_QUEUE')),
+          redis: parseRedisUrl(config.getOrThrow('redis.queue')),
           defaultJobOptions: {
             removeOnComplete: true,
             removeOnFail: true,
@@ -46,7 +46,7 @@ import { expandedEnvFactory } from './config';
       inject: [ConfigService],
       useFactory: (config: ConfigService) => {
         return {
-          uri: config.getOrThrow('MONGODB_URL'),
+          uri: config.getOrThrow('mongodb.url'),
           // autoIndex: false,
           dbName: 'chat',
         };
