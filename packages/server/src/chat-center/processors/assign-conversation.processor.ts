@@ -53,7 +53,7 @@ export class AssignConversationProcessor {
 
     for (const operator of readyOperators) {
       const concurrency = concurrencyMap[operator.id];
-      if (concurrency && operator.concurrency > concurrency) {
+      if (concurrency !== undefined && operator.concurrency > concurrency) {
         return operator;
       }
     }
