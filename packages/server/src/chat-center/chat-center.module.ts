@@ -61,7 +61,7 @@ import {
     StatisticsController,
     SkillGroupController,
   ],
-  exports: [AssignService, ChatConversationService],
+  exports: [ChatConversationService],
 })
 export class ChatCenterModule implements NestModule {
   configure(consumer: MiddlewareConsumer) {

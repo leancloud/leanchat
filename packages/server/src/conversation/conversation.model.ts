@@ -58,6 +58,7 @@ class Stats {
 
 @Index({ visitorId: 1 })
 @Index({ operatorId: 1 })
+@Index({ createdAt: 1 })
 @ModelOptions({
   schemaOptions: {
     collection: 'conversation',

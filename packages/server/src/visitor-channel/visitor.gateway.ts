@@ -15,7 +15,6 @@ import { ZodValidationPipe } from 'nestjs-zod';
 import { Message, MessageService } from 'src/message';
 import { MessageCreatedEvent } from 'src/event';
 import { ConversationEvaluationInvitedEvent } from 'src/events';
-import { AssignService } from 'src/chat-center';
 import {
   ConversationDocument,
   ConversationService,
@@ -37,7 +36,6 @@ export class VisitorGateway implements OnModuleInit, OnGatewayConnection {
     private visitorService: VisitorService,
     private conversationService: ConversationService,
     private messageService: MessageService,
-    private assignService: AssignService,
   ) {}
 
   onModuleInit() {
@@ -123,10 +121,6 @@ export class VisitorGateway implements OnModuleInit, OnGatewayConnection {
         visitorLastMessageAt: message.createdAt,
       },
     });
-
-    if (conv.status === ConversationStatus.New) {
-      await this.assignService.assignConversation(conv);
-    }
 
     return message;
   }

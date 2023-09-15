@@ -4,7 +4,7 @@ import { Queue } from 'bull';
 import { Redis } from 'ioredis';
 
 import { REDIS } from 'src/redis';
-import { ConversationDocument } from 'src/conversation';
+import { Conversation } from 'src/conversation';
 import { AssignConversationJobData } from '../interfaces/assign-job';
 
 @Injectable()
@@ -17,7 +17,7 @@ export class AssignService {
     private assignVisitorQueue: Queue<AssignConversationJobData>,
   ) {}
 
-  async assignConversation(conv: ConversationDocument) {
+  async assignConversation(conv: Conversation) {
     const queuedAt = new Date();
     const added = await this.redis.zadd(
       'conversation_queue',
