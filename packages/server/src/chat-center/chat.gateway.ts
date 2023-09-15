@@ -21,19 +21,17 @@ import { ZodValidationPipe } from 'nestjs-zod';
 import { z } from 'nestjs-zod/z';
 
 import { WsFilter } from 'src/common/filters';
-import { MessageCreatedEvent } from 'src/event';
+import { MessageCreatedEvent, OperatorStatusChangedEvent } from 'src/event';
 import { ConversationEvaluationInvitedEvent } from 'src/events';
 import { WsInterceptor } from 'src/common/interceptors';
 import { ConversationService, ConversationStatus } from 'src/conversation';
 import { OperatorService } from 'src/operator';
 import { MessageService } from 'src/message';
 import { CreateMessageDto } from './dtos/create-message.dto';
-import { ChatService } from './services/chat.service';
 import {
   ConversationAssignedEvent,
   ConversationClosedEvent,
   ConversationQueuedEvent,
-  OperatorStatusChangedEvent,
 } from './events';
 import { ChatConversationService } from './services/chat-conversation.service';
 import { AssignConversationDto } from './dtos/assign-conversation.dto';
@@ -57,7 +55,6 @@ export class ChatGateway
     private conversationService: ConversationService,
     private operatorService: OperatorService,
     private messageService: MessageService,
-    private chatService: ChatService,
     private chatConvService: ChatConversationService,
   ) {}
 
@@ -88,7 +85,15 @@ export class ChatGateway
     status: string,
   ) {
     const operatorId = socket.data.id;
-    await this.chatService.setOperatorStatus(operatorId, status);
+    await this.operatorService.setOperatorStatus(operatorId, status);
+    if (status === 'ready') {
+      const concurrency =
+        await this.conversationService.getAssignedConversationCount(operatorId);
+      await this.operatorService.setOperatorConcurrency(
+        operatorId,
+        concurrency,
+      );
+    }
   }
 
   @SubscribeMessage('assignConversation')
@@ -105,7 +110,7 @@ export class ChatGateway
       throw new WsException(`客服 ${data.operatorId} 不存在`);
     }
 
-    const status = await this.chatService.getOperatorStatus(operator.id);
+    const status = await this.operatorService.getOperatorStatus(operator.id);
     if (status !== 'ready') {
       throw new WsException(`客服 ${data.conversationId} 不是在线状态`);
     }

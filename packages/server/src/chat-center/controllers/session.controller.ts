@@ -12,17 +12,13 @@ import { Request } from 'express';
 import { ZodValidationPipe } from 'nestjs-zod';
 
 import { OperatorService } from 'src/operator';
-import { ChatService } from '../services';
-import { OperatorDto } from '../dtos/operator.dto';
+import { OperatorDto } from '../dtos/operator';
 import { CreateSessionDto } from '../dtos/create-session.dto';
 
 @Controller('sessions')
 @UsePipes(ZodValidationPipe)
 export class SessionController {
-  constructor(
-    private operatorService: OperatorService,
-    private chatService: ChatService,
-  ) {}
+  constructor(private operatorService: OperatorService) {}
 
   @Post()
   async createSession(@Req() req: Request, @Body() data: CreateSessionDto) {
@@ -45,10 +41,9 @@ export class SessionController {
     await promisify(req.session.regenerate).call(req.session);
     req.session.uid = operator.id;
 
-    const operatorDto = OperatorDto.fromDocument(operator);
-    operatorDto.status = await this.chatService.getOperatorStatus(operator.id);
-
-    return operatorDto;
+    const dto = OperatorDto.fromDocument(operator);
+    dto.status = await this.operatorService.getOperatorStatus(operator.id);
+    return dto;
   }
 
   @Delete('current')

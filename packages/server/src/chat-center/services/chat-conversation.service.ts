@@ -8,7 +8,7 @@ import {
   ConversationStatsService,
   ConversationStatus,
 } from 'src/conversation';
-import { Operator } from 'src/operator';
+import { Operator, OperatorService } from 'src/operator';
 import { REDIS } from 'src/redis';
 import {
   ConversationAssignedEvent,
@@ -25,6 +25,7 @@ export class ChatConversationService {
     private events: EventEmitter2,
     private conversationService: ConversationService,
     private convStatsService: ConversationStatsService,
+    private operatorService: OperatorService,
   ) {}
 
   async enqueue(conv: ConversationDocument) {
@@ -35,7 +36,7 @@ export class ChatConversationService {
 
     const queuedAt = new Date(Number(score));
     const newConv = await this.conversationService.updateConversation(conv, {
-      status: 'queued',
+      status: ConversationStatus.Queued,
       timestamps: {
         queuedAt,
       },
@@ -55,11 +56,8 @@ export class ChatConversationService {
       },
     });
 
-    await this.redis
-      .pipeline()
-      .zrem('conversation_queue', conv.id)
-      .hincrby('operator_concurrency', operator.id, 1)
-      .exec();
+    await this.redis.zrem('conversation_queue', conv.id);
+    await this.operatorService.increaseOperatorConcurrency(operator.id);
 
     this.events.emit('conversation.assigned', {
       conversation: newConv,
@@ -82,7 +80,7 @@ export class ChatConversationService {
 
     if (conv.operatorId) {
       const operatorId = conv.operatorId.toString();
-      await this.redis.hincrby('operator_concurrency', operatorId, -1);
+      await this.operatorService.increaseOperatorConcurrency(operatorId, -1);
     }
 
     this.events.emit('conversation.closed', {

@@ -1,6 +1,7 @@
 import crypto from 'node:crypto';
 import {
   ConflictException,
+  Inject,
   Injectable,
   NotFoundException,
   OnApplicationBootstrap,
@@ -8,7 +9,12 @@ import {
 import { hash, verify } from '@node-rs/argon2';
 import { InjectModel } from '@m8a/nestjs-typegoose';
 import { ReturnModelType } from '@typegoose/typegoose';
+import { Redis } from 'ioredis';
+import { EventEmitter2 } from '@nestjs/event-emitter';
+import _ from 'lodash';
 
+import { OperatorStatusChangedEvent } from 'src/event';
+import { REDIS } from 'src/redis';
 import {
   GetOperatorsOptions,
   ICreateOperator,
@@ -20,6 +26,11 @@ import { Operator } from './operator.model';
 export class OperatorService implements OnApplicationBootstrap {
   @InjectModel(Operator)
   private operatorModel: ReturnModelType<typeof Operator>;
+
+  @Inject(REDIS)
+  private redis: Redis;
+
+  constructor(private events: EventEmitter2) {}
 
   private generateRandomPassword(length: number) {
     if (length <= 0) {
@@ -137,5 +148,60 @@ export class OperatorService implements OnApplicationBootstrap {
     }
 
     return operator.save();
+  }
+
+  async getOperatorStatuses(ids?: string[]) {
+    if (ids) {
+      const statuses = await this.redis.hmget('operator_status', ...ids);
+      return ids.reduce<Record<string, string>>((map, key, index) => {
+        const status = statuses[index];
+        if (status !== null) {
+          map[key] = status;
+        }
+        return map;
+      }, {});
+    }
+    return this.redis.hgetall('operator_status');
+  }
+
+  async getOperatorStatus(id: string) {
+    const status = await this.redis.hget('operator_status', id);
+    return status || 'leave';
+  }
+
+  async setOperatorStatus(id: string, status: string) {
+    await this.redis.hset('operator_status', id, status);
+    this.events.emit('operator.status.changed', {
+      operatorId: id,
+      status,
+    } satisfies OperatorStatusChangedEvent);
+  }
+
+  async getOperatorConcurrencies(ids?: string[]) {
+    if (!ids) {
+      const concurrencyMap = await this.redis.hgetall('operator_status');
+      return _.mapValues(concurrencyMap, (concurrency) =>
+        parseInt(concurrency),
+      );
+    }
+    const concurrencies = await this.redis.hmget(
+      'operator_concurrency',
+      ...ids,
+    );
+    return ids.reduce<Record<string, number>>((map, key, index) => {
+      const concurrency = concurrencies[index];
+      if (concurrency !== null) {
+        map[key] = parseInt(concurrency);
+      }
+      return map;
+    }, {});
+  }
+
+  async increaseOperatorConcurrency(id: string, amount = 1) {
+    await this.redis.hincrby('operator_concurrency', id, amount);
+  }
+
+  async setOperatorConcurrency(operatorId: string, concurrency: number) {
+    await this.redis.hset('operator_concurrency', operatorId, concurrency);
   }
 }

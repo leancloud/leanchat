@@ -8,3 +8,8 @@ export interface ConversationCreatedEvent {
 export interface MessageCreatedEvent {
   message: Message;
 }
+
+export interface OperatorStatusChangedEvent {
+  operatorId: string;
+  status: string;
+}

@@ -1,5 +1,6 @@
 export enum ConversationStatus {
   New = 'new',
+  Queued = 'queued',
   InProgress = 'inProgress',
   Solved = 'solved',
 }

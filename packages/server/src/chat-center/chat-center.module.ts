@@ -12,11 +12,7 @@ import { SkillGroupModule } from 'src/skill-group';
 import { ChatGateway } from './chat.gateway';
 import { AssignConversationProcessor } from './processors/assign-conversation.processor';
 import { CurrentOperatorMiddleware } from './middlewares/current-operator.middleware';
-import {
-  AssignService,
-  ChatService,
-  ChatConversationService,
-} from './services';
+import { AssignService, ChatConversationService } from './services';
 import {
   CategoryController,
   ChatbotController,
@@ -47,7 +43,6 @@ import {
     ChatGateway,
     AssignConversationProcessor,
     AssignService,
-    ChatService,
     ChatConversationService,
   ],
   controllers: [

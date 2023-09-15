@@ -14,8 +14,7 @@ import { ZodValidationPipe } from 'nestjs-zod';
 import { Operator, OperatorService } from 'src/operator';
 import { AuthGuard } from '../guards/auth.guard';
 import { CurrentOperator } from '../decorators/current-operator.decorator';
-import { ChatService } from '../services';
-import { OperatorDto } from '../dtos/operator.dto';
+import { OperatorDto } from '../dtos/operator';
 import { CreateOperatorDto } from '../dtos/create-operator.dto';
 import { UpdateOperatorDto } from '../dtos/update-operator.dto';
 
@@ -23,10 +22,7 @@ import { UpdateOperatorDto } from '../dtos/update-operator.dto';
 @UseGuards(AuthGuard)
 @UsePipes(ZodValidationPipe)
 export class OperatorController {
-  constructor(
-    private operatorService: OperatorService,
-    private chatService: ChatService,
-  ) {}
+  constructor(private operatorService: OperatorService) {}
 
   @Post()
   createOperator(@Body() data: CreateOperatorDto) {
@@ -36,7 +32,7 @@ export class OperatorController {
   @Get()
   async getOperators() {
     const operators = await this.operatorService.getOperators();
-    const statuses = await this.chatService.getOperatorStatuses();
+    const statuses = await this.operatorService.getOperatorStatuses();
     return operators.map((operator) => {
       const dto = OperatorDto.fromDocument(operator);
       dto.status = statuses[operator.id] || 'leave';
@@ -47,7 +43,7 @@ export class OperatorController {
   @Get('me')
   async getCurrentOperator(@CurrentOperator() operator: Operator) {
     const dto = OperatorDto.fromDocument(operator);
-    dto.status = await this.chatService.getOperatorStatus(operator.id);
+    dto.status = await this.operatorService.getOperatorStatus(operator.id);
     return dto;
   }
 
@@ -58,7 +54,7 @@ export class OperatorController {
       throw new NotFoundException(`客服 ${id} 不存在`);
     }
     const dto = OperatorDto.fromDocument(operator);
-    dto.status = await this.chatService.getOperatorStatus(operator.id);
+    dto.status = await this.operatorService.getOperatorStatus(operator.id);
     return dto;
   }
 

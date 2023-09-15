@@ -1,10 +1,6 @@
-import { Inject } from '@nestjs/common';
 import { Process, Processor } from '@nestjs/bull';
 import { Job } from 'bull';
-import { Redis } from 'ioredis';
-import _ from 'lodash';
 
-import { REDIS } from 'src/redis';
 import { OperatorService } from 'src/operator';
 import { ConversationService } from 'src/conversation';
 import { AssignConversationJobData } from '../interfaces/assign-job';
@@ -12,9 +8,6 @@ import { ChatConversationService } from '../services/chat-conversation.service';
 
 @Processor('assign_conversation')
 export class AssignConversationProcessor {
-  @Inject(REDIS)
-  private redis: Redis;
-
   constructor(
     private conversationService: ConversationService,
     private operatorService: OperatorService,
@@ -38,7 +31,7 @@ export class AssignConversationProcessor {
   }
 
   async selectOperator() {
-    const operatorStatus = await this.redis.hgetall('operator_status');
+    const operatorStatus = await this.operatorService.getOperatorStatuses();
     const readyOperatorIds = Object.entries(operatorStatus)
       .filter(([, status]) => status === 'ready')
       .map(([id]) => id);
@@ -54,17 +47,13 @@ export class AssignConversationProcessor {
     }
 
     const operatorIds = readyOperators.map((o) => o.id);
-    const operatorConcurrency = await this.redis.hmget(
-      'operator_concurrency',
-      ...operatorIds,
+    const concurrencyMap = await this.operatorService.getOperatorConcurrencies(
+      operatorIds,
     );
 
-    const entries = _.zip(readyOperators, operatorConcurrency);
-    for (const [operator, concurrency] of entries) {
-      if (!operator || !concurrency) {
-        continue;
-      }
-      if (operator.concurrency > parseInt(concurrency)) {
+    for (const operator of readyOperators) {
+      const concurrency = concurrencyMap[operator.id];
+      if (concurrency && operator.concurrency > concurrency) {
         return operator;
       }
     }
