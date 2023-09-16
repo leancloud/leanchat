@@ -1,6 +1,8 @@
-import { ModelOptions, Prop } from '@typegoose/typegoose';
+import { Index, ModelOptions, Prop } from '@typegoose/typegoose';
 import { Types } from 'mongoose';
 
+@Index({ channel: 1, channelId: 1 })
+@Index({ createdAt: 1 })
 @ModelOptions({
   schemaOptions: {
     collection: 'visitor',
