@@ -2,7 +2,10 @@ import { Index, ModelOptions, Prop, Severity } from '@typegoose/typegoose';
 import { Types } from 'mongoose';
 
 class MessageFrom {
+  @Prop()
   type: 'visitor' | 'operator';
+
+  @Prop()
   id: Types.ObjectId;
 }
 

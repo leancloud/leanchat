@@ -21,4 +21,8 @@ export class VisitorService {
   getVisitor(id: string) {
     return this.visitorModel.findById(id);
   }
+
+  getVisitorByChannel(channel: string, channelId: string) {
+    return this.visitorModel.findOne({ channel, channelId });
+  }
 }

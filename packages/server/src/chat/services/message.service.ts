@@ -14,10 +14,7 @@ export class MessageService {
     const message = new this.messageModel({
       visitorId: data.visitorId,
       conversationId: data.conversationId,
-      from: {
-        type: data.from.type,
-        id: data.from.id,
-      },
+      from: data.from,
       type: data.type,
       data: data.data,
     });

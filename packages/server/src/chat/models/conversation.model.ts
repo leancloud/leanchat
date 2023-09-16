@@ -1,6 +1,14 @@
 import { Index, ModelOptions, Prop } from '@typegoose/typegoose';
 import { Types } from 'mongoose';
 
+class Evaluation {
+  @Prop()
+  star: number;
+
+  @Prop()
+  feedback: string;
+}
+
 @Index({ visitorId: 1 })
 @Index({ createdAt: 1 })
 @ModelOptions({
@@ -16,6 +24,12 @@ export class Conversation {
 
   @Prop()
   visitorId: Types.ObjectId;
+
+  @Prop()
+  evaluation?: Evaluation;
+
+  @Prop()
+  closedAt?: Date;
 
   createdAt: Date;
 
