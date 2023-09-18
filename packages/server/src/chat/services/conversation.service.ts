@@ -1,24 +1,31 @@
 import { Injectable } from '@nestjs/common';
+import { EventEmitter2 } from '@nestjs/event-emitter';
 import { InjectModel } from '@m8a/nestjs-typegoose';
 import { ReturnModelType } from '@typegoose/typegoose';
 
-import { Conversation } from '../models/conversation.model';
-import {
-  CreateConversationData,
-  UpdateConversationData,
-} from '../interfaces/conversation.interface';
+import { Conversation } from '../models';
+import { CreateConversationData, UpdateConversationData } from '../interfaces';
+import { ConversationCreatedEvent } from '../events';
 
 @Injectable()
 export class ConversationService {
   @InjectModel(Conversation)
   private conversationModel: ReturnModelType<typeof Conversation>;
 
-  createConversation(data: CreateConversationData) {
+  constructor(private events: EventEmitter2) {}
+
+  async createConversation(data: CreateConversationData) {
     const conversation = new this.conversationModel({
       channel: data.channel,
       visitorId: data.visitorId,
     });
-    return conversation.save();
+    await conversation.save();
+
+    this.events.emit('conversation.created', {
+      conversation,
+    } satisfies ConversationCreatedEvent);
+
+    return conversation;
   }
 
   getConversation(id: string) {

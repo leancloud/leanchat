@@ -15,6 +15,7 @@ import { ConversationEvaluationInvitedEvent } from 'src/events';
 import {
   ChatService,
   Conversation,
+  ConversationCreatedEvent,
   ConversationService,
   Message,
   MessageCreatedEvent,
@@ -25,6 +26,7 @@ import { CreateMessageDto } from './dtos/create-message.dto';
 import { EvaluationDto } from './dtos/evaluation.dto';
 import { VisitorChannelService } from './visitor-channel.service';
 import { MessageDto } from './dtos/message.dto';
+import { ConversationDto } from './dtos/conversation.dto';
 
 @WebSocketGateway()
 @UsePipes(ZodValidationPipe)
@@ -65,10 +67,24 @@ export class VisitorGateway implements OnModuleInit, OnGatewayConnection {
   }
 
   async handleConnection(socket: Socket) {
-    socket.join(socket.data.id);
+    const visitorId = socket.data.id;
+    socket.join(visitorId);
+
+    const visitor = await this.visitorService.getVisitor(visitorId);
+    if (visitor && visitor.currentConversationId) {
+      const conversation = await this.conversationService.getConversation(
+        visitor.currentConversationId.toString(),
+      );
+      if (conversation) {
+        socket.emit(
+          'currentConversation',
+          ConversationDto.fromDocument(conversation),
+        );
+      }
+    }
 
     const messages = await this.messageService.getMessages({
-      visitorId: socket.data.id,
+      visitorId,
       type: ['message', 'evaluate'],
       desc: true,
       limit: 25,
@@ -137,6 +153,16 @@ export class VisitorGateway implements OnModuleInit, OnGatewayConnection {
 
   shouldDispatchMessage(message: Message) {
     return message.type === 'message' || message.type === 'evaluate';
+  }
+
+  @OnEvent('conversation.created', { async: true })
+  dispatchConversationCreated(payload: ConversationCreatedEvent) {
+    this.server
+      .to(payload.conversation.visitorId.toString())
+      .emit(
+        'currentConversation',
+        ConversationDto.fromDocument(payload.conversation),
+      );
   }
 
   @OnEvent('message.created', { async: true })
