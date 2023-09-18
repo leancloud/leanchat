@@ -68,7 +68,7 @@ function MessageItem({ message }: MessageItemProps) {
       </TextMessage>
     );
   }
-  if (message.data.type === 'evaluate') {
+  if (message.type === 'evaluate') {
     return <LogMessage content="消息提示：感谢您的评价" />;
   }
 }
