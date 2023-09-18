@@ -2,6 +2,11 @@ import { ConversationEvaluation } from './conversation.interface';
 
 export type MessageType = 'message' | 'evaluate';
 
+export interface MessageData {
+  text?: string;
+  evaluation?: ConversationEvaluation;
+}
+
 export interface CreateMessageData {
   visitorId: string;
   conversationId: string;
@@ -10,8 +15,5 @@ export interface CreateMessageData {
     id: string;
   };
   type: MessageType;
-  data: {
-    text?: string;
-    evaluation?: ConversationEvaluation;
-  };
+  data: MessageData;
 }

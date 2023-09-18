@@ -1,10 +1,9 @@
 import { Injectable } from '@nestjs/common';
 
-import {
-  CreateVisitorMessageData,
-  StartConversationData,
-} from '../interfaces/chat.interface';
+import { StartConversationData } from '../interfaces/chat.interface';
 import { ConversationEvaluation } from '../interfaces/conversation.interface';
+import { MessageData } from '../interfaces/message.interface';
+import { ChatError } from '../errors';
 import { ConversationService } from './conversation.service';
 import { MessageService } from './message.service';
 
@@ -19,24 +18,30 @@ export class ChatService {
     const conversation = await this.conversationService.createConversation({
       visitorId: data.visitorId,
     });
-    await this.createVisitorMessage({
-      conversationId: conversation.id,
-      visitorId: data.visitorId,
-      data: data.data,
-    });
+    await this.createVisitorMessage(conversation.id, data.data);
     return conversation;
   }
 
-  createVisitorMessage(data: CreateVisitorMessageData) {
+  async createVisitorMessage(conversationId: string, data: MessageData) {
+    const conversation = await this.conversationService.getConversation(
+      conversationId,
+    );
+    if (!conversation) {
+      throw new ChatError('CONVERSATION_NOT_EXIST');
+    }
+    if (conversation.closedAt) {
+      throw new ChatError('CONVERSATION_CLOSED');
+    }
+
     return this.messageService.createMessage({
-      conversationId: data.conversationId,
-      visitorId: data.visitorId,
+      conversationId: conversation.id,
+      visitorId: conversation.visitorId.toString(),
       from: {
         type: 'visitor',
-        id: data.visitorId,
+        id: conversation.visitorId.toString(),
       },
       type: 'message',
-      data: data.data,
+      data: data,
     });
   }
 
@@ -44,25 +49,39 @@ export class ChatService {
     conversationId: string,
     evaluation: ConversationEvaluation,
   ) {
-    const conversation = await this.conversationService.updateConversation(
+    const conversation = await this.conversationService.getConversation(
       conversationId,
-      {
-        evaluation,
-      },
     );
-    if (conversation) {
-      await this.messageService.createMessage({
-        conversationId: conversation.id,
-        visitorId: conversation.visitorId.toString(),
-        type: 'evaluate',
-        data: { evaluation },
-      });
+    if (!conversation) {
+      throw new ChatError('CONVERSATION_NOT_EXIST');
     }
-    return conversation;
+    if (conversation.evaluation) {
+      throw new ChatError('CONVERSATION_EVALUATED');
+    }
+
+    await this.conversationService.updateConversation(conversationId, {
+      evaluation,
+    });
+    await this.messageService.createMessage({
+      conversationId: conversation.id,
+      visitorId: conversation.visitorId.toString(),
+      type: 'evaluate',
+      data: { evaluation },
+    });
   }
 
-  closeConversation(conversationId: string) {
-    return this.conversationService.updateConversation(conversationId, {
+  async closeConversation(conversationId: string) {
+    const conversation = await this.conversationService.getConversation(
+      conversationId,
+    );
+    if (!conversation) {
+      throw new ChatError('CONVERSATION_NOT_EXIST');
+    }
+    if (conversation.closedAt) {
+      throw new ChatError('CONVERSATION_CLOSED');
+    }
+
+    await this.conversationService.updateConversation(conversationId, {
       closedAt: new Date(),
     });
   }
