@@ -1,4 +1,4 @@
-import { OnModuleInit, UseInterceptors, UsePipes } from '@nestjs/common';
+import { OnModuleInit, UsePipes } from '@nestjs/common';
 import {
   ConnectedSocket,
   MessageBody,
@@ -6,33 +6,35 @@ import {
   SubscribeMessage,
   WebSocketGateway,
   WebSocketServer,
-  WsException,
 } from '@nestjs/websockets';
 import { OnEvent } from '@nestjs/event-emitter';
 import { Server, Socket } from 'socket.io';
 import { ZodValidationPipe } from 'nestjs-zod';
 
-import { Message, MessageService } from 'src/message';
-import { MessageCreatedEvent } from 'src/event';
 import { ConversationEvaluationInvitedEvent } from 'src/events';
 import {
-  ConversationDocument,
+  ChatService,
+  Conversation,
   ConversationService,
-  ConversationStatus,
-} from 'src/conversation';
-import { VisitorService } from 'src/visitor';
-import { WsInterceptor } from 'src/common/interceptors';
+  Message,
+  MessageCreatedEvent,
+  MessageService,
+  VisitorService,
+} from 'src/chat';
 import { CreateMessageDto } from './dtos/create-message.dto';
 import { EvaluationDto } from './dtos/evaluation.dto';
+import { VisitorChannelService } from './visitor-channel.service';
+import { MessageDto } from './dtos/message.dto';
 
 @WebSocketGateway()
 @UsePipes(ZodValidationPipe)
-@UseInterceptors(WsInterceptor)
 export class VisitorGateway implements OnModuleInit, OnGatewayConnection {
   @WebSocketServer()
   private server: Server;
 
   constructor(
+    private chatService: ChatService,
+    private widgetService: VisitorChannelService,
     private visitorService: VisitorService,
     private conversationService: ConversationService,
     private messageService: MessageService,
@@ -40,41 +42,39 @@ export class VisitorGateway implements OnModuleInit, OnGatewayConnection {
 
   onModuleInit() {
     this.server.use(async (socket, next) => {
-      const { id } = socket.handshake.auth;
-      if (typeof id !== 'string') {
-        return next(new Error('Invalid visitor ID'));
+      const { token } = socket.handshake.auth;
+
+      if (token) {
+        if (typeof token !== 'string') {
+          return next(new Error('Invalid token'));
+        }
+        const result = this.widgetService.validateToken(token);
+        if (!result) {
+          return next(new Error('Invalid token'));
+        }
+        socket.data.id = result.id;
+      } else {
+        const visitor = await this.visitorService.createVisitor();
+        const token = this.widgetService.createToken(visitor.id);
+        socket.emit('signedUp', { token });
+        socket.data.id = visitor.id;
       }
 
-      const visitor = await this.visitorService.registerVisitorFromChatChannel(
-        id,
-      );
-
-      socket.data.id = visitor.id;
       next();
     });
   }
 
   async handleConnection(socket: Socket) {
-    console.log('visitor online', socket.data.id);
     socket.join(socket.data.id);
 
-    const visitor = await this.visitorService.getVisitor(socket.data.id);
-    if (visitor) {
-      if (visitor.currentConversationId) {
-        const conv = await this.conversationService.getConversation(
-          visitor.currentConversationId,
-        );
-        if (conv) {
-          socket.emit('currentConversation', conv);
-        }
-      }
-
-      const messages = await this.messageService.getMessages({
-        visitorId: visitor.id,
-        type: 'message',
-        desc: true,
-      });
-      socket.emit('messages', messages.reverse());
+    const messages = await this.messageService.getMessages({
+      visitorId: socket.data.id,
+      type: ['message', 'evaluate'],
+      desc: true,
+      limit: 25,
+    });
+    if (messages.length) {
+      socket.emit('messages', messages.reverse().map(MessageDto.fromDocument));
     }
   }
 
@@ -83,46 +83,35 @@ export class VisitorGateway implements OnModuleInit, OnGatewayConnection {
     @ConnectedSocket() socket: Socket,
     @MessageBody() data: CreateMessageDto,
   ) {
-    const { id } = socket.data;
-
-    const visitor = await this.visitorService.getVisitor(id);
+    const visitorId = socket.data.id;
+    const visitor = await this.visitorService.getVisitor(visitorId);
     if (!visitor) {
-      throw new WsException('账户已被删除');
+      return;
     }
 
-    let conv: ConversationDocument | null | undefined;
+    let conversation: Conversation | null | undefined;
     if (visitor.currentConversationId) {
-      conv = await this.conversationService.getConversation(
-        visitor.currentConversationId,
+      conversation = await this.conversationService.getConversation(
+        visitor.currentConversationId.toString(),
       );
     }
-    if (!conv || conv.status === ConversationStatus.Solved) {
-      conv = await this.conversationService.createConversation({
-        channel: 'chat',
-        visitorId: visitor.id,
+    if (!conversation || conversation.closedAt) {
+      conversation = await this.conversationService.createConversation({
+        channel: 'widget',
+        visitorId,
       });
-      await this.visitorService.updateVisitor(visitor, {
-        currentConversationId: conv.id,
+      await this.visitorService.updateVisitor(visitorId, {
+        currentVisitorId: conversation.id,
       });
-      socket.emit('currentConversation', conv);
     }
-
-    const message = await this.messageService.createMessage({
-      visitorId: id,
-      conversationId: conv.id,
-      type: 'message',
-      from: { type: 'visitor', id },
-      data: data.data,
-    });
-
-    await this.conversationService.updateConversation(conv, {
-      lastMessage: message,
-      timestamps: {
-        visitorLastMessageAt: message.createdAt,
+    await this.chatService.createMessage({
+      conversationId: conversation.id,
+      sender: {
+        type: 'visitor',
+        id: visitorId,
       },
+      data,
     });
-
-    return message;
   }
 
   @SubscribeMessage('evaluate')
@@ -132,40 +121,31 @@ export class VisitorGateway implements OnModuleInit, OnGatewayConnection {
   ) {
     const visitorId = socket.data.id;
     const visitor = await this.visitorService.getVisitor(visitorId);
-    if (!visitor) {
-      throw new WsException('账户不存在');
-    }
-    if (!visitor.currentConversationId) {
-      throw new WsException('当前未在会话中');
-    }
-    const conv = await this.conversationService.getConversation(
-      visitor.currentConversationId,
-    );
-    if (!conv) {
-      throw new WsException('当前会话不存在');
-    }
-    if (conv.evaluation) {
+    if (!visitor || !visitor.currentConversationId) {
       return;
     }
-    await this.conversationService.evaluateConversation(conv, data);
+
+    const conversation = await this.conversationService.getConversation(
+      visitor.currentConversationId.toString(),
+    );
+    if (!conversation || conversation.evaluation) {
+      return;
+    }
+
+    await this.chatService.evaluateConversation(conversation.id, data);
   }
 
   shouldDispatchMessage(message: Message) {
-    if (message.type === 'message') {
-      return true;
-    }
-    if (message.type === 'log' && message.data.type === 'evaluated') {
-      return true;
-    }
-    return false;
+    return message.type === 'message' || message.type === 'evaluate';
   }
 
   @OnEvent('message.created', { async: true })
   dispatchMessage(payload: MessageCreatedEvent) {
     const { message } = payload;
     if (this.shouldDispatchMessage(message)) {
-      const visitorId = message.visitorId.toString();
-      this.server.to(visitorId).emit('message', message);
+      this.server
+        .to(message.visitorId.toString())
+        .emit('message', MessageDto.fromDocument(message));
     }
   }
 

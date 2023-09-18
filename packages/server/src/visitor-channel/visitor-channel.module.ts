@@ -1,12 +1,11 @@
 import { Module } from '@nestjs/common';
 
-import { VisitorModule } from 'src/visitor/visitor.module';
-import { MessageModule } from 'src/message/message.module';
-import { ConversationModule } from 'src/conversation/conversation.module';
+import { ChatModule } from 'src/chat';
 import { VisitorGateway } from './visitor.gateway';
+import { VisitorChannelService } from './visitor-channel.service';
 
 @Module({
-  imports: [VisitorModule, MessageModule, ConversationModule],
-  providers: [VisitorGateway],
+  imports: [ChatModule],
+  providers: [VisitorGateway, VisitorChannelService],
 })
 export class VisitorChannelModule {}

@@ -1,8 +1,7 @@
 import { Injectable } from '@nestjs/common';
 
-import { StartConversationData } from '../interfaces/chat.interface';
 import { ConversationEvaluation } from '../interfaces/conversation.interface';
-import { MessageData } from '../interfaces/message.interface';
+import { CreateMessageData } from '../interfaces/chat.interface';
 import { ChatError } from '../errors';
 import { ConversationService } from './conversation.service';
 import { MessageService } from './message.service';
@@ -14,15 +13,7 @@ export class ChatService {
     private messageService: MessageService,
   ) {}
 
-  async startConversation(data: StartConversationData) {
-    const conversation = await this.conversationService.createConversation({
-      visitorId: data.visitorId,
-    });
-    await this.createVisitorMessage(conversation.id, data.data);
-    return conversation;
-  }
-
-  async createVisitorMessage(conversationId: string, data: MessageData) {
+  async createMessage({ conversationId, sender, data }: CreateMessageData) {
     const conversation = await this.conversationService.getConversation(
       conversationId,
     );
@@ -34,14 +25,11 @@ export class ChatService {
     }
 
     return this.messageService.createMessage({
-      conversationId: conversation.id,
+      conversationId,
       visitorId: conversation.visitorId.toString(),
-      from: {
-        type: 'visitor',
-        id: conversation.visitorId.toString(),
-      },
+      sender,
       type: 'message',
-      data: data,
+      data,
     });
   }
 

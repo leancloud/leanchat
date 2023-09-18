@@ -1,4 +1,3 @@
-export interface CreateVisitorData {
-  channel: string;
-  channelId: string;
+export interface UpdateVisitorData {
+  currentVisitorId?: string;
 }

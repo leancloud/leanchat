@@ -1,7 +1,8 @@
 export type ChatErrorCode =
   | 'CONVERSATION_NOT_EXIST'
   | 'CONVERSATION_EVALUATED'
-  | 'CONVERSATION_CLOSED';
+  | 'CONVERSATION_CLOSED'
+  | 'VISITOR_NOT_EXIST';
 
 export class ChatError extends Error {
   constructor(

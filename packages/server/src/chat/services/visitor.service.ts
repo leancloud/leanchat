@@ -3,18 +3,15 @@ import { InjectModel } from '@m8a/nestjs-typegoose';
 import { ReturnModelType } from '@typegoose/typegoose';
 
 import { Visitor } from '../models/visitor.model';
-import { CreateVisitorData } from '../interfaces/visitor.interface';
+import { UpdateVisitorData } from '../interfaces/visitor.interface';
 
 @Injectable()
 export class VisitorService {
   @InjectModel(Visitor)
   private visitorModel: ReturnModelType<typeof Visitor>;
 
-  createVisitor(data: CreateVisitorData) {
-    const visitor = new this.visitorModel({
-      channel: data.channel,
-      channelId: data.channelId,
-    });
+  createVisitor() {
+    const visitor = new this.visitorModel();
     return visitor.save();
   }
 
@@ -24,5 +21,21 @@ export class VisitorService {
 
   getVisitorByChannel(channel: string, channelId: string) {
     return this.visitorModel.findOne({ channel, channelId });
+  }
+
+  updateVisitor(visitorId: string, data: UpdateVisitorData) {
+    return this.visitorModel
+      .findOneAndUpdate(
+        { _id: visitorId },
+        {
+          $set: {
+            currentConversationId: data.currentVisitorId,
+          },
+        },
+        {
+          new: true,
+        },
+      )
+      .exec();
   }
 }

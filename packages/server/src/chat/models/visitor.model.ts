@@ -1,7 +1,6 @@
 import { Index, ModelOptions, Prop } from '@typegoose/typegoose';
 import { Types } from 'mongoose';
 
-@Index({ channel: 1, channelId: 1 })
 @Index({ createdAt: 1 })
 @ModelOptions({
   schemaOptions: {
@@ -15,10 +14,7 @@ export class Visitor {
   id: string;
 
   @Prop()
-  channel: string;
-
-  @Prop()
-  channelId: string;
+  currentConversationId?: Types.ObjectId;
 
   createdAt: Date;
 

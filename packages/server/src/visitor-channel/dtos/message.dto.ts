@@ -1,4 +1,4 @@
-import { Message } from 'src/message';
+import { Message } from 'src/chat';
 
 export class MessageDto {
   id: string;
@@ -9,13 +9,11 @@ export class MessageDto {
 
   type: string;
 
-  from: any;
+  sender: any;
 
   data: any;
 
   createdAt: string;
-
-  updatedAt: string;
 
   static fromDocument(message: Message) {
     const dto = new MessageDto();
@@ -23,10 +21,9 @@ export class MessageDto {
     dto.visitorId = message.visitorId.toString();
     dto.conversationId = message.conversationId.toString();
     dto.type = message.type;
-    dto.from = message.from;
+    dto.sender = message.sender;
     dto.data = message.data;
     dto.createdAt = message.createdAt.toISOString();
-    dto.updatedAt = message.updatedAt.toISOString();
     return dto;
   }
 }

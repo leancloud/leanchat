@@ -23,6 +23,9 @@ export class Conversation {
   id: string;
 
   @Prop()
+  channel: string;
+
+  @Prop()
   visitorId: Types.ObjectId;
 
   @Prop()

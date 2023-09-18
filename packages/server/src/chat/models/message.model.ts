@@ -1,7 +1,7 @@
 import { Index, ModelOptions, Prop, Severity } from '@typegoose/typegoose';
 import { Types } from 'mongoose';
 
-class MessageFrom {
+class MessageSender {
   @Prop()
   type: 'visitor' | 'operator';
 
@@ -33,7 +33,7 @@ export class Message {
   conversationId: Types.ObjectId;
 
   @Prop()
-  from: MessageFrom;
+  sender?: MessageSender;
 
   @Prop()
   type: string;

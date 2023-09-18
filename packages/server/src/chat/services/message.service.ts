@@ -1,23 +1,46 @@
-import { InjectModel } from '@m8a/nestjs-typegoose';
 import { Injectable } from '@nestjs/common';
+import { EventEmitter2 } from '@nestjs/event-emitter';
+import { InjectModel } from '@m8a/nestjs-typegoose';
 import { ReturnModelType } from '@typegoose/typegoose';
 
 import { Message } from '../models/message.model';
-import { CreateMessageData } from '../interfaces/message.interface';
+import {
+  CreateMessageData,
+  GetMessagesOptions,
+} from '../interfaces/message.interface';
+import { MessageCreatedEvent } from '../events';
 
 @Injectable()
 export class MessageService {
   @InjectModel(Message)
   private messageModel: ReturnModelType<typeof Message>;
 
-  createMessage(data: CreateMessageData) {
+  constructor(private events: EventEmitter2) {}
+
+  async createMessage(data: CreateMessageData) {
     const message = new this.messageModel({
       visitorId: data.visitorId,
       conversationId: data.conversationId,
-      from: data.from,
+      sender: data.sender,
       type: data.type,
       data: data.data,
     });
-    return message.save();
+    await message.save();
+    this.events.emit('message.created', {
+      message,
+    } satisfies MessageCreatedEvent);
+  }
+
+  async getMessages({ visitorId, type, desc, limit = 10 }: GetMessagesOptions) {
+    const query = this.messageModel.find();
+    if (visitorId) {
+      query.where({ visitorId });
+    }
+    if (type) {
+      query.where({ type: { $in: type } });
+    }
+    query.sort({ createdAt: desc ? -1 : 1 });
+    query.limit(limit);
+    return query.exec();
   }
 }

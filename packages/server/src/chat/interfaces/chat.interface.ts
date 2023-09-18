@@ -1,6 +1,7 @@
-import { MessageData } from './message.interface';
+import { MessageData, MessageSender } from './message.interface';
 
-export interface StartConversationData {
-  visitorId: string;
+export interface CreateMessageData {
+  conversationId: string;
+  sender: MessageSender;
   data: MessageData;
 }

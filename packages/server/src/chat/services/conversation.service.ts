@@ -15,6 +15,7 @@ export class ConversationService {
 
   createConversation(data: CreateConversationData) {
     const conversation = new this.conversationModel({
+      channel: data.channel,
       visitorId: data.visitorId,
     });
     return conversation.save();
