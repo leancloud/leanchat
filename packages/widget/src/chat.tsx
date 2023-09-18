@@ -9,7 +9,6 @@ import {
 } from 'react';
 import { useLocalStorage } from 'react-use';
 import { Socket, io } from 'socket.io-client';
-import { nanoid } from 'nanoid';
 
 import { Conversation, EvaluateData, Message } from './types';
 
@@ -22,8 +21,6 @@ interface ChatContextValue {
 }
 
 const ChatContext = createContext<ChatContextValue>(undefined as any);
-
-const VISITOR_ID = nanoid();
 
 function useEvent(socket: Socket | undefined, event: string, callback: (...args: any[]) => void) {
   const callbackRef = useRef(callback);
@@ -43,7 +40,7 @@ interface ChatProps {
 }
 
 export function Chat({ children }: ChatProps) {
-  const [visitorId] = useLocalStorage('LeanChat/visitorId', VISITOR_ID, { raw: true });
+  const [token, setToken] = useLocalStorage('LeanChat/token', undefined, { raw: true });
 
   const [socket, setSocket] = useState<Socket>();
   const [connected, setConnected] = useState(false);
@@ -56,7 +53,7 @@ export function Chat({ children }: ChatProps) {
     const socket = io({
       transports: ['websocket'],
       auth: {
-        id: visitorId,
+        token,
       },
     });
     setSocket(socket);
@@ -74,13 +71,8 @@ export function Chat({ children }: ChatProps) {
   }, [socket]);
 
   const sendMessage = useCallback(
-    (content: string) => {
-      socket?.emit('message', {
-        data: {
-          type: 'text',
-          content,
-        },
-      });
+    (text: string) => {
+      socket?.emit('message', { text });
     },
     [socket],
   );
@@ -88,6 +80,7 @@ export function Chat({ children }: ChatProps) {
   const [conversation, setConversation] = useState<Conversation>();
   const [messages, setMessages] = useState<Message[]>([]);
 
+  useEvent(socket, 'signedUp', ({ token }) => setToken(token));
   useEvent(socket, 'currentConversation', setConversation);
   useEvent(socket, 'messages', setMessages);
 

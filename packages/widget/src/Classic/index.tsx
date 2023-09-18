@@ -63,15 +63,13 @@ interface MessageItemProps {
 function MessageItem({ message }: MessageItemProps) {
   if (message.type === 'message') {
     return (
-      <TextMessage position={message.from.type === 'visitor' ? 'right' : 'left'}>
-        {message.data.content}
+      <TextMessage position={message.sender.type === 'visitor' ? 'right' : 'left'}>
+        {message.data.text}
       </TextMessage>
     );
   }
-  if (message.type === 'log') {
-    if (message.data.type === 'evaluated') {
-      return <LogMessage content="消息提示：感谢您的评价" />;
-    }
+  if (message.data.type === 'evaluate') {
+    return <LogMessage content="消息提示：感谢您的评价" />;
   }
 }
 
@@ -257,7 +255,10 @@ export function Classic() {
               onKeyDown={handleTextareaKeyDown}
             />
             {content ? (
-              <button className="ml-2 mr-2 mt-auto h-[36px] mb-[3px] bg-[#cef2ff] px-2 rounded">
+              <button
+                className="ml-2 mr-2 mt-auto h-[36px] mb-[3px] bg-[#cef2ff] px-2 rounded"
+                onClick={handleSendMessage}
+              >
                 发送
               </button>
             ) : (
@@ -319,7 +320,10 @@ export function Classic() {
           <div className="flex h-10 items-center px-[10px]">
             <div className="ml-auto space-x-[10px]">
               <button className="h-6 px-[10px] hover:text-[rgb(0,95,234)]">结束会话</button>
-              <button className="px-6 border rounded border-[#cccccc] h-7 hover:bg-[#f1f1f1]">
+              <button
+                className="px-6 border rounded border-[#cccccc] h-7 hover:bg-[#f1f1f1]"
+                onClick={handleSendMessage}
+              >
                 发送
               </button>
             </div>

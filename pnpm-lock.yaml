@@ -283,9 +283,6 @@ importers:
       classnames:
         specifier: ^2.3.2
         version: 2.3.2
-      nanoid:
-        specifier: ^4.0.2
-        version: 4.0.2
       react:
         specifier: ^18.2.0
         version: 18.2.0
