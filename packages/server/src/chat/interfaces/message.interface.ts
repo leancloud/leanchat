@@ -26,4 +26,5 @@ export interface GetMessagesOptions {
   type?: string[];
   desc?: boolean;
   limit?: number;
+  cursor?: Date;
 }

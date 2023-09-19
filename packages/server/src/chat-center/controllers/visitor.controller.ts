@@ -8,7 +8,7 @@ import {
 } from '@nestjs/common';
 import { ZodValidationPipe } from 'nestjs-zod';
 
-import { MessageService } from 'src/message';
+import { MessageService } from 'src/chat';
 import { GetMessagesDto, MessageDto } from '../dtos/message';
 import { AuthGuard } from '../guards/auth.guard';
 

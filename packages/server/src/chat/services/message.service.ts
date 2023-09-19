@@ -35,6 +35,7 @@ export class MessageService {
     type,
     desc,
     limit = 10,
+    cursor,
   }: GetMessagesOptions) {
     const query = this.messageModel.find();
     if (conversationId) {
@@ -45,6 +46,11 @@ export class MessageService {
     }
     if (type) {
       query.where({ type: { $in: type } });
+    }
+    if (cursor) {
+      query.where({
+        createdAt: desc ? { $lt: cursor } : { $gt: cursor },
+      });
     }
     query.sort({ createdAt: desc ? -1 : 1 });
     query.limit(limit);
