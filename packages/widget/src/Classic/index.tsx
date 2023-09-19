@@ -63,7 +63,7 @@ interface MessageItemProps {
 function MessageItem({ message }: MessageItemProps) {
   if (message.type === 'message') {
     return (
-      <TextMessage position={message.sender.type === 'visitor' ? 'right' : 'left'}>
+      <TextMessage position={message.from.type === 'visitor' ? 'right' : 'left'}>
         {message.data.text}
       </TextMessage>
     );
