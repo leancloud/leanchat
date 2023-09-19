@@ -4,7 +4,6 @@ import axios from 'axios';
 import { Operator } from './types';
 import { getOperator } from './api/operator';
 import { useEffectOnce } from './hooks/useEffectOnce';
-import { useUserStatus } from './states/user';
 
 interface AuthContextValue {
   user?: Operator;
@@ -28,14 +27,11 @@ export function AuthProvider({ children }: PropsWithChildren) {
   const [user, setUser] = useState<Operator>();
   const [settled, setSettled] = useState(false);
 
-  const [, setStatus] = useUserStatus();
-
   useEffectOnce(() => {
     getCurrentUser()
       .then((user) => {
         if (user) {
           setUser(user);
-          setStatus(user.status);
         }
       })
       .finally(() => setSettled(true));

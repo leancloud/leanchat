@@ -5,7 +5,6 @@ import { useMutation } from '@tanstack/react-query';
 
 import { createSession } from './api/session';
 import { useAuthContext } from './auth';
-import { useUserStatus } from './states/user';
 
 interface LoginData {
   username: string;
@@ -17,8 +16,6 @@ export default function Login() {
   const { control, handleSubmit } = useForm<LoginData>();
   const navigate = useNavigate();
 
-  const [, setStatus] = useUserStatus();
-
   const {
     mutate: login,
     error,
@@ -29,7 +26,6 @@ export default function Login() {
     },
     onSuccess: (user) => {
       setUser(user);
-      setStatus(user.status);
       navigate('..');
     },
   });

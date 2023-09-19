@@ -2,11 +2,10 @@ import { JSXElementConstructor, ReactNode } from 'react';
 import { NavLink } from 'react-router-dom';
 import cx from 'classnames';
 import { Dropdown } from 'antd';
-import { useMutation } from '@tanstack/react-query';
 
-import { callRpc, useSocket } from '@/socket';
 import { Avatar } from '@/Panel/components/Avatar';
-import { useUserStatus } from './states/user';
+import { setStatus } from './api/operator';
+import { useCurrentUser } from './auth';
 
 interface Nav {
   to: string;
@@ -64,17 +63,8 @@ function Nav({ icon: Icon, to }: Nav) {
 }
 
 function User() {
-  const [status, setStatusState] = useUserStatus();
-  const socket = useSocket();
+  const user = useCurrentUser();
 
-  const { mutate: setStatus } = useMutation({
-    mutationFn: async (status: string) => {
-      await callRpc(socket, 'setStatus', status);
-    },
-    onSuccess: (_data, status) => {
-      setStatusState(status);
-    },
-  });
   return (
     <Dropdown
       trigger={['click']}
@@ -111,7 +101,7 @@ function User() {
       }}
     >
       <button className="relative">
-        <Avatar size={32} status={status} />
+        <Avatar size={32} status={user.status} />
       </button>
     </Dropdown>
   );

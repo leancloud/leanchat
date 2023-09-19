@@ -36,3 +36,7 @@ export async function updateOperator({ id, ...data }: UpdateOperatorData) {
   const res = await client.patch<Operator>(`/operators/${id}`, data);
   return res.data;
 }
+
+export async function setStatus(status: string) {
+  await client.post('/operators/me/setStatus', { status });
+}

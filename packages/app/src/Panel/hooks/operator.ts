@@ -5,6 +5,7 @@ import { produce } from 'immer';
 
 import { getOperators } from '@/Panel/api/operator';
 import { Operator } from '@/Panel/types';
+import { useAuthContext } from '../auth';
 
 interface OperatorStatusChangedEvent {
   operatorId: string;
@@ -21,18 +22,24 @@ export function useOperators() {
 
 export function useSubscribeOperatorsStatus(socket: Socket) {
   const queryClient = useQueryClient();
+  const { user, setUser } = useAuthContext();
+
   useEffect(() => {
     const onOperatorStatusChanged = (e: OperatorStatusChangedEvent) => {
       queryClient.setQueryData<Operator[] | undefined>(['Operators'], (data) => {
         if (!data) return;
         return produce(data, (operators) => {
-          operators.forEach((operator) => {
+          for (const operator of operators) {
             if (operator.id === e.operatorId) {
               operator.status = e.status;
+              break;
             }
-          });
+          }
         });
       });
+      if (user && e.operatorId === user.id) {
+        setUser({ ...user, status: e.status });
+      }
     };
     socket.on('operatorStatusChanged', onOperatorStatusChanged);
     return () => {
