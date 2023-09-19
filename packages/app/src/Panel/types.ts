@@ -17,6 +17,10 @@ export interface Conversation {
   operatorId?: string;
   lastMessage?: Message;
   categoryId?: string;
+  evaluation?: {
+    star: number;
+    feedback: string;
+  };
   status: string;
 }
 

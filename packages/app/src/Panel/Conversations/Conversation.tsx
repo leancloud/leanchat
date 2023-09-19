@@ -9,7 +9,7 @@ import { Button, Dropdown, Input, Tooltip, message } from 'antd';
 import cx from 'classnames';
 import _ from 'lodash';
 
-import { callRpc, useSocket } from '@/socket';
+import { useSocket } from '@/socket';
 import { useCurrentUser } from '@/Panel/auth';
 import { useConversation } from '@/Panel/hooks/conversation';
 import { ConversationDetail } from './ConversationDetail';
@@ -19,7 +19,7 @@ import { Avatar } from '../components/Avatar';
 import { useOperators } from '../hooks/operator';
 import { ReassignModal } from './ReassignModal';
 import { QuickReply, QuickReplyRef } from './QuickReply';
-import { closeConversation, updateConversation } from '../api/conversation';
+import { closeConversation, updateConversation, inviteEvaluation } from '../api/conversation';
 
 interface OperatorLabelProps {
   operatorId: string;
@@ -96,9 +96,9 @@ export function Conversation({ conversationId }: ConversationProps) {
     },
   });
 
-  const { mutate: inviteEvaluation } = useMutation({
+  const { mutate: _inviteEvaluation } = useMutation({
     mutationFn: () => {
-      return callRpc(socket, 'inviteEvaluation', { conversationId });
+      return inviteEvaluation(conversationId);
     },
     onSuccess: () => {
       message.info('评价邀请已发送');
@@ -189,7 +189,11 @@ export function Conversation({ conversationId }: ConversationProps) {
             )}
 
             <div className="p-2 border-b space-x-1">
-              <Button size="small" disabled={closed} onClick={() => inviteEvaluation()}>
+              <Button
+                size="small"
+                disabled={!!conversation.evaluation || closed}
+                onClick={() => _inviteEvaluation()}
+              >
                 邀请评价
               </Button>
             </div>

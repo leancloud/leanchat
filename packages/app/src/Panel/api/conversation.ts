@@ -49,3 +49,7 @@ export async function updateConversation(id: string, data: UpdateConversationDat
 export async function closeConversation(id: string) {
   await client.post(`/conversations/${id}/close`);
 }
+
+export async function inviteEvaluation(id: string) {
+  await client.post(`/conversations/${id}/inviteEvaluation`);
+}
