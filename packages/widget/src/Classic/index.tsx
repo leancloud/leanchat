@@ -180,9 +180,7 @@ export function Classic() {
 
   const { conversation, messages, sendMessage, evaluate } = useChat({
     onInviteEvaluation: () => {
-      if (conversation && !conversation.evaluation) {
-        setShowEvaluationModal(true);
-      }
+      setShowEvaluationModal(true);
     },
   });
 

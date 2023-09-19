@@ -138,7 +138,9 @@ export function useChat(options: UseChatOptions = {}) {
   const anyListener = useEffectEvent((event: string) => {
     switch (event) {
       case 'inviteEvaluation':
-        onInviteEvaluation?.();
+        if (onInviteEvaluation && chatCtx.conversation && !chatCtx.conversation.evaluation) {
+          onInviteEvaluation();
+        }
         break;
     }
   });
