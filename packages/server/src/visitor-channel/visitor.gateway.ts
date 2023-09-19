@@ -11,7 +11,7 @@ import { OnEvent } from '@nestjs/event-emitter';
 import { Server, Socket } from 'socket.io';
 import { ZodValidationPipe } from 'nestjs-zod';
 
-import { ConversationEvaluationInvitedEvent } from 'src/events';
+import { InviteEvaluationEvent } from 'src/event';
 import {
   ChatService,
   Conversation,
@@ -175,8 +175,8 @@ export class VisitorGateway implements OnModuleInit, OnGatewayConnection {
     }
   }
 
-  @OnEvent('conversation.evaluationInvited', { async: true })
-  dispatchEvaluationInvitation(payload: ConversationEvaluationInvitedEvent) {
+  @OnEvent('inviteEvaluation', { async: true })
+  dispatchEvaluationInvitation(payload: InviteEvaluationEvent) {
     const { conversation } = payload;
     const visitorId = conversation.visitorId.toString();
     this.server.to(visitorId).emit('inviteEvaluation', {

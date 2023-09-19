@@ -14,6 +14,7 @@ import { ZodValidationPipe } from 'nestjs-zod';
 
 import {
   ChatService,
+  Conversation,
   ConversationService,
   MessageService,
   Operator,
@@ -23,12 +24,16 @@ import { GetConversationsDto } from '../dtos/conversation/get-conversations.dto'
 import { GetMessagesDto, MessageDto } from '../dtos/message';
 import { ConversationDto, UpdateConversationDto } from '../dtos/conversation';
 import { CurrentOperator } from '../decorators/current-operator.decorator';
+import { EventEmitter2 } from '@nestjs/event-emitter';
+import { FindConversationPipe } from '../pipes';
+import { InviteEvaluationEvent } from 'src/event';
 
 @Controller('conversations')
 @UseGuards(AuthGuard)
 @UsePipes(ZodValidationPipe)
 export class ConversationController {
   constructor(
+    private events: EventEmitter2,
     private conversationService: ConversationService,
     private messageService: MessageService,
     private chatService: ChatService,
@@ -84,5 +89,17 @@ export class ConversationController {
       type: 'operator',
       id: operator.id,
     });
+  }
+
+  @Post(':id/inviteEvaluation')
+  inviteEvaluation(
+    @Param('id', FindConversationPipe) conversation: Conversation,
+  ) {
+    if (conversation.evaluation) {
+      return;
+    }
+    this.events.emit('inviteEvaluation', {
+      conversation,
+    } satisfies InviteEvaluationEvent);
   }
 }
