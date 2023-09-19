@@ -20,7 +20,6 @@ import cx from 'classnames';
 import { NavButton, NavMenu } from '../components/NavMenu';
 import { ChatBots, NewChatBot, ChatBotDetail } from './ChatBots';
 import { Operators, NewOperator, EditOperator } from './Team/Operators';
-import { EditSkillGroup, NewSkillGroup, SkillGroups } from './Team/SkillGroups';
 import { Categories } from './Categories';
 import { QuickReplies } from './QuickReplies';
 
@@ -70,11 +69,6 @@ const navs: NavSection[] = [
             icon: FaUserCheck,
             name: '客服',
             path: 'team/operators',
-          },
-          {
-            icon: HiUserGroup,
-            name: '技能组',
-            path: 'team/skill-groups',
           },
         ],
       },
@@ -190,11 +184,6 @@ export default function Settings() {
           <Route index element={<Operators />} />
           <Route path="new" element={<NewOperator />} />
           <Route path=":id" element={<EditOperator />} />
-        </Route>
-        <Route path="team/skill-groups">
-          <Route index element={<SkillGroups />} />
-          <Route path="new" element={<NewSkillGroup />} />
-          <Route path=":id" element={<EditSkillGroup />} />
         </Route>
         <Route path="categories" element={<Categories />} />
         <Route path="quick-replies" element={<QuickReplies />} />

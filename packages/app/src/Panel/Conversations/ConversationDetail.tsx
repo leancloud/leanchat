@@ -1,7 +1,6 @@
 import { Tabs, TabsProps } from 'antd';
 
 import { CategoryCascader } from '../components/CategoryCascader';
-import { SkillGroupSelect } from '../components/SkillGroupSelect';
 import { useUpdateConversation } from '../hooks/conversation';
 import { useConversationContext } from './ConversationContext';
 
@@ -26,9 +25,7 @@ function ConversationInfo() {
   return (
     <div className="pt-2">
       <div className="">
-        <div className="font-medium mb-1">技能组</div>
-        <SkillGroupSelect placeholder="-" style={{ width: '100%' }} />
-        <div className="font-medium mt-2 mb-1">分类</div>
+        <div className="font-medium mb-1">分类</div>
         <CategoryCascader
           allowClear={false}
           placeholder="-"
