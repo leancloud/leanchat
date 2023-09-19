@@ -53,3 +53,7 @@ export async function closeConversation(id: string) {
 export async function inviteEvaluation(id: string) {
   await client.post(`/conversations/${id}/inviteEvaluation`);
 }
+
+export async function assignconversation(id: string, operatorId: string) {
+  await client.post(`/conversations/${id}/assign`, { operatorId });
+}

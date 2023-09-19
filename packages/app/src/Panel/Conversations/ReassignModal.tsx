@@ -2,9 +2,9 @@ import { useMemo, useState } from 'react';
 import { useMutation } from '@tanstack/react-query';
 import { Modal, Select, SelectProps } from 'antd';
 
-import { callRpc, useSocket } from '@/socket';
 import { useOperators } from '../hooks/operator';
 import { Avatar } from '../components/Avatar';
+import { assignconversation } from '../api/conversation';
 import { useConversationContext } from './ConversationContext';
 
 interface ReassignModalProps {
@@ -13,7 +13,6 @@ interface ReassignModalProps {
 }
 
 export function ReassignModal({ open, onClose }: ReassignModalProps) {
-  const socket = useSocket();
   const { conversation } = useConversationContext();
   const [operatorId, setOperatorId] = useState(conversation.operatorId);
 
@@ -33,12 +32,9 @@ export function ReassignModal({ open, onClose }: ReassignModalProps) {
     }));
   }, [operators]);
 
-  const { mutate: assignConversation, isLoading: isUpdating } = useMutation({
-    mutationFn: async (operatorId: string) => {
-      await callRpc(socket, 'assignConversation', {
-        conversationId: conversation.id,
-        operatorId,
-      });
+  const { mutate: _assignConversation, isLoading: isUpdating } = useMutation({
+    mutationFn: (operatorId: string) => {
+      return assignconversation(conversation.id, operatorId);
     },
     onSuccess: onClose,
   });
@@ -50,7 +46,7 @@ export function ReassignModal({ open, onClose }: ReassignModalProps) {
       title="重新分配会话"
       okButtonProps={{ disabled: !operatorId }}
       afterClose={() => setOperatorId(conversation.operatorId)}
-      onOk={() => assignConversation(operatorId!)}
+      onOk={() => _assignConversation(operatorId!)}
       confirmLoading={isUpdating}
     >
       <div className="mb-2">将会话分配给：</div>

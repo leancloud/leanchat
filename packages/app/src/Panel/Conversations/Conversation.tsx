@@ -19,7 +19,7 @@ import { Avatar } from '../components/Avatar';
 import { useOperators } from '../hooks/operator';
 import { ReassignModal } from './ReassignModal';
 import { QuickReply, QuickReplyRef } from './QuickReply';
-import { closeConversation, updateConversation, inviteEvaluation } from '../api/conversation';
+import { closeConversation, inviteEvaluation, assignconversation } from '../api/conversation';
 
 interface OperatorLabelProps {
   operatorId: string;
@@ -84,9 +84,7 @@ export function Conversation({ conversationId }: ConversationProps) {
 
   const { mutate: joinConversation } = useMutation({
     mutationFn: () => {
-      return updateConversation(conversationId, {
-        operatorId: user!.id,
-      });
+      return assignconversation(conversationId, user!.id);
     },
   });
 
