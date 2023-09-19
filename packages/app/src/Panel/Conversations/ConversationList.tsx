@@ -31,7 +31,7 @@ export function ConversationList({
             </Avatar>
           }
           title={conv.id}
-          message={conv.lastMessage?.data.content}
+          message={conv.lastMessage?.data.text}
           unreadAlert={unreadAlert}
         />
       </button>

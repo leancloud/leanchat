@@ -106,12 +106,13 @@ export function useAutoPushNewMessage(socket: Socket) {
           ['Conversations'],
           (conversations) => {
             if (conversations) {
-              return produce(conversations, (draft) => {
-                draft.forEach((conversation) => {
+              return produce(conversations, (conversations) => {
+                for (const conversation of conversations) {
                   if (conversation.id === message.conversationId) {
                     conversation.lastMessage = message;
+                    break;
                   }
-                });
+                }
               });
             }
           },

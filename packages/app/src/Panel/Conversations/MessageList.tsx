@@ -1,5 +1,7 @@
 import {
   Fragment,
+  JSXElementConstructor,
+  PropsWithChildren,
   ReactNode,
   RefObject,
   forwardRef,
@@ -30,7 +32,7 @@ interface DateGroup {
 
 interface MessageGroup {
   type: 'messageGroup';
-  sender: any;
+  from: IMessage['from'];
   messages: IMessage[];
 }
 
@@ -58,11 +60,11 @@ function DateDivider({ date }: DateDividerProps) {
 
 interface MessageGroupProps {
   isLeft: boolean;
-  sender: any;
+  from: MessageGroup['from'];
   messages: IMessage[];
 }
 
-function MessageGroup({ sender, isLeft, messages }: MessageGroupProps) {
+function MessageGroup({ from, isLeft, messages }: MessageGroupProps) {
   return (
     <div
       className={cx('my-5 px-5 flex flex-col', {
@@ -70,7 +72,7 @@ function MessageGroup({ sender, isLeft, messages }: MessageGroupProps) {
         'items-end': !isLeft,
       })}
     >
-      <div className={cx('text-xs px-1 mb-1')}>{isLeft ? '用户' : sender.id}</div>
+      <div className={cx('text-xs px-1 mb-1')}>{isLeft ? '用户' : from.id}</div>
       {messages.map((message) => (
         <div
           key={message.id}
@@ -111,23 +113,40 @@ function Bubble({ isVisitor, className, children }: BubbleProps) {
   );
 }
 
-const systemMessages: Record<string, string> = {
-  evaluate: '用户已评价',
-};
-
-interface LogMessageProps {
+interface MessageComponentProps {
   message: IMessage;
 }
 
-function LogMessage({ message }: LogMessageProps) {
+function LogMessage({ children }: PropsWithChildren) {
   return (
     <div className="flex justify-center my-4">
-      <div className="text-xs bg-[#e7e7e7] rounded-full px-3 py-1">
-        系统消息：{systemMessages[message.type]}
-      </div>
+      <div className="text-xs bg-[#e7e7e7] rounded px-2 py-1 max-w-[80%]">{children}</div>
     </div>
   );
 }
+
+function EvaluateMessage({ message }: MessageComponentProps) {
+  const { star, feedback } = message.data.evaluation;
+  return (
+    <LogMessage>
+      <div className="text-center">用户已评价：{'⭐️'.repeat(star)}</div>
+      {feedback && <div className="mt-0.5 break-all">{feedback}</div>}
+    </LogMessage>
+  );
+}
+
+function CloseConversation({ message }: MessageComponentProps) {
+  return (
+    <LogMessage>
+      <div>{message.from.type === 'operator' ? '客服' : '用户'}关闭了会话</div>
+    </LogMessage>
+  );
+}
+
+const MessageComponents: Record<string, JSXElementConstructor<MessageComponentProps>> = {
+  evaluate: EvaluateMessage,
+  closeConversation: CloseConversation,
+};
 
 function useAtBottom(ref: RefObject<HTMLElement>) {
   const [atBottom, setAtBottom] = useState(false);
@@ -193,14 +212,14 @@ export const MessageList = forwardRef<MessageListRef, MessageListProps>((props, 
           if (message.type === 'message') {
             const lastMessage = dateGroup.messages[dateGroup.messages.length - 1];
             if (lastMessage.type === 'messageGroup') {
-              if (lastMessage.sender.id === message.sender.id) {
+              if (lastMessage.from.id === message.from.id) {
                 lastMessage.messages.push(message);
                 return;
               }
             }
             dateGroup.messages.push({
               type: 'messageGroup',
-              sender: message.sender,
+              from: message.from,
               messages: [message],
             });
             return;
@@ -218,7 +237,7 @@ export const MessageList = forwardRef<MessageListRef, MessageListProps>((props, 
           messages: [
             {
               type: 'messageGroup',
-              sender: message.sender,
+              from: message.from,
               messages: [message],
             },
           ],
@@ -326,13 +345,18 @@ export const MessageList = forwardRef<MessageListRef, MessageListProps>((props, 
                 return (
                   <MessageGroup
                     key={item.messages[0].id}
-                    isLeft={item.sender.type === 'visitor'}
-                    sender={item.sender}
+                    isLeft={item.from.type === 'visitor'}
+                    from={item.from}
                     messages={item.messages}
                   />
                 );
               }
-              return <LogMessage key={item.message.id} message={item.message} />;
+              const Component = MessageComponents[item.message.type];
+              if (Component) {
+                return <Component key={item.message.id} message={item.message} />;
+              } else {
+                return null;
+              }
             })}
           </Fragment>
         ))}

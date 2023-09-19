@@ -3,7 +3,10 @@ export interface Message {
   visitorId: string;
   conversationId: string;
   type: string;
-  sender: any;
+  from: {
+    type: 'visitor' | 'operator';
+    id: string;
+  };
   data: any;
   createdAt: string;
 }
