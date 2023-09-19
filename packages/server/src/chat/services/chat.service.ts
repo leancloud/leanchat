@@ -1,6 +1,9 @@
 import { Inject, Injectable } from '@nestjs/common';
-import { EventEmitter2 } from '@nestjs/event-emitter';
+import { EventEmitter2, OnEvent } from '@nestjs/event-emitter';
+import { InjectQueue } from '@nestjs/bull';
+import { Queue } from 'bull';
 import { Redis } from 'ioredis';
+import _ from 'lodash';
 
 import { REDIS } from 'src/redis';
 import { ConversationEvaluation } from '../interfaces/conversation.interface';
@@ -8,8 +11,12 @@ import { CreateMessageData } from '../interfaces/chat.interface';
 import { ChatError } from '../errors';
 import { ConversationService } from './conversation.service';
 import { MessageService } from './message.service';
-import { MessageSender } from '../interfaces';
-import { OperatorStatusChangedEvent } from '../events';
+import { AutoAssignJobData, MessageSender } from '../interfaces';
+import {
+  ConversationCreatedEvent,
+  OperatorStatusChangedEvent,
+} from '../events';
+import { OperatorService } from './operator.service';
 
 @Injectable()
 export class ChatService {
@@ -20,6 +27,10 @@ export class ChatService {
     private events: EventEmitter2,
     private conversationService: ConversationService,
     private messageService: MessageService,
+    private operatorService: OperatorService,
+
+    @InjectQueue('auto_assign_conversation')
+    private autoAssignQueue: Queue<AutoAssignJobData>,
   ) {}
 
   async createMessage({ conversationId, from, data }: CreateMessageData) {
@@ -115,5 +126,77 @@ export class ChatService {
 
   getOperatorStatus(operatorId: string) {
     return this.redis.hget('operator_status', operatorId);
+  }
+
+  async getOperatorWorkloads(operatorIds: string[]) {
+    const workloads = await this.redis.hmget(
+      'operator_workload',
+      ...operatorIds,
+    );
+    return operatorIds.reduce<Record<string, number>>(
+      (map, operatorId, index) => {
+        const workload = workloads[index];
+        if (workload !== null) {
+          map[operatorId] = parseInt(workload);
+        }
+        return map;
+      },
+      {},
+    );
+  }
+
+  async getRandomReadyOperator() {
+    const operatorStatuses = await this.getOperatorStatuses();
+    const readyOperatorIds = Object.keys(operatorStatuses).filter(
+      (operatorId) => operatorStatuses[operatorId] === 'ready',
+    );
+    if (readyOperatorIds.length === 0) {
+      return;
+    }
+
+    const readyOperators = await this.operatorService.getOperators(
+      readyOperatorIds,
+    );
+    if (readyOperators.length === 0) {
+      return;
+    }
+
+    const workloads = await this.getOperatorWorkloads(
+      readyOperators.map((o) => o.id),
+    );
+
+    for (const operator of _.shuffle(readyOperators)) {
+      const workload = workloads[operator.id];
+      if (workload !== undefined && workload < operator.concurrency) {
+        return operator;
+      }
+    }
+  }
+
+  async assignConversation(conversationId: string, operatorId: string) {
+    const conversation = await this.conversationService.getConversation(
+      conversationId,
+    );
+    if (!conversation) {
+      return;
+    }
+
+    await this.conversationService.updateConversation(conversationId, {
+      operatorId,
+    });
+
+    const pl = this.redis.pipeline();
+    if (conversation.operatorId) {
+      pl.hincrby('operator_workload', conversation.operatorId.toString(), -1);
+    }
+    pl.hincrby('operator_workload', operatorId, 1);
+    await pl.exec();
+  }
+
+  @OnEvent('conversation.created', { async: true })
+  addAutoAssignJob(payload: ConversationCreatedEvent) {
+    this.autoAssignQueue.add({
+      conversationId: payload.conversation.id,
+    });
   }
 }

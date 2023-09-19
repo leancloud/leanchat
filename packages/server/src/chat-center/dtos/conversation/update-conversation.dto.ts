@@ -4,7 +4,6 @@ import { z } from 'zod';
 import { ObjectIdSchema } from 'src/common/schemas';
 
 const UpdateConversationSchema = z.object({
-  operatorId: ObjectIdSchema.optional(),
   categoryId: ObjectIdSchema.optional(),
 });
 

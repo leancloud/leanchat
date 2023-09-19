@@ -1,4 +1,5 @@
 import {
+  BadRequestException,
   Body,
   Controller,
   Get,
@@ -10,24 +11,29 @@ import {
   UseGuards,
   UsePipes,
 } from '@nestjs/common';
+import { EventEmitter2 } from '@nestjs/event-emitter';
 import { ZodValidationPipe } from 'nestjs-zod';
 import _ from 'lodash';
 
+import { InviteEvaluationEvent } from 'src/event';
 import {
   ChatService,
   Conversation,
   ConversationService,
   MessageService,
   Operator,
+  OperatorService,
 } from 'src/chat';
 import { AuthGuard } from '../guards/auth.guard';
 import { GetConversationsDto } from '../dtos/conversation/get-conversations.dto';
 import { GetMessagesDto, MessageDto } from '../dtos/message';
-import { ConversationDto, UpdateConversationDto } from '../dtos/conversation';
+import {
+  AssignConversationDto,
+  ConversationDto,
+  UpdateConversationDto,
+} from '../dtos/conversation';
 import { CurrentOperator } from '../decorators/current-operator.decorator';
-import { EventEmitter2 } from '@nestjs/event-emitter';
 import { FindConversationPipe } from '../pipes';
-import { InviteEvaluationEvent } from 'src/event';
 
 @Controller('conversations')
 @UseGuards(AuthGuard)
@@ -38,6 +44,7 @@ export class ConversationController {
     private conversationService: ConversationService,
     private messageService: MessageService,
     private chatService: ChatService,
+    private operatorService: OperatorService,
   ) {}
 
   @Get()
@@ -91,7 +98,7 @@ export class ConversationController {
     if (!conversation) {
       throw new NotFoundException(`会话 ${id} 不存在`);
     }
-    await this.conversationService.updateConversation(id, data);
+    // await this.conversationService.updateConversation(id, data);
   }
 
   @Post(':id/close')
@@ -115,5 +122,17 @@ export class ConversationController {
     this.events.emit('inviteEvaluation', {
       conversation,
     } satisfies InviteEvaluationEvent);
+  }
+
+  @Post(':id/assign')
+  async assignConversation(
+    @Param('id', FindConversationPipe) conversation: Conversation,
+    @Body() data: AssignConversationDto,
+  ) {
+    const operator = await this.operatorService.getOperator(data.operatorId);
+    if (!operator) {
+      throw new BadRequestException('Invalid operator id');
+    }
+    await this.chatService.assignConversation(conversation.id, operator.id);
   }
 }

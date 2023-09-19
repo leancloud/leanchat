@@ -1,5 +1,6 @@
 import { TypegooseModule } from '@m8a/nestjs-typegoose';
 import { Module } from '@nestjs/common';
+import { BullModule } from '@nestjs/bull';
 
 import { Conversation, Message, Operator, Visitor } from './models';
 import {
@@ -9,10 +10,14 @@ import {
   OperatorService,
   VisitorService,
 } from './services';
+import { AutoAssignProcessor } from './processors/auto-assign.processor';
 
 @Module({
   imports: [
     TypegooseModule.forFeature([Conversation, Message, Visitor, Operator]),
+    BullModule.registerQueue({
+      name: 'auto_assign_conversation',
+    }),
   ],
   providers: [
     ConversationService,
@@ -20,6 +25,7 @@ import {
     VisitorService,
     ChatService,
     OperatorService,
+    AutoAssignProcessor,
   ],
   exports: [
     ChatService,

@@ -57,7 +57,12 @@ export class OperatorService implements OnApplicationBootstrap {
     return this.operatorModel.findById(id).exec();
   }
 
-  getOperators() {
+  getOperators(ids?: string[]) {
+    if (ids) {
+      return this.operatorModel.find({
+        _id: { $in: ids },
+      });
+    }
     return this.operatorModel.find().exec();
   }
 
