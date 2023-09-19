@@ -5,16 +5,16 @@ import {
   NotFoundException,
   Param,
   Patch,
+  Post,
   Query,
   UseGuards,
   UsePipes,
 } from '@nestjs/common';
 import { ZodValidationPipe } from 'nestjs-zod';
 
-import { ConversationService } from 'src/conversation';
-import { MessageService } from 'src/message';
+import { ChatService, ConversationService, MessageService } from 'src/chat';
 import { AuthGuard } from '../guards/auth.guard';
-import { GetConversationsDto } from '../dtos/get-conversations.dto';
+import { GetConversationsDto } from '../dtos/conversation/get-conversations.dto';
 import { GetMessagesDto, MessageDto } from '../dtos/message';
 import { ConversationDto, UpdateConversationDto } from '../dtos/conversation';
 
@@ -25,6 +25,7 @@ export class ConversationController {
   constructor(
     private conversationService: ConversationService,
     private messageService: MessageService,
+    private chatService: ChatService,
   ) {}
 
   @Get()
@@ -65,7 +66,11 @@ export class ConversationController {
     if (!conversation) {
       throw new NotFoundException(`会话 ${id} 不存在`);
     }
-    await this.conversationService.updateConversation(conversation, data);
-    return ConversationDto.fromDocument(conversation);
+    await this.conversationService.updateConversation(id, data);
+  }
+
+  @Post(':id/close')
+  async closeConversation(@Param('id') id: string) {
+    await this.chatService.closeConversation(id);
   }
 }

@@ -29,6 +29,9 @@ export class Conversation {
   visitorId: Types.ObjectId;
 
   @Prop()
+  operatorId?: Types.ObjectId;
+
+  @Prop()
   evaluation?: Evaluation;
 
   @Prop()

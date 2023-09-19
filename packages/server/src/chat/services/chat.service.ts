@@ -66,7 +66,7 @@ export class ChatService {
       throw new ChatError('CONVERSATION_NOT_EXIST');
     }
     if (conversation.closedAt) {
-      throw new ChatError('CONVERSATION_CLOSED');
+      return;
     }
 
     await this.conversationService.updateConversation(conversationId, {

@@ -32,7 +32,7 @@ export class Message {
   @Prop()
   conversationId: Types.ObjectId;
 
-  @Prop()
+  @Prop({ _id: false })
   sender?: MessageSender;
 
   @Prop()

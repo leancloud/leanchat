@@ -20,6 +20,7 @@ import { mongodbConfig, redisConfig } from './config';
   imports: [
     ServeStaticModule.forRoot({
       rootPath: path.join(__dirname, 'public'),
+      exclude: ['/api/(.*)'],
     }),
     ConfigModule.forRoot({
       isGlobal: true,

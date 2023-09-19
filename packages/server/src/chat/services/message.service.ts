@@ -31,8 +31,17 @@ export class MessageService {
     } satisfies MessageCreatedEvent);
   }
 
-  async getMessages({ visitorId, type, desc, limit = 10 }: GetMessagesOptions) {
+  async getMessages({
+    conversationId,
+    visitorId,
+    type,
+    desc,
+    limit = 10,
+  }: GetMessagesOptions) {
     const query = this.messageModel.find();
+    if (conversationId) {
+      query.where({ conversationId });
+    }
     if (visitorId) {
       query.where({ visitorId });
     }

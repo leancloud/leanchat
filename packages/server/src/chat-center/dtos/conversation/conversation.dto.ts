@@ -1,5 +1,4 @@
-import { ConversationDocument } from 'src/conversation';
-import { IMessage } from 'src/interfaces';
+import type { Conversation } from 'src/chat';
 
 export class ConversationDto {
   id: string;
@@ -8,10 +7,6 @@ export class ConversationDto {
 
   operatorId?: string;
 
-  lastMessage?: IMessage;
-
-  status: string;
-
   evaluation?: {
     star: number;
     feedback: string;
@@ -19,19 +14,19 @@ export class ConversationDto {
 
   categoryId?: string;
 
+  status: string;
+
   createdAt: string;
 
   updatedAt: string;
 
-  static fromDocument(conv: ConversationDocument) {
+  static fromDocument(conv: Conversation) {
     const dto = new ConversationDto();
     dto.id = conv.id;
     dto.visitorId = conv.visitorId.toString();
     dto.operatorId = conv.operatorId?.toString();
-    dto.lastMessage = conv.lastMessage;
-    dto.status = conv.status;
     dto.evaluation = conv.evaluation;
-    dto.categoryId = conv.categoryId?.toString();
+    dto.status = conv.closedAt ? 'closed' : 'open';
     dto.createdAt = conv.createdAt.toISOString();
     dto.updatedAt = conv.updatedAt.toISOString();
     return dto;

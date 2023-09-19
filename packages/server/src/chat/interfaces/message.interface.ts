@@ -21,6 +21,7 @@ export interface CreateMessageData {
 }
 
 export interface GetMessagesOptions {
+  conversationId?: string;
   visitorId?: string;
   type?: string[];
   desc?: boolean;
