@@ -13,18 +13,19 @@ import { Namespace, Socket } from 'socket.io';
 import { OnEvent } from '@nestjs/event-emitter';
 import { ZodValidationPipe } from 'nestjs-zod';
 
-import { MessageCreatedEvent, OperatorStatusChangedEvent } from 'src/event';
-import { WsInterceptor } from 'src/common/interceptors';
-import { CreateMessageDto } from './dtos/create-message.dto';
-import { ConversationDto } from './dtos/conversation';
-import { MessageDto } from './dtos/message';
 import {
   ChatService,
   ConversationCreatedEvent,
   ConversationService,
   ConversationUpdatedEvent,
+  OperatorStatusChangedEvent,
+  MessageCreatedEvent,
   MessageService,
 } from 'src/chat';
+import { WsInterceptor } from 'src/common/interceptors';
+import { CreateMessageDto } from './dtos/create-message.dto';
+import { ConversationDto } from './dtos/conversation';
+import { MessageDto } from './dtos/message';
 
 @WebSocketGateway({ namespace: 'o' })
 @UsePipes(ZodValidationPipe)
@@ -113,7 +114,7 @@ export class ChatGateway
     this.server.emit('message', MessageDto.fromDocument(payload.message));
   }
 
-  @OnEvent('operator.status.changed', { async: true })
+  @OnEvent('operator.statusChanged', { async: true })
   dispatchOperatorStatusChanged(payload: OperatorStatusChangedEvent) {
     this.server.emit('operatorStatusChanged', {
       operatorId: payload.operatorId,
