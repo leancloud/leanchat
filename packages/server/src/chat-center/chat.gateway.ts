@@ -23,6 +23,7 @@ import {
   ConversationCreatedEvent,
   ConversationService,
   ConversationUpdatedEvent,
+  MessageService,
 } from 'src/chat';
 
 @WebSocketGateway({ namespace: 'o' })
@@ -36,6 +37,7 @@ export class ChatGateway
 
   constructor(
     private conversationService: ConversationService,
+    private messageService: MessageService,
     private chatService: ChatService,
   ) {}
 
@@ -93,8 +95,15 @@ export class ChatGateway
 
   @OnEvent('conversation.updated', { async: true })
   async handleConversationUpdated(payload: ConversationUpdatedEvent) {
+    const dto = ConversationDto.fromDocument(payload.conversation);
+    const lastMessage = await this.messageService.getLastMessage(
+      payload.conversation.id,
+    );
+    if (lastMessage) {
+      dto.lastMessage = MessageDto.fromDocument(lastMessage);
+    }
     this.server.emit('conversationUpdated', {
-      conversation: ConversationDto.fromDocument(payload.conversation),
+      conversation: dto,
       data: payload.data,
     });
   }

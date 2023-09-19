@@ -20,6 +20,8 @@ export class ConversationDto {
 
   updatedAt: string;
 
+  lastMessage?: any;
+
   static fromDocument(conv: Conversation) {
     const dto = new ConversationDto();
     dto.id = conv.id;

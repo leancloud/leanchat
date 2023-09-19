@@ -11,6 +11,7 @@ import {
   UsePipes,
 } from '@nestjs/common';
 import { ZodValidationPipe } from 'nestjs-zod';
+import _ from 'lodash';
 
 import {
   ChatService,
@@ -44,7 +45,20 @@ export class ConversationController {
     const conversations = await this.conversationService.getConversations(
       query,
     );
-    return conversations.map(ConversationDto.fromDocument);
+    const lastMessages = await this.messageService.getLastMessages(
+      conversations.map((c) => c.id),
+    );
+    const lastMessageByCid = _.keyBy(lastMessages, (m) =>
+      m.conversationId.toString(),
+    );
+    return conversations.map((conversation) => {
+      const dto = ConversationDto.fromDocument(conversation);
+      const lastMessage = lastMessageByCid[conversation.id];
+      if (lastMessage) {
+        dto.lastMessage = MessageDto.fromDocument(lastMessage);
+      }
+      return dto;
+    });
   }
 
   @Get(':id')

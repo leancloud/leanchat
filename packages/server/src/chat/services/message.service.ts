@@ -2,6 +2,7 @@ import { Injectable } from '@nestjs/common';
 import { EventEmitter2 } from '@nestjs/event-emitter';
 import { InjectModel } from '@m8a/nestjs-typegoose';
 import { ReturnModelType } from '@typegoose/typegoose';
+import { Types } from 'mongoose';
 
 import { Conversation, Message } from '../models';
 import { CreateMessageData, GetMessagesOptions } from '../interfaces';
@@ -48,5 +49,45 @@ export class MessageService {
     query.sort({ createdAt: desc ? -1 : 1 });
     query.limit(limit);
     return query.exec();
+  }
+
+  getLastMessage(conversationId: string) {
+    return this.messageModel
+      .findOne({ conversationId, type: 'message' })
+      .sort({ createdAt: -1 })
+      .exec();
+  }
+
+  async getLastMessages(conversationIds: string[]) {
+    const result = await this.messageModel
+      .aggregate([
+        {
+          $match: {
+            conversationId: {
+              $in: conversationIds.map((id) => new Types.ObjectId(id)),
+            },
+            type: 'message',
+          },
+        },
+        {
+          $sort: {
+            createdAt: -1,
+          },
+        },
+        {
+          $group: {
+            _id: '$conversationId',
+            lastMessage: {
+              $first: '$$ROOT',
+            },
+          },
+        },
+      ])
+      .exec();
+    return result.map(({ lastMessage }) => {
+      const message = new this.messageModel(lastMessage);
+      message.id = message._id.toString();
+      return message;
+    });
   }
 }
