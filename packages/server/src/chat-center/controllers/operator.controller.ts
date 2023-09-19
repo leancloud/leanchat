@@ -11,7 +11,7 @@ import {
 } from '@nestjs/common';
 import { ZodValidationPipe } from 'nestjs-zod';
 
-import { Operator, OperatorService } from 'src/operator';
+import { Operator, OperatorService } from 'src/chat';
 import { AuthGuard } from '../guards/auth.guard';
 import { CurrentOperator } from '../decorators/current-operator.decorator';
 import { OperatorDto } from '../dtos/operator';
@@ -32,10 +32,8 @@ export class OperatorController {
   @Get()
   async getOperators() {
     const operators = await this.operatorService.getOperators();
-    const statuses = await this.operatorService.getOperatorStatuses();
     return operators.map((operator) => {
       const dto = OperatorDto.fromDocument(operator);
-      dto.status = statuses[operator.id] || 'leave';
       return dto;
     });
   }
@@ -43,7 +41,6 @@ export class OperatorController {
   @Get('me')
   async getCurrentOperator(@CurrentOperator() operator: Operator) {
     const dto = OperatorDto.fromDocument(operator);
-    dto.status = await this.operatorService.getOperatorStatus(operator.id);
     return dto;
   }
 
@@ -54,7 +51,6 @@ export class OperatorController {
       throw new NotFoundException(`客服 ${id} 不存在`);
     }
     const dto = OperatorDto.fromDocument(operator);
-    dto.status = await this.operatorService.getOperatorStatus(operator.id);
     return dto;
   }
 

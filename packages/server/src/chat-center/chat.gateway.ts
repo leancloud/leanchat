@@ -1,9 +1,4 @@
-import {
-  OnModuleInit,
-  UseFilters,
-  UseInterceptors,
-  UsePipes,
-} from '@nestjs/common';
+import { OnModuleInit, UseInterceptors, UsePipes } from '@nestjs/common';
 import {
   ConnectedSocket,
   MessageBody,
@@ -12,36 +7,25 @@ import {
   SubscribeMessage,
   WebSocketGateway,
   WebSocketServer,
-  WsException,
 } from '@nestjs/websockets';
 import { Request } from 'express';
 import { Namespace, Socket } from 'socket.io';
-import { EventEmitter2, OnEvent } from '@nestjs/event-emitter';
+import { OnEvent } from '@nestjs/event-emitter';
 import { ZodValidationPipe } from 'nestjs-zod';
-import { z } from 'nestjs-zod/z';
 
-import { WsFilter } from 'src/common/filters';
 import { MessageCreatedEvent, OperatorStatusChangedEvent } from 'src/event';
-import { ConversationEvaluationInvitedEvent } from 'src/events';
 import { WsInterceptor } from 'src/common/interceptors';
-import { ConversationService, ConversationStatus } from 'src/conversation';
-import { OperatorService } from 'src/operator';
-import { MessageService } from 'src/message';
 import { CreateMessageDto } from './dtos/create-message.dto';
-import {
-  ConversationAssignedEvent,
-  ConversationClosedEvent,
-  ConversationQueuedEvent,
-} from './events';
-import { ChatConversationService } from './services/chat-conversation.service';
-import { AssignConversationDto } from './dtos/assign-conversation.dto';
-import { CloseConversationDto } from './dtos/close-conversation.dto';
-import { InviteEvaluationDto } from './dtos/invite-evaluation.dto';
 import { ConversationDto } from './dtos/conversation';
 import { MessageDto } from './dtos/message';
+import {
+  ChatService,
+  ConversationCreatedEvent,
+  ConversationService,
+  ConversationUpdatedEvent,
+} from 'src/chat';
 
 @WebSocketGateway({ namespace: 'o' })
-@UseFilters(WsFilter)
 @UsePipes(ZodValidationPipe)
 @UseInterceptors(WsInterceptor)
 export class ChatGateway
@@ -51,11 +35,8 @@ export class ChatGateway
   private server: Namespace;
 
   constructor(
-    private events: EventEmitter2,
     private conversationService: ConversationService,
-    private operatorService: OperatorService,
-    private messageService: MessageService,
-    private chatConvService: ChatConversationService,
+    private chatService: ChatService,
   ) {}
 
   onModuleInit() {
@@ -78,57 +59,6 @@ export class ChatGateway
     console.log('operator offline', socket.data.id);
   }
 
-  @SubscribeMessage('setStatus')
-  async handleSetStatus(
-    @ConnectedSocket() socket: Socket,
-    @MessageBody(new ZodValidationPipe(z.enum(['ready', 'leave', 'busy'])))
-    status: string,
-  ) {
-    const operatorId = socket.data.id;
-    await this.operatorService.setOperatorStatus(operatorId, status);
-    if (status === 'ready') {
-      const concurrency =
-        await this.conversationService.getAssignedConversationCount(operatorId);
-      await this.operatorService.setOperatorConcurrency(
-        operatorId,
-        concurrency,
-      );
-    }
-  }
-
-  @SubscribeMessage('assignConversation')
-  async handleAssignConversation(@MessageBody() data: AssignConversationDto) {
-    const conv = await this.conversationService.getConversation(
-      data.conversationId,
-    );
-    if (!conv) {
-      throw new WsException('会话不存在');
-    }
-
-    const operator = await this.operatorService.getOperator(data.operatorId);
-    if (!operator) {
-      throw new WsException(`客服 ${data.operatorId} 不存在`);
-    }
-
-    const status = await this.operatorService.getOperatorStatus(operator.id);
-    if (status !== 'ready') {
-      throw new WsException(`客服 ${data.conversationId} 不是在线状态`);
-    }
-
-    await this.chatConvService.assign(conv, operator);
-  }
-
-  @SubscribeMessage('closeConversation')
-  async handleCloseConversation(@MessageBody() data: CloseConversationDto) {
-    const conv = await this.conversationService.getConversation(
-      data.conversationId,
-    );
-    if (!conv) {
-      throw new WsException('会话不存在');
-    }
-    await this.chatConvService.close(conv);
-  }
-
   @SubscribeMessage('message')
   async handleIncomingMessage(
     @ConnectedSocket() socket: Socket,
@@ -136,72 +66,42 @@ export class ChatGateway
   ) {
     const operatorId = socket.data.id;
 
-    const conv = await this.conversationService.getConversation(
+    const conversation = await this.conversationService.getConversation(
       data.conversationId,
     );
-    if (!conv) {
-      throw new WsException(`对话 ${data.conversationId} 不存在`);
-    }
-    if (conv.status === ConversationStatus.Solved) {
-      throw new WsException('对话已结束');
+    if (!conversation || conversation.closedAt) {
+      return;
     }
 
-    const message = await this.messageService.createMessage({
-      visitorId: conv.visitorId,
-      conversationId: conv.id,
-      type: 'message',
-      from: { type: 'operator', id: operatorId },
-      data: data.data,
-    });
-
-    await this.conversationService.updateConversation(conv, {
-      lastMessage: message,
-      timestamps: {
-        operatorLastMessageAt: message.createdAt,
+    await this.chatService.createMessage({
+      conversationId: conversation.id,
+      from: {
+        type: 'operator',
+        id: operatorId,
       },
+      data: data.data,
     });
   }
 
-  @SubscribeMessage('inviteEvaluation')
-  async handleInviteEvaluation(@MessageBody() data: InviteEvaluationDto) {
-    const conv = await this.conversationService.getConversation(
-      data.conversationId,
+  @OnEvent('conversation.created', { async: true })
+  async handleConversationCreated(payload: ConversationCreatedEvent) {
+    this.server.emit(
+      'conversationCreated',
+      ConversationDto.fromDocument(payload.conversation),
     );
-    if (!conv) {
-      throw new WsException('会话不存在');
-    }
-    if (conv.evaluation) {
-      throw new WsException('会话已评价');
-    }
-    this.events.emit('conversation.evaluationInvited', {
-      conversation: conv,
-    } satisfies ConversationEvaluationInvitedEvent);
+  }
+
+  @OnEvent('conversation.updated', { async: true })
+  async handleConversationUpdated(payload: ConversationUpdatedEvent) {
+    this.server.emit('conversationUpdated', {
+      conversation: ConversationDto.fromDocument(payload.conversation),
+      data: payload.data,
+    });
   }
 
   @OnEvent('message.created', { async: true })
   dispatchMessage(payload: MessageCreatedEvent) {
     this.server.emit('message', MessageDto.fromDocument(payload.message));
-  }
-
-  @OnEvent('conversation.queued', { async: true })
-  dispatchConversationQueued(payload: ConversationQueuedEvent) {
-    this.server.emit('conversationQueued', {
-      conversation: ConversationDto.fromDocument(payload.conversation),
-    });
-  }
-
-  @OnEvent('conversation.assigned', { async: true })
-  dispatchConversationAssigned(payload: ConversationAssignedEvent) {
-    this.server.emit('conversationAssigned', {
-      conversation: ConversationDto.fromDocument(payload.conversation),
-    });
-  }
-
-  @OnEvent('conversation.closed', { async: true })
-  dispatchConversationClosed(payload: ConversationClosedEvent) {
-    this.server.emit('conversationClosed', {
-      conversation: ConversationDto.fromDocument(payload.conversation),
-    });
   }
 
   @OnEvent('operator.status.changed', { async: true })

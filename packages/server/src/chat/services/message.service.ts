@@ -3,11 +3,8 @@ import { EventEmitter2 } from '@nestjs/event-emitter';
 import { InjectModel } from '@m8a/nestjs-typegoose';
 import { ReturnModelType } from '@typegoose/typegoose';
 
-import { Message } from '../models/message.model';
-import {
-  CreateMessageData,
-  GetMessagesOptions,
-} from '../interfaces/message.interface';
+import { Conversation, Message } from '../models';
+import { CreateMessageData, GetMessagesOptions } from '../interfaces';
 import { MessageCreatedEvent } from '../events';
 
 @Injectable()
@@ -17,11 +14,11 @@ export class MessageService {
 
   constructor(private events: EventEmitter2) {}
 
-  async createMessage(data: CreateMessageData) {
+  async createMessage(conversation: Conversation, data: CreateMessageData) {
     const message = new this.messageModel({
-      visitorId: data.visitorId,
-      conversationId: data.conversationId,
-      sender: data.sender,
+      conversationId: conversation.id,
+      visitorId: conversation.visitorId,
+      from: data.from,
       type: data.type,
       data: data.data,
     });

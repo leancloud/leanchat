@@ -1,11 +1,13 @@
+import { Types } from 'mongoose';
+
 import { ConversationEvaluation } from './conversation.interface';
 
 export interface MessageSender {
   type: 'visitor' | 'operator';
-  id: string;
+  id: string | Types.ObjectId;
 }
 
-export type MessageType = 'message' | 'evaluate';
+export type MessageType = 'message' | 'evaluate' | 'closeConversation';
 
 export interface MessageData {
   text?: string;
@@ -13,9 +15,7 @@ export interface MessageData {
 }
 
 export interface CreateMessageData {
-  visitorId: string;
-  conversationId: string;
-  sender?: MessageSender;
+  from: MessageSender;
   type: MessageType;
   data: MessageData;
 }

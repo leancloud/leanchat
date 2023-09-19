@@ -122,7 +122,7 @@ export class VisitorGateway implements OnModuleInit, OnGatewayConnection {
     }
     await this.chatService.createMessage({
       conversationId: conversation.id,
-      sender: {
+      from: {
         type: 'visitor',
         id: visitorId,
       },

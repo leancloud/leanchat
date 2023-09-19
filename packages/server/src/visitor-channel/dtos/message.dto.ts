@@ -9,7 +9,7 @@ export class MessageDto {
 
   type: string;
 
-  sender: any;
+  from: any;
 
   data: any;
 
@@ -21,7 +21,7 @@ export class MessageDto {
     dto.visitorId = message.visitorId.toString();
     dto.conversationId = message.conversationId.toString();
     dto.type = message.type;
-    dto.sender = message.sender;
+    dto.from = message.from;
     dto.data = message.data;
     dto.createdAt = message.createdAt.toISOString();
     return dto;

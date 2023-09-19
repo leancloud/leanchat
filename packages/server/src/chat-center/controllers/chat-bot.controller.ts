@@ -26,13 +26,13 @@ export class ChatbotController {
   @Post()
   async createChatbot(@Body() data: CreateChatbotDto) {
     const result = this.chatbotService.validateChatbotNodes(
-      data.nodes,
+      data.nodes as any,
       data.edges,
     );
     if (!result) {
       throw new BadRequestException('机器人配置不合法');
     }
-    const chatbot = await this.chatbotService.createChatbot(data);
+    const chatbot = await this.chatbotService.createChatbot(data as any);
     return ChatbotDto.fromDocument(chatbot);
   }
 
@@ -57,7 +57,7 @@ export class ChatbotController {
     if (!chatbot) {
       throw new NotFoundException(`聊天机器人 ${id} 不存在`);
     }
-    await this.chatbotService.updateChatbot(chatbot, data);
+    await this.chatbotService.updateChatbot(chatbot, data as any);
     return ChatbotDto.fromDocument(chatbot);
   }
 }

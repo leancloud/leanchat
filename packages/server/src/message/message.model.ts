@@ -34,10 +34,7 @@ export class Message {
   type: string;
 
   @Prop()
-  from: {
-    type: string;
-    id: string;
-  };
+  from: any;
 
   @Prop()
   data: any;

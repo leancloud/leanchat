@@ -11,7 +11,7 @@ import {
 import { Request } from 'express';
 import { ZodValidationPipe } from 'nestjs-zod';
 
-import { OperatorService } from 'src/operator';
+import { OperatorService } from 'src/chat';
 import { OperatorDto } from '../dtos/operator';
 import { CreateSessionDto } from '../dtos/create-session.dto';
 
@@ -29,11 +29,7 @@ export class SessionController {
     if (!operator) {
       throw new UnauthorizedException(`客服 ${data.username} 不存在`);
     }
-    const passwordMatch = await this.operatorService.comparePassword(
-      operator.password!,
-      data.password,
-    );
-    if (!passwordMatch) {
+    if (!(await operator.comparePassword(data.password))) {
       throw new UnauthorizedException('用户名密码不匹配');
     }
     delete operator.password;
@@ -42,7 +38,6 @@ export class SessionController {
     req.session.uid = operator.id;
 
     const dto = OperatorDto.fromDocument(operator);
-    dto.status = await this.operatorService.getOperatorStatus(operator.id);
     return dto;
   }
 

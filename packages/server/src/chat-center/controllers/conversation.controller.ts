@@ -12,11 +12,17 @@ import {
 } from '@nestjs/common';
 import { ZodValidationPipe } from 'nestjs-zod';
 
-import { ChatService, ConversationService, MessageService } from 'src/chat';
+import {
+  ChatService,
+  ConversationService,
+  MessageService,
+  Operator,
+} from 'src/chat';
 import { AuthGuard } from '../guards/auth.guard';
 import { GetConversationsDto } from '../dtos/conversation/get-conversations.dto';
 import { GetMessagesDto, MessageDto } from '../dtos/message';
 import { ConversationDto, UpdateConversationDto } from '../dtos/conversation';
+import { CurrentOperator } from '../decorators/current-operator.decorator';
 
 @Controller('conversations')
 @UseGuards(AuthGuard)
@@ -70,7 +76,13 @@ export class ConversationController {
   }
 
   @Post(':id/close')
-  async closeConversation(@Param('id') id: string) {
-    await this.chatService.closeConversation(id);
+  async closeConversation(
+    @Param('id') id: string,
+    @CurrentOperator() operator: Operator,
+  ) {
+    await this.chatService.closeConversation(id, {
+      type: 'operator',
+      id: operator.id,
+    });
   }
 }
