@@ -19,4 +19,5 @@ export interface UpdateConversationData {
   operatorId?: string;
   evaluation?: ConversationEvaluation;
   closedAt?: Date;
+  queuedAt?: Date;
 }

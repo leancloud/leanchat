@@ -10,14 +10,19 @@ import {
   OperatorService,
   VisitorService,
 } from './services';
-import { AutoAssignProcessor } from './processors/auto-assign.processor';
+import { AssignQueuedProcessor, AutoAssignProcessor } from './processors';
 
 @Module({
   imports: [
     TypegooseModule.forFeature([Conversation, Message, Visitor, Operator]),
-    BullModule.registerQueue({
-      name: 'auto_assign_conversation',
-    }),
+    BullModule.registerQueue(
+      {
+        name: 'auto_assign_conversation',
+      },
+      {
+        name: 'assign_queued_conversation',
+      },
+    ),
   ],
   providers: [
     ConversationService,
@@ -26,6 +31,7 @@ import { AutoAssignProcessor } from './processors/auto-assign.processor';
     ChatService,
     OperatorService,
     AutoAssignProcessor,
+    AssignQueuedProcessor,
   ],
   exports: [
     ChatService,

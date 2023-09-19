@@ -14,6 +14,8 @@ export class AutoAssignProcessor {
     const operator = await this.chatService.getRandomReadyOperator();
     if (operator) {
       await this.chatService.assignConversation(conversationId, operator.id);
+    } else {
+      await this.chatService.enqueueConversation(conversationId);
     }
   }
 }

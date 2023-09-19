@@ -11,7 +11,11 @@ import { CreateMessageData } from '../interfaces/chat.interface';
 import { ChatError } from '../errors';
 import { ConversationService } from './conversation.service';
 import { MessageService } from './message.service';
-import { AutoAssignJobData, MessageSender } from '../interfaces';
+import {
+  AssignQueuedJobData,
+  AutoAssignJobData,
+  MessageSender,
+} from '../interfaces';
 import {
   ConversationCreatedEvent,
   OperatorStatusChangedEvent,
@@ -31,6 +35,9 @@ export class ChatService {
 
     @InjectQueue('auto_assign_conversation')
     private autoAssignQueue: Queue<AutoAssignJobData>,
+
+    @InjectQueue('assign_queued_conversation')
+    private assignQueuedQueue: Queue<AssignQueuedJobData>,
   ) {}
 
   async createMessage({ conversationId, from, data }: CreateMessageData) {
@@ -97,10 +104,25 @@ export class ChatService {
       from,
       data: {},
     });
+
+    if (conversation.operatorId) {
+      const operatorId = conversation.operatorId.toString();
+      await this.redis.hincrby('operator_workload', operatorId, -1);
+      await this.assignQueuedConversationToOperator(operatorId);
+    }
   }
 
   async setOperatorStatus(operatorId: string, status: string) {
     await this.redis.hset('operator_status', operatorId, status);
+
+    if (status === 'ready') {
+      const workload = await this.conversationService.getOpenConversationCount(
+        operatorId,
+      );
+      await this.redis.hset('operator_workload', operatorId, workload);
+      await this.assignQueuedConversationToOperator(operatorId);
+    }
+
     this.events.emit('operator.statusChanged', {
       operatorId,
       status,
@@ -177,26 +199,96 @@ export class ChatService {
     const conversation = await this.conversationService.getConversation(
       conversationId,
     );
-    if (!conversation) {
+    if (!conversation || conversation.operatorId?.equals(operatorId)) {
       return;
     }
+    const fromOperatorId = conversation.operatorId?.toString();
 
     await this.conversationService.updateConversation(conversationId, {
       operatorId,
     });
 
     const pl = this.redis.pipeline();
-    if (conversation.operatorId) {
-      pl.hincrby('operator_workload', conversation.operatorId.toString(), -1);
+    if (fromOperatorId) {
+      pl.hincrby('operator_workload', fromOperatorId, -1);
     }
     pl.hincrby('operator_workload', operatorId, 1);
+    pl.zrem('conversation_queue', conversation.id);
     await pl.exec();
+
+    if (fromOperatorId) {
+      // 为原客服重新分配会话
+      await this.assignQueuedConversationToOperator(fromOperatorId);
+    }
   }
 
   @OnEvent('conversation.created', { async: true })
-  addAutoAssignJob(payload: ConversationCreatedEvent) {
-    this.autoAssignQueue.add({
-      conversationId: payload.conversation.id,
+  async addAutoAssignJob({ conversation }: ConversationCreatedEvent) {
+    const queueSize = await this.redis.zcard('conversation_queue');
+    if (queueSize === 0) {
+      await this.autoAssignQueue.add({
+        conversationId: conversation.id,
+      });
+    } else {
+      await this.enqueueConversation(conversation.id);
+    }
+  }
+
+  async enqueueConversation(conversationId: string) {
+    const queuedAt = new Date();
+    const score = queuedAt.getTime();
+    const added = await this.redis.zadd(
+      'conversation_queue',
+      'NX',
+      score,
+      conversationId,
+    );
+    if (!added) {
+      return;
+    }
+    await this.conversationService.updateConversation(conversationId, {
+      queuedAt,
     });
+  }
+
+  async dequeueConversation() {
+    const [conversationId] = await this.redis.zpopmin('conversation_queue');
+    return conversationId;
+  }
+
+  async addAssignQueuedConversationJob(operatorId: string, maxCount: number) {
+    await this.assignQueuedQueue.add({ operatorId, maxCount });
+  }
+
+  async assignQueuedConversationToOperator(operatorId: string) {
+    const operator = await this.operatorService.getOperator(operatorId);
+    if (!operator) {
+      return;
+    }
+
+    const results = await this.redis
+      .pipeline()
+      .hget('operator_status', operator.id)
+      .hget('operator_workload', operator.id)
+      .exec();
+    if (!results) {
+      return;
+    }
+
+    const status = results[0][1] as string | null;
+    const workloadStr = results[1][1] as string | null;
+    if (status !== 'ready' || !workloadStr) {
+      return;
+    }
+
+    const workload = parseInt(workloadStr);
+    if (workload < 0) {
+      return;
+    }
+
+    const maxCount = operator.concurrency - workload;
+    if (maxCount > 0) {
+      await this.assignQueuedQueue.add({ operatorId, maxCount });
+    }
   }
 }

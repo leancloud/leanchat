@@ -37,6 +37,9 @@ export class Conversation {
   @Prop()
   closedAt?: Date;
 
+  @Prop()
+  queuedAt?: Date;
+
   createdAt: Date;
 
   updatedAt: Date;

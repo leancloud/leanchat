@@ -79,6 +79,7 @@ export class ConversationService {
             operatorId: data.operatorId,
             evaluation: data.evaluation,
             closedAt: data.closedAt,
+            queuedAt: data.queuedAt,
           },
         },
         {
@@ -95,5 +96,16 @@ export class ConversationService {
     }
 
     return conversation;
+  }
+
+  getOpenConversationCount(operatorId: string) {
+    return this.conversationModel
+      .count({
+        operatorId,
+        closedAt: {
+          $exists: false,
+        },
+      })
+      .exec();
   }
 }
