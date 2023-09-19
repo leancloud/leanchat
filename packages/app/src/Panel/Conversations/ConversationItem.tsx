@@ -48,7 +48,7 @@ export function ConversationItem({
 }: ConversationItemProps) {
   const visitorWaitedAt = useMemo(() => {
     if (!unreadAlert) return;
-    if (conversation.lastMessage?.from.type === 'visitor') {
+    if (conversation.lastMessage?.sender.type === 'visitor') {
       return conversation.lastMessage.createdAt;
     }
   }, [conversation.lastMessage, unreadAlert]);

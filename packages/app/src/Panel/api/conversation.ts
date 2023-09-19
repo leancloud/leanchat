@@ -37,10 +37,15 @@ export async function getConversationMessages(
 }
 
 export interface UpdateConversationData {
+  operatorId?: string;
   categoryId?: string;
 }
 
 export async function updateConversation(id: string, data: UpdateConversationData) {
   const res = await client.patch<Conversation>(`/conversations/${id}`, data);
   return res.data;
+}
+
+export async function closeConversation(id: string) {
+  await client.post(`/conversations/${id}/close`);
 }

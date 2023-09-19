@@ -19,6 +19,7 @@ import { Avatar } from '../components/Avatar';
 import { useOperators } from '../hooks/operator';
 import { ReassignModal } from './ReassignModal';
 import { QuickReply, QuickReplyRef } from './QuickReply';
+import { closeConversation, updateConversation } from '../api/conversation';
 
 interface OperatorLabelProps {
   operatorId: string;
@@ -73,8 +74,7 @@ export function Conversation({ conversationId }: ConversationProps) {
     socket.emit('message', {
       conversationId,
       data: {
-        type: 'text',
-        content: trimedContent,
+        text: trimedContent,
       },
     });
     setContent('');
@@ -84,16 +84,15 @@ export function Conversation({ conversationId }: ConversationProps) {
 
   const { mutate: joinConversation } = useMutation({
     mutationFn: () => {
-      return callRpc(socket, 'assignConversation', {
-        conversationId,
+      return updateConversation(conversationId, {
         operatorId: user!.id,
       });
     },
   });
 
-  const { mutate: closeConversation } = useMutation({
+  const { mutate: close } = useMutation({
     mutationFn: () => {
-      return callRpc(socket, 'closeConversation', { conversationId });
+      return closeConversation(conversationId);
     },
   });
 
@@ -116,6 +115,8 @@ export function Conversation({ conversationId }: ConversationProps) {
   if (!conversation) {
     return;
   }
+
+  const closed = conversation.status === 'closed';
 
   return (
     <ConversationContext.Provider value={{ conversation }}>
@@ -141,7 +142,7 @@ export function Conversation({ conversationId }: ConversationProps) {
               <Tooltip title="结束会话" placement="bottom" mouseEnterDelay={0.5}>
                 <button
                   className="text-[#969696] p-1 rounded transition-colors hover:bg-[#f7f7f7]"
-                  onClick={() => closeConversation()}
+                  onClick={() => close()}
                 >
                   <FiCheck className="w-5 h-5" />
                 </button>
@@ -188,7 +189,7 @@ export function Conversation({ conversationId }: ConversationProps) {
             )}
 
             <div className="p-2 border-b space-x-1">
-              <Button size="small" onClick={() => inviteEvaluation()}>
+              <Button size="small" disabled={closed} onClick={() => inviteEvaluation()}>
                 邀请评价
               </Button>
             </div>
@@ -197,8 +198,8 @@ export function Conversation({ conversationId }: ConversationProps) {
                 ref={textareaRef}
                 className="placeholder:!text-[#a8a8a8]"
                 autoSize={{ maxRows: 25 }}
-                placeholder="输入 / 选择快捷回复"
-                value={content}
+                placeholder={closed ? '会话已结束' : '输入 / 选择快捷回复'}
+                value={closed ? '' : content}
                 onChange={(e) => {
                   setContent(e.target.value);
                   setShowQuickReply(e.target.value.startsWith('/'));
@@ -209,7 +210,7 @@ export function Conversation({ conversationId }: ConversationProps) {
                     return;
                   }
                   if (e.key === 'Enter') {
-                    if (e.shiftKey) {
+                    if (closed || e.shiftKey) {
                       return;
                     }
                     e.preventDefault();
@@ -230,7 +231,7 @@ export function Conversation({ conversationId }: ConversationProps) {
               <Button
                 className="h-[34px] border-none"
                 type="primary"
-                disabled={content.trim() === ''}
+                disabled={content.trim() === '' || closed}
                 onClick={handleCreateMessage}
               >
                 发送
@@ -242,18 +243,6 @@ export function Conversation({ conversationId }: ConversationProps) {
                 <JoinConversationMask onJoin={joinConversation} />
               </Mask>
             )}
-
-            {conversation.operatorId && conversation.operatorId !== user.id && (
-              <Mask>
-                <div>
-                  <Button type="primary" onClick={() => joinConversation()}>
-                    抢接会话
-                  </Button>
-                </div>
-              </Mask>
-            )}
-
-            {conversation.status === 'solved' && <Mask>会话已结束</Mask>}
           </div>
         </div>
 

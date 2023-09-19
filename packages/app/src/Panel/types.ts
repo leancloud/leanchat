@@ -3,7 +3,7 @@ export interface Message {
   visitorId: string;
   conversationId: string;
   type: string;
-  from: any;
+  sender: any;
   data: any;
   createdAt: string;
 }
@@ -13,8 +13,8 @@ export interface Conversation {
   visitorId: string;
   operatorId?: string;
   lastMessage?: Message;
-  status: string;
   categoryId?: string;
+  status: string;
 }
 
 export interface Operator {

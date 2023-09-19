@@ -30,7 +30,7 @@ interface DateGroup {
 
 interface MessageGroup {
   type: 'messageGroup';
-  from: any;
+  sender: any;
   messages: IMessage[];
 }
 
@@ -58,11 +58,11 @@ function DateDivider({ date }: DateDividerProps) {
 
 interface MessageGroupProps {
   isLeft: boolean;
-  from: any;
+  sender: any;
   messages: IMessage[];
 }
 
-function MessageGroup({ from, isLeft, messages }: MessageGroupProps) {
+function MessageGroup({ sender, isLeft, messages }: MessageGroupProps) {
   return (
     <div
       className={cx('my-5 px-5 flex flex-col', {
@@ -70,7 +70,7 @@ function MessageGroup({ from, isLeft, messages }: MessageGroupProps) {
         'items-end': !isLeft,
       })}
     >
-      <div className={cx('text-xs px-1 mb-1')}>{isLeft ? '用户' : from.id}</div>
+      <div className={cx('text-xs px-1 mb-1')}>{isLeft ? '用户' : sender.id}</div>
       {messages.map((message) => (
         <div
           key={message.id}
@@ -79,7 +79,7 @@ function MessageGroup({ from, isLeft, messages }: MessageGroupProps) {
           })}
         >
           <Bubble className="" isVisitor={isLeft}>
-            {message.data.content}
+            {message.data.text}
           </Bubble>
           <div className="text-gray-500 text-xs">{dayjs(message.createdAt).format('HH:mm')}</div>
         </div>
@@ -112,7 +112,7 @@ function Bubble({ isVisitor, className, children }: BubbleProps) {
 }
 
 const systemMessages: Record<string, string> = {
-  evaluated: '用户已评价',
+  evaluate: '用户已评价',
 };
 
 interface LogMessageProps {
@@ -123,7 +123,7 @@ function LogMessage({ message }: LogMessageProps) {
   return (
     <div className="flex justify-center my-4">
       <div className="text-xs bg-[#e7e7e7] rounded-full px-3 py-1">
-        系统消息：{systemMessages[message.data.type]}
+        系统消息：{systemMessages[message.type]}
       </div>
     </div>
   );
@@ -193,14 +193,14 @@ export const MessageList = forwardRef<MessageListRef, MessageListProps>((props, 
           if (message.type === 'message') {
             const lastMessage = dateGroup.messages[dateGroup.messages.length - 1];
             if (lastMessage.type === 'messageGroup') {
-              if (lastMessage.from.id === message.from.id) {
+              if (lastMessage.sender.id === message.sender.id) {
                 lastMessage.messages.push(message);
                 return;
               }
             }
             dateGroup.messages.push({
               type: 'messageGroup',
-              from: message.from,
+              sender: message.sender,
               messages: [message],
             });
             return;
@@ -218,7 +218,7 @@ export const MessageList = forwardRef<MessageListRef, MessageListProps>((props, 
           messages: [
             {
               type: 'messageGroup',
-              from: message.from,
+              sender: message.sender,
               messages: [message],
             },
           ],
@@ -326,8 +326,8 @@ export const MessageList = forwardRef<MessageListRef, MessageListProps>((props, 
                 return (
                   <MessageGroup
                     key={item.messages[0].id}
-                    isLeft={item.from.type === 'visitor'}
-                    from={item.from}
+                    isLeft={item.sender.type === 'visitor'}
+                    sender={item.sender}
                     messages={item.messages}
                   />
                 );

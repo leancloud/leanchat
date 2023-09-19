@@ -31,8 +31,8 @@ export function useConversations(variables: ConversationsQueryVariables) {
       switch (variables.type) {
         case 'unassigned':
           return getConversations({
-            status: 'queued',
-            sort: 'queuedAt',
+            status: 'open',
+            operatorId: 'none',
             desc: true,
           });
         case 'solved':
@@ -42,12 +42,12 @@ export function useConversations(variables: ConversationsQueryVariables) {
           });
         case 'allOperators':
           return getConversations({
-            status: 'inProgress',
+            status: 'open',
             desc: true,
           });
         case 'operator':
           return getConversations({
-            status: 'inProgress',
+            status: 'open',
             operatorId: variables.operatorId,
             desc: true,
           });
@@ -125,8 +125,12 @@ export function useAutoPushNewMessage(socket: Socket) {
   }, [socket, queryClient]);
 }
 
-interface ConversationEvent {
+interface ConversationUpdatedEvent {
   conversation: Conversation;
+  data: {
+    operatorId?: string;
+    closedAt?: string;
+  };
 }
 
 export function useSubscribeConversations(socket: Socket) {
@@ -154,33 +158,32 @@ export function useSubscribeConversations(socket: Socket) {
       );
     };
 
-    const onConversationQueued = (e: ConversationEvent) => {
-      unshiftConversation({ type: 'unassigned' }, e.conversation);
+    const onConversationCreated = (conv: Conversation) => {
+      unshiftConversation({ type: 'unassigned' }, conv);
+      unshiftConversation({ type: 'allOperators' }, conv);
     };
 
-    const onConversationAssigned = (e: ConversationEvent) => {
-      removeConversation(e.conversation.id);
-      unshiftConversation({ type: 'allOperators' }, e.conversation);
-      unshiftConversation(
-        { type: 'operator', operatorId: e.conversation.operatorId! },
-        e.conversation,
-      );
-      setConversation(e.conversation);
+    const onConversationUpdated = (e: ConversationUpdatedEvent) => {
+      if (e.data.operatorId) {
+        removeConversation(e.conversation.id);
+        unshiftConversation({ type: 'allOperators' }, e.conversation);
+        unshiftConversation(
+          { type: 'operator', operatorId: e.conversation.operatorId! },
+          e.conversation,
+        );
+        setConversation(e.conversation);
+      }
+      if (e.data.closedAt) {
+        removeConversation(e.conversation.id);
+        setConversation(e.conversation);
+      }
     };
 
-    const onConversationClosed = (e: ConversationEvent) => {
-      removeConversation(e.conversation.id);
-      unshiftConversation({ type: 'solved' }, e.conversation);
-      setConversation(e.conversation);
-    };
-
-    socket.on('conversationQueued', onConversationQueued);
-    socket.on('conversationAssigned', onConversationAssigned);
-    socket.on('conversationClosed', onConversationClosed);
+    socket.on('conversationCreated', onConversationCreated);
+    socket.on('conversationUpdated', onConversationUpdated);
     return () => {
-      socket.off('conversationQueued', onConversationQueued);
-      socket.off('conversationAssigned', onConversationAssigned);
-      socket.off('conversationClosed', onConversationClosed);
+      socket.off('conversationCreated', onConversationCreated);
+      socket.off('conversationUpdated', onConversationUpdated);
     };
   }, [socket, queryClient]);
 }
