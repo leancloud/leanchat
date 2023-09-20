@@ -6,7 +6,10 @@ import { Redis } from 'ioredis';
 import _ from 'lodash';
 
 import { REDIS } from 'src/redis';
-import { ConversationEvaluation } from '../interfaces/conversation.interface';
+import {
+  ConversationEvaluation,
+  UpdateConversationData,
+} from '../interfaces/conversation.interface';
 import { CreateMessageData } from '../interfaces/chat.interface';
 import { ChatError } from '../errors';
 import { ConversationService } from './conversation.service';
@@ -51,11 +54,27 @@ export class ChatService {
       throw new ChatError('CONVERSATION_CLOSED');
     }
 
-    return this.messageService.createMessage(conversation, {
+    const message = await this.messageService.createMessage(conversation, {
       from,
       type: 'message',
       data,
     });
+
+    const updateConversationData: UpdateConversationData = {};
+    if (from.type === 'visitor') {
+      updateConversationData.visitorLastActivityAt = message.createdAt;
+    } else if (from.type === 'operator') {
+      updateConversationData.operatorLastActivityAt = message.createdAt;
+    }
+
+    if (!_.isEmpty(updateConversationData)) {
+      await this.conversationService.updateConversation(
+        conversation.id,
+        updateConversationData,
+      );
+    }
+
+    return message;
   }
 
   async evaluateConversation(

@@ -34,11 +34,17 @@ export class Conversation {
   @Prop({ _id: false })
   evaluation?: Evaluation;
 
-  @Prop()
+  @Prop({ index: true })
   closedAt?: Date;
 
   @Prop()
   queuedAt?: Date;
+
+  @Prop()
+  visitorLastActivityAt?: Date;
+
+  @Prop()
+  operatorLastActivityAt?: Date;
 
   createdAt: Date;
 

@@ -20,4 +20,6 @@ export interface UpdateConversationData {
   evaluation?: ConversationEvaluation;
   closedAt?: Date;
   queuedAt?: Date;
+  visitorLastActivityAt?: Date;
+  operatorLastActivityAt?: Date;
 }

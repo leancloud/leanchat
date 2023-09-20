@@ -2,6 +2,7 @@ import { Injectable } from '@nestjs/common';
 import { EventEmitter2 } from '@nestjs/event-emitter';
 import { InjectModel } from '@m8a/nestjs-typegoose';
 import { ReturnModelType } from '@typegoose/typegoose';
+import _ from 'lodash';
 
 import { Conversation } from '../models';
 import {
@@ -64,6 +65,11 @@ export class ConversationService {
   }
 
   async updateConversation(id: string, data: UpdateConversationData) {
+    data = _.omitBy(data, _.isUndefined);
+    if (_.isEmpty(data)) {
+      return;
+    }
+
     if (data.operatorId) {
       const operator = await this.operatorService.getOperator(data.operatorId);
       if (!operator) {
@@ -80,6 +86,8 @@ export class ConversationService {
             evaluation: data.evaluation,
             closedAt: data.closedAt,
             queuedAt: data.queuedAt,
+            visitorLastActivityAt: data.visitorLastActivityAt,
+            operatorLastActivityAt: data.operatorLastActivityAt,
           },
         },
         {

@@ -96,6 +96,15 @@ export class ChatGateway
 
   @OnEvent('conversation.updated', { async: true })
   async handleConversationUpdated(payload: ConversationUpdatedEvent) {
+    const subscribedFields: (keyof ConversationUpdatedEvent['data'])[] = [
+      'operatorId',
+      'evaluation',
+      'closedAt',
+    ];
+    if (!subscribedFields.some((field) => field in payload.data)) {
+      return;
+    }
+
     const dto = ConversationDto.fromDocument(payload.conversation);
     const lastMessage = await this.messageService.getLastMessage(
       payload.conversation.id,
@@ -105,7 +114,7 @@ export class ChatGateway
     }
     this.server.emit('conversationUpdated', {
       conversation: dto,
-      data: payload.data,
+      fields: Object.keys(payload.data),
     });
   }
 

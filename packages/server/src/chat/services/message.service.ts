@@ -24,9 +24,12 @@ export class MessageService {
       data: data.data,
     });
     await message.save();
+
     this.events.emit('message.created', {
       message,
     } satisfies MessageCreatedEvent);
+
+    return message;
   }
 
   async getMessages({
