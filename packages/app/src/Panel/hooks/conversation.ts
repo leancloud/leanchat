@@ -169,12 +169,11 @@ export function useSubscribeConversations(socket: Socket) {
           { type: 'operator', operatorId: e.conversation.operatorId! },
           e.conversation,
         );
-        setConversation(e.conversation);
       }
       if (e.fields.includes('closedAt')) {
         removeConversation(e.conversation.id);
-        setConversation(e.conversation);
       }
+      setConversation(e.conversation);
     };
 
     socket.on('conversationCreated', onConversationCreated);
