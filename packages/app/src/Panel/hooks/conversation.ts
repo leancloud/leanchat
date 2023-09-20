@@ -128,10 +128,7 @@ export function useAutoPushNewMessage(socket: Socket) {
 
 interface ConversationUpdatedEvent {
   conversation: Conversation;
-  data: {
-    operatorId?: string;
-    closedAt?: string;
-  };
+  fields: string[];
 }
 
 export function useSubscribeConversations(socket: Socket) {
@@ -165,7 +162,7 @@ export function useSubscribeConversations(socket: Socket) {
     };
 
     const onConversationUpdated = (e: ConversationUpdatedEvent) => {
-      if (e.data.operatorId) {
+      if (e.fields.includes('operatorId')) {
         removeConversation(e.conversation.id);
         unshiftConversation({ type: 'allOperators' }, e.conversation);
         unshiftConversation(
@@ -174,7 +171,7 @@ export function useSubscribeConversations(socket: Socket) {
         );
         setConversation(e.conversation);
       }
-      if (e.data.closedAt) {
+      if (e.fields.includes('closedAt')) {
         removeConversation(e.conversation.id);
         setConversation(e.conversation);
       }
