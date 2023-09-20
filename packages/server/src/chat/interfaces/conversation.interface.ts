@@ -1,3 +1,5 @@
+import { MessageSender } from './message.interface';
+
 export interface CreateConversationData {
   channel: string;
   visitorId: string;
@@ -22,4 +24,15 @@ export interface UpdateConversationData {
   queuedAt?: Date;
   visitorLastActivityAt?: Date;
   operatorLastActivityAt?: Date;
+}
+
+export interface GetInactiveConversationIdsOptions {
+  lastActivityBefore: Date;
+  limit: number;
+}
+
+export interface CloseConversationOptions {
+  conversationId: string;
+  by: MessageSender;
+  reason?: string;
 }

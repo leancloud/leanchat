@@ -3,8 +3,8 @@ import { Types } from 'mongoose';
 import { ConversationEvaluation } from './conversation.interface';
 
 export interface MessageSender {
-  type: 'visitor' | 'operator';
-  id: string | Types.ObjectId;
+  type: 'visitor' | 'operator' | 'system';
+  id?: string | Types.ObjectId;
 }
 
 export type MessageType = 'message' | 'evaluate' | 'closeConversation';
@@ -12,6 +12,7 @@ export type MessageType = 'message' | 'evaluate' | 'closeConversation';
 export interface MessageData {
   text?: string;
   evaluation?: ConversationEvaluation;
+  reason?: string;
 }
 
 export interface CreateMessageData {

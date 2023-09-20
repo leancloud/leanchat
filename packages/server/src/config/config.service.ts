@@ -4,7 +4,7 @@ import { Injectable } from '@nestjs/common';
 import { LRUCache } from 'lru-cache';
 
 import { Config } from './config.model';
-import { GreetingConfig } from './interfaces';
+import { AutoCloseConversationConfig, GreetingConfig } from './interfaces';
 
 @Injectable()
 export class ConfigService {
@@ -56,5 +56,13 @@ export class ConfigService {
 
   setGreetingConfig(value: GreetingConfig) {
     return this.setConfig('greeting', value);
+  }
+
+  setAutoCloseConversationConfig(value: AutoCloseConversationConfig) {
+    return this.setConfig('autoCloseConversation', value);
+  }
+
+  getAutoCloseConversationConfig() {
+    return this.getConfig<AutoCloseConversationConfig>('autoCloseConversation');
   }
 }

@@ -8,6 +8,7 @@ import { Conversation } from '../models';
 import {
   CreateConversationData,
   GetConversationOptions,
+  GetInactiveConversationIdsOptions,
   UpdateConversationData,
 } from '../interfaces';
 import { ConversationCreatedEvent, ConversationUpdatedEvent } from '../events';
@@ -62,6 +63,37 @@ export class ConversationService {
     query.sort({ createdAt: desc ? 1 : -1 });
     query.limit(limit);
     return query.exec();
+  }
+
+  async getInactiveConversationIds({
+    lastActivityBefore,
+    limit,
+  }: GetInactiveConversationIdsOptions) {
+    const results = await this.conversationModel
+      .aggregate([
+        {
+          $match: {
+            closedAt: { $exists: false },
+            $expr: {
+              $gte: ['$operatorLastActivityAt', '$visitorLastActivityAt'],
+            },
+            visitorLastActivityAt: {
+              $lte: lastActivityBefore,
+            },
+          },
+        },
+        {
+          $limit: limit,
+        },
+        {
+          $project: {
+            _id: 1,
+          },
+        },
+      ])
+      .exec();
+
+    return results.map((result) => result._id.toString()) as string[];
   }
 
   async updateConversation(id: string, data: UpdateConversationData) {

@@ -6,7 +6,7 @@ import { Redis } from 'ioredis';
 import { ConversationService } from 'src/conversation';
 import { MessageService } from 'src/message';
 import { REDIS } from 'src/redis';
-import { ChatConversationService } from 'src/chat-center/services';
+import { ChatConversationService } from 'src/chat-center/services/chat-conversation.service';
 import { QUEUE_CHATBOT_PROCESS } from '../constants';
 import {
   ChatbotNode,

@@ -106,9 +106,12 @@ export class ConversationController {
     @Param('id') id: string,
     @CurrentOperator() operator: Operator,
   ) {
-    await this.chatService.closeConversation(id, {
-      type: 'operator',
-      id: operator.id,
+    await this.chatService.closeConversation({
+      conversationId: id,
+      by: {
+        type: 'operator',
+        id: operator.id,
+      },
     });
   }
 

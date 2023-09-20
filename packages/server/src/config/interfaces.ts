@@ -4,3 +4,7 @@ export interface GreetingConfig {
     text: string;
   };
 }
+
+export interface AutoCloseConversationConfig {
+  timeout: number;
+}

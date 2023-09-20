@@ -7,6 +7,7 @@ import _ from 'lodash';
 
 import { REDIS } from 'src/redis';
 import {
+  CloseConversationOptions,
   ConversationEvaluation,
   UpdateConversationData,
 } from '../interfaces/conversation.interface';
@@ -14,11 +15,7 @@ import { CreateMessageData } from '../interfaces/chat.interface';
 import { ChatError } from '../errors';
 import { ConversationService } from './conversation.service';
 import { MessageService } from './message.service';
-import {
-  AssignQueuedJobData,
-  AutoAssignJobData,
-  MessageSender,
-} from '../interfaces';
+import { AssignQueuedJobData, AutoAssignJobData } from '../interfaces';
 import {
   ConversationCreatedEvent,
   OperatorStatusChangedEvent,
@@ -104,7 +101,11 @@ export class ChatService {
     });
   }
 
-  async closeConversation(conversationId: string, from: MessageSender) {
+  async closeConversation({
+    conversationId,
+    by,
+    reason,
+  }: CloseConversationOptions) {
     const conversation = await this.conversationService.getConversation(
       conversationId,
     );
@@ -122,8 +123,8 @@ export class ChatService {
     });
     await this.messageService.createMessage(conversation, {
       type: 'closeConversation',
-      from,
-      data: {},
+      from: by,
+      data: { reason },
     });
 
     if (conversation.operatorId) {
