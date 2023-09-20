@@ -15,6 +15,7 @@ import { FaUserCheck } from 'react-icons/fa';
 import { MdAccountCircle } from 'react-icons/md';
 import { BiBot } from 'react-icons/bi';
 import { IoFlashOutline } from 'react-icons/io5';
+import { BsFillChatLeftDotsFill } from 'react-icons/bs';
 import cx from 'classnames';
 
 import { NavButton, NavMenu } from '../components/NavMenu';
@@ -22,6 +23,7 @@ import { ChatBots, NewChatBot, ChatBotDetail } from './ChatBots';
 import { Operators, NewOperator, EditOperator } from './Team/Operators';
 import { Categories } from './Categories';
 import { QuickReplies } from './QuickReplies';
+import { ChatConfig } from './ChatConfig';
 
 interface NavSection {
   name: string;
@@ -61,6 +63,11 @@ const navs: NavSection[] = [
   {
     name: '通用',
     items: [
+      {
+        icon: BsFillChatLeftDotsFill,
+        name: '聊天设置',
+        path: 'chat',
+      },
       {
         icon: HiUserGroup,
         name: '团队',
@@ -180,6 +187,7 @@ export default function Settings() {
         <Route path="chat-bots">
           <Route index element={<ChatBots />} />
         </Route>
+        <Route path="chat" element={<ChatConfig />} />
         <Route path="team/operators">
           <Route index element={<Operators />} />
           <Route path="new" element={<NewOperator />} />

@@ -108,7 +108,7 @@ function Bubble({ isVisitor, className, children }: BubbleProps) {
         className,
       )}
     >
-      <div className="min-w-[16px] whitespace-pre-line break-words">{children}</div>
+      <div className="min-w-[16px] whitespace-pre-line break-all">{children}</div>
     </div>
   );
 }
