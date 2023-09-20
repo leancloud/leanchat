@@ -138,7 +138,16 @@ function EvaluateMessage({ message }: MessageComponentProps) {
 function CloseConversation({ message }: MessageComponentProps) {
   return (
     <LogMessage>
-      <div>{message.from.type === 'operator' ? '客服' : '用户'}关闭了会话</div>
+      <div>
+        {
+          {
+            visitor: '用户',
+            operator: '客服',
+            system: '系统',
+          }[message.from.type]
+        }
+        关闭了会话
+      </div>
     </LogMessage>
   );
 }
