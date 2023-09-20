@@ -19,6 +19,7 @@ export interface ConversationEvaluation {
 
 export interface UpdateConversationData {
   operatorId?: string;
+  categoryId?: string;
   evaluation?: ConversationEvaluation;
   closedAt?: Date;
   queuedAt?: Date;

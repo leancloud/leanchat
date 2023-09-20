@@ -98,7 +98,7 @@ export class ConversationController {
     if (!conversation) {
       throw new NotFoundException(`会话 ${id} 不存在`);
     }
-    // await this.conversationService.updateConversation(id, data);
+    await this.conversationService.updateConversation(id, data);
   }
 
   @Post(':id/close')

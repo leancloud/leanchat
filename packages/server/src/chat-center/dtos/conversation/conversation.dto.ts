@@ -7,12 +7,12 @@ export class ConversationDto {
 
   operatorId?: string;
 
+  categoryId?: string;
+
   evaluation?: {
     star: number;
     feedback: string;
   };
-
-  categoryId?: string;
 
   status: string;
 
@@ -27,6 +27,7 @@ export class ConversationDto {
     dto.id = conv.id;
     dto.visitorId = conv.visitorId.toString();
     dto.operatorId = conv.operatorId?.toString();
+    dto.categoryId = conv.categoryId?.toString();
     dto.evaluation = conv.evaluation;
     dto.status = conv.closedAt ? 'closed' : 'open';
     dto.createdAt = conv.createdAt.toISOString();

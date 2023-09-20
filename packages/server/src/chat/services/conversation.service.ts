@@ -115,6 +115,7 @@ export class ConversationService {
         {
           $set: {
             operatorId: data.operatorId,
+            categoryId: data.categoryId,
             evaluation: data.evaluation,
             closedAt: data.closedAt,
             queuedAt: data.queuedAt,

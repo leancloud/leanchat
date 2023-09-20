@@ -31,6 +31,9 @@ export class Conversation {
   @Prop()
   operatorId?: Types.ObjectId;
 
+  @Prop()
+  categoryId?: Types.ObjectId;
+
   @Prop({ _id: false })
   evaluation?: Evaluation;
 

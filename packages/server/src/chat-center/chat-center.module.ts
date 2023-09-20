@@ -1,62 +1,41 @@
 import { MiddlewareConsumer, Module, NestModule } from '@nestjs/common';
 import { BullModule } from '@nestjs/bull';
 
-import { VisitorModule } from 'src/visitor/visitor.module';
-import { ConversationModule } from 'src/conversation/conversation.module';
-import { OperatorModule } from 'src/operator/operator.module';
-import { MessageModule } from 'src/message/message.module';
-import { ChatbotModule } from 'src/chatbot';
 import { CategoryModule } from 'src/category';
 import { QuickReplyModule } from 'src/quick-reply';
-import { SkillGroupModule } from 'src/skill-group';
 import { ChatGateway } from './chat.gateway';
-import { AssignConversationProcessor } from './processors/assign-conversation.processor';
 import { CurrentOperatorMiddleware } from './middlewares/current-operator.middleware';
-import { AssignService, ChatConversationService } from './services';
+import { AutoCloseConversationService } from './services';
 import {
   CategoryController,
-  ChatbotController,
+  ConfigController,
   ConversationController,
   OperatorController,
   QuickReplyController,
   SessionController,
-  SkillGroupController,
-  StatisticsController,
   VisitorController,
 } from './controllers';
+import { ChatModule } from 'src/chat';
 
 @Module({
   imports: [
     BullModule.registerQueue({
       name: 'assign_conversation',
     }),
-    VisitorModule,
-    ConversationModule,
-    OperatorModule,
-    MessageModule,
-    ChatbotModule,
+    ChatModule,
     CategoryModule,
     QuickReplyModule,
-    SkillGroupModule,
   ],
-  providers: [
-    ChatGateway,
-    AssignConversationProcessor,
-    AssignService,
-    ChatConversationService,
-  ],
+  providers: [ChatGateway, AutoCloseConversationService],
   controllers: [
     OperatorController,
     SessionController,
     ConversationController,
     VisitorController,
-    ChatbotController,
     CategoryController,
     QuickReplyController,
-    StatisticsController,
-    SkillGroupController,
+    ConfigController,
   ],
-  exports: [ChatConversationService],
 })
 export class ChatCenterModule implements NestModule {
   configure(consumer: MiddlewareConsumer) {

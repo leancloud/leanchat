@@ -98,6 +98,7 @@ export class ChatGateway
   async handleConversationUpdated(payload: ConversationUpdatedEvent) {
     const subscribedFields: (keyof ConversationUpdatedEvent['data'])[] = [
       'operatorId',
+      'categoryId',
       'evaluation',
       'closedAt',
     ];
