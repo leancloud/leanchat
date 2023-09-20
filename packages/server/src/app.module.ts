@@ -3,7 +3,10 @@ import { Module } from '@nestjs/common';
 import { ServeStaticModule } from '@nestjs/serve-static';
 import { EventEmitterModule } from '@nestjs/event-emitter';
 import { BullModule } from '@nestjs/bull';
-import { ConfigModule, ConfigService } from '@nestjs/config';
+import {
+  ConfigModule as NestConfigModule,
+  ConfigService as NestConfigService,
+} from '@nestjs/config';
 import { ScheduleModule } from '@nestjs/schedule';
 import { TypegooseModule } from '@m8a/nestjs-typegoose';
 
@@ -14,7 +17,7 @@ import { ChatCenterModule } from './chat-center/chat-center.module';
 import { VisitorChannelModule } from './visitor-channel/visitor-channel.module';
 import { LeanCloudModule } from './leancloud/leancloud.module';
 import { parseRedisUrl } from './redis/utils';
-import { mongodbConfig, redisConfig } from './config';
+import { ConfigModule, mongodbConfig, redisConfig } from './config';
 
 @Module({
   imports: [
@@ -22,7 +25,7 @@ import { mongodbConfig, redisConfig } from './config';
       rootPath: path.join(__dirname, 'public'),
       exclude: ['/api/(.*)'],
     }),
-    ConfigModule.forRoot({
+    NestConfigModule.forRoot({
       isGlobal: true,
       cache: true,
       expandVariables: true,
@@ -30,8 +33,8 @@ import { mongodbConfig, redisConfig } from './config';
     }),
     EventEmitterModule.forRoot(),
     BullModule.forRootAsync({
-      inject: [ConfigService],
-      useFactory: (config: ConfigService) => {
+      inject: [NestConfigService],
+      useFactory: (config: NestConfigService) => {
         return {
           prefix: 'chat:queue',
           redis: parseRedisUrl(config.getOrThrow('redis.queue')),
@@ -44,8 +47,8 @@ import { mongodbConfig, redisConfig } from './config';
     }),
     ScheduleModule.forRoot(),
     TypegooseModule.forRootAsync({
-      inject: [ConfigService],
-      useFactory: (config: ConfigService) => {
+      inject: [NestConfigService],
+      useFactory: (config: NestConfigService) => {
         return {
           uri: config.getOrThrow('mongodb.url'),
           // autoIndex: false,
@@ -54,6 +57,7 @@ import { mongodbConfig, redisConfig } from './config';
       },
     }),
 
+    ConfigModule,
     LeanCloudModule,
     RedisModule,
     ChatCenterModule,

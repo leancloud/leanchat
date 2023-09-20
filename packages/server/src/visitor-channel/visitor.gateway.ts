@@ -11,6 +11,7 @@ import { OnEvent } from '@nestjs/event-emitter';
 import { Server, Socket } from 'socket.io';
 import { ZodValidationPipe } from 'nestjs-zod';
 
+import { ConfigService } from 'src/config';
 import { InviteEvaluationEvent } from 'src/event';
 import {
   ChatService,
@@ -27,6 +28,7 @@ import { EvaluationDto } from './dtos/evaluation.dto';
 import { VisitorChannelService } from './visitor-channel.service';
 import { MessageDto } from './dtos/message.dto';
 import { ConversationDto } from './dtos/conversation.dto';
+import { WidgetInitialized } from './interfaces';
 
 @WebSocketGateway()
 @UsePipes(ZodValidationPipe)
@@ -40,6 +42,7 @@ export class VisitorGateway implements OnModuleInit, OnGatewayConnection {
     private visitorService: VisitorService,
     private conversationService: ConversationService,
     private messageService: MessageService,
+    private configService: ConfigService,
   ) {}
 
   onModuleInit() {
@@ -70,16 +73,20 @@ export class VisitorGateway implements OnModuleInit, OnGatewayConnection {
     const visitorId = socket.data.id;
     socket.join(visitorId);
 
+    const initData: WidgetInitialized = {};
+
+    const greeting = await this.configService.getGreetingConfig();
+    if (greeting && greeting.enabled) {
+      initData.greeting = greeting.message;
+    }
+
     const visitor = await this.visitorService.getVisitor(visitorId);
     if (visitor && visitor.currentConversationId) {
       const conversation = await this.conversationService.getConversation(
         visitor.currentConversationId.toString(),
       );
       if (conversation) {
-        socket.emit(
-          'currentConversation',
-          ConversationDto.fromDocument(conversation),
-        );
+        initData.conversation = ConversationDto.fromDocument(conversation);
       }
     }
 
@@ -90,8 +97,10 @@ export class VisitorGateway implements OnModuleInit, OnGatewayConnection {
       limit: 25,
     });
     if (messages.length) {
-      socket.emit('messages', messages.reverse().map(MessageDto.fromDocument));
+      initData.messages = messages.reverse().map(MessageDto.fromDocument);
     }
+
+    socket.emit('initialized', initData);
   }
 
   @SubscribeMessage('message')
