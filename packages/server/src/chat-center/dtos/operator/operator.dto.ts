@@ -1,4 +1,4 @@
-import { Operator } from 'src/operator';
+import { Operator } from 'src/chat';
 
 export class OperatorDto {
   id: string;
