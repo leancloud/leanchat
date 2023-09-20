@@ -1,6 +1,6 @@
 import { MiddlewareConsumer, Module, NestModule } from '@nestjs/common';
-import { BullModule } from '@nestjs/bull';
 
+import { ChatModule } from 'src/chat';
 import { CategoryModule } from 'src/category';
 import { QuickReplyModule } from 'src/quick-reply';
 import { ChatGateway } from './chat.gateway';
@@ -15,17 +15,9 @@ import {
   SessionController,
   VisitorController,
 } from './controllers';
-import { ChatModule } from 'src/chat';
 
 @Module({
-  imports: [
-    BullModule.registerQueue({
-      name: 'assign_conversation',
-    }),
-    ChatModule,
-    CategoryModule,
-    QuickReplyModule,
-  ],
+  imports: [ChatModule, CategoryModule, QuickReplyModule],
   providers: [ChatGateway, AutoCloseConversationService],
   controllers: [
     OperatorController,
