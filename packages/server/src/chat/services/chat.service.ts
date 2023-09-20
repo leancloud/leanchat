@@ -96,6 +96,8 @@ export class ChatService {
       return;
     }
 
+    await this.redis.zrem('conversation_queue', conversation.id);
+
     await this.conversationService.updateConversation(conversationId, {
       closedAt: new Date(),
     });

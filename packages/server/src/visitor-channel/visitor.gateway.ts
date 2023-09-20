@@ -75,11 +75,6 @@ export class VisitorGateway implements OnModuleInit, OnGatewayConnection {
 
     const initData: WidgetInitialized = {};
 
-    const greeting = await this.configService.getGreetingConfig();
-    if (greeting && greeting.enabled) {
-      initData.greeting = greeting.message;
-    }
-
     const visitor = await this.visitorService.getVisitor(visitorId);
     if (visitor && visitor.currentConversationId) {
       const conversation = await this.conversationService.getConversation(
@@ -90,14 +85,22 @@ export class VisitorGateway implements OnModuleInit, OnGatewayConnection {
       }
     }
 
+    const messageCount = 25;
     const messages = await this.messageService.getMessages({
       visitorId,
       type: ['message', 'evaluate'],
       desc: true,
-      limit: 25,
+      limit: messageCount,
     });
-    if (messages.length) {
-      initData.messages = messages.reverse().map(MessageDto.fromDocument);
+    initData.messages = messages.reverse().map(MessageDto.fromDocument);
+
+    if (messages.length < messageCount) {
+      const greeting = await this.configService.getGreetingConfig();
+      if (greeting && greeting.enabled) {
+        initData.messages.unshift(
+          MessageDto.fromText('greeting', greeting.message.text),
+        );
+      }
     }
 
     socket.emit('initialized', initData);

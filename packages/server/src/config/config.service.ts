@@ -16,7 +16,7 @@ export class ConfigService {
   constructor() {
     this.cache = new LRUCache({
       max: 100,
-      ttl: 1000 * 60 * 5,
+      ttl: 1000 * 10,
     });
   }
 
