@@ -13,13 +13,11 @@ import {
 import { HiUserGroup, HiTag } from 'react-icons/hi2';
 import { FaUserCheck } from 'react-icons/fa';
 import { MdAccountCircle } from 'react-icons/md';
-import { BiBot } from 'react-icons/bi';
 import { IoFlashOutline } from 'react-icons/io5';
 import { BsFillChatLeftDotsFill } from 'react-icons/bs';
 import cx from 'classnames';
 
 import { NavButton, NavMenu } from '../components/NavMenu';
-import { ChatBots, NewChatBot, ChatBotDetail } from './ChatBots';
 import { Operators, NewOperator, EditOperator } from './Team/Operators';
 import { Categories } from './Categories';
 import { QuickReplies } from './QuickReplies';
@@ -47,16 +45,6 @@ const navs: NavSection[] = [
         icon: MdAccountCircle,
         name: '账号',
         path: 'account',
-      },
-    ],
-  },
-  {
-    name: '自动化',
-    items: [
-      {
-        icon: BiBot,
-        name: '聊天机器人',
-        path: 'chat-bots',
       },
     ],
   },
@@ -184,9 +172,6 @@ export default function Settings() {
         <Route path="account">
           <Route index element="Todo" />
         </Route>
-        <Route path="chat-bots">
-          <Route index element={<ChatBots />} />
-        </Route>
         <Route path="chat" element={<ChatConfig />} />
         <Route path="team/operators">
           <Route index element={<Operators />} />
@@ -196,8 +181,6 @@ export default function Settings() {
         <Route path="categories" element={<Categories />} />
         <Route path="quick-replies" element={<QuickReplies />} />
       </Route>
-      <Route path="chat-bots/new" element={<NewChatBot />} />
-      <Route path="chat-bots/:id" element={<ChatBotDetail />} />
       <Route path="*" element={<Navigate to="account" replace />} />
     </Routes>
   );

@@ -33,30 +33,6 @@ export interface Operator {
   status: string;
 }
 
-export interface ChatBotNode {
-  id: string;
-  type: string;
-  position?: {
-    x: number;
-    y: number;
-  };
-  [key: string]: any;
-}
-
-export interface ChatBotEdge {
-  sourceNode: string;
-  sourcePin: string;
-  targetNode: string;
-  targetPin: string;
-}
-
-export interface ChatBot {
-  id: string;
-  name: string;
-  nodes: ChatBotNode[];
-  edges: ChatBotEdge[];
-}
-
 export interface Category {
   id: string;
   name: string;
@@ -67,10 +43,4 @@ export interface QuickReply {
   id: string;
   content: string;
   tags?: string[];
-}
-
-export interface SkillGroup {
-  id: string;
-  name: string;
-  memberIds: string[];
 }
