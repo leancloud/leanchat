@@ -82,7 +82,14 @@ export function Chat({ children }: ChatProps) {
 
   useEvent(socket, 'signedUp', ({ token }) => setToken(token));
   useEvent(socket, 'currentConversation', setConversation);
-  useEvent(socket, 'messages', setMessages);
+  useEvent(socket, 'initialized', (data) => {
+    if (data.conversation) {
+      setConversation(data.conversation);
+    }
+    if (data.messages) {
+      setMessages(data.messages);
+    }
+  });
 
   useEffect(() => {
     if (!socket) return;

@@ -14,7 +14,6 @@ export interface Message {
     id: string;
   };
   data: any;
-  createdAt: string;
 }
 
 export interface EvaluateData {

@@ -29,7 +29,7 @@ function TextMessage({ children, position = 'left' }: TextMessageProps) {
     >
       <div
         className={cx(
-          'bg-white text-[#6c6c6c] p-2 inline-block max-w-[85%] rounded-md min-w-[32px]',
+          'bg-white text-[#6c6c6c] p-2 inline-block max-w-[85%] rounded-md min-w-[32px] whitespace-pre-line break-all',
           {
             'rounded-bl-none': position === 'left',
             'rounded-br-none !bg-[#CEF2FF] text-black': position === 'right',
