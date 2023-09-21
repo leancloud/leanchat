@@ -3,7 +3,7 @@ import AV from 'leancloud-storage';
 AV.init({
   appId: import.meta.env.VITE_LEANCLOUD_APP_ID,
   appKey: import.meta.env.VITE_LEANCLOUD_APP_KEY,
-  serverURL: import.meta.env.VITE_LEANCLOUD_API_SERVER,
+  serverURL: import.meta.env.VITE_LEANCLOUD_API_HOST,
 });
 
 interface UploadFileOptions {

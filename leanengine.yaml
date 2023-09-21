@@ -8,8 +8,10 @@ install:
     - pnpm-workspace.yaml
   - pnpm install
 
+exposeEnvironmentsOnBuild: true
+
 build:
-  - (cd packages/app && pnpm build)
+  - (cd packages/app && pnpm genenv && pnpm build)
   - (cd packages/server && pnpm build)
   - (cd packages/widget && pnpm build)
   - cp -r packages/app/dist packages/server/dist/public
