@@ -20,12 +20,13 @@ import {
   ConversationUpdatedEvent,
   OperatorStatusChangedEvent,
   MessageCreatedEvent,
+  MessageData,
   MessageService,
 } from 'src/chat';
+import { LeanCloudService } from 'src/leancloud';
 import { WsInterceptor } from 'src/common/interceptors';
-import { CreateMessageDto } from './dtos/create-message.dto';
 import { ConversationDto } from './dtos/conversation';
-import { MessageDto } from './dtos/message';
+import { CreateMessageDto, MessageDto } from './dtos/message';
 
 @WebSocketGateway({ namespace: 'o' })
 @UsePipes(ZodValidationPipe)
@@ -40,6 +41,7 @@ export class ChatGateway
     private conversationService: ConversationService,
     private messageService: MessageService,
     private chatService: ChatService,
+    private leancloudService: LeanCloudService,
   ) {}
 
   onModuleInit() {
@@ -76,14 +78,26 @@ export class ChatGateway
       return;
     }
 
-    await this.chatService.createMessage({
-      conversationId: conversation.id,
-      from: {
-        type: 'operator',
-        id: operatorId,
-      },
-      data: data.data,
-    });
+    const messageData: MessageData = {};
+    if (data.data.text) {
+      messageData.text = data.data.text;
+    } else if (data.data.file) {
+      const file = await this.leancloudService.getFile(data.data.file.id);
+      if (file) {
+        messageData.file = file;
+      }
+    }
+
+    if (Object.keys(messageData)) {
+      await this.chatService.createMessage({
+        conversationId: conversation.id,
+        from: {
+          type: 'operator',
+          id: operatorId,
+        },
+        data: messageData,
+      });
+    }
   }
 
   @OnEvent('conversation.created', { async: true })

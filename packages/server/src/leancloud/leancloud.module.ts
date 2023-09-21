@@ -1,8 +1,14 @@
-import { Module, OnModuleInit } from '@nestjs/common';
+import { Global, Module, OnModuleInit } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import AV from 'leancloud-storage';
 
-@Module({})
+import { LeanCloudService } from './leancloud.service';
+
+@Global()
+@Module({
+  providers: [LeanCloudService],
+  exports: [LeanCloudService],
+})
 export class LeanCloudModule implements OnModuleInit {
   constructor(private configService: ConfigService) {}
 

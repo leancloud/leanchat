@@ -1,5 +1,6 @@
 import { Types } from 'mongoose';
 
+import { LeanCloudFile } from 'src/leancloud';
 import { ConversationEvaluation } from './conversation.interface';
 
 export interface MessageSender {
@@ -11,6 +12,7 @@ export type MessageType = 'message' | 'evaluate' | 'closeConversation';
 
 export interface MessageData {
   text?: string;
+  file?: LeanCloudFile;
   evaluation?: ConversationEvaluation;
   reason?: string;
 }

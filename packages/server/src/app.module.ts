@@ -15,7 +15,7 @@ import { AppService } from './app.service';
 import { RedisModule } from './redis/redis.module';
 import { ChatCenterModule } from './chat-center/chat-center.module';
 import { VisitorChannelModule } from './visitor-channel/visitor-channel.module';
-import { LeanCloudModule } from './leancloud/leancloud.module';
+import { LeanCloudModule } from './leancloud';
 import { parseRedisUrl } from './redis/utils';
 import { ConfigModule, mongodbConfig, redisConfig } from './config';
 
