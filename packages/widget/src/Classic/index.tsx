@@ -10,6 +10,7 @@ import {
   FaHeadset,
   FaArrowLeft,
   FaPlus,
+  FaFile,
 } from 'react-icons/fa6';
 import cx from 'classnames';
 import { useChat } from '../chat';
@@ -56,6 +57,35 @@ function LogMessage({ content }: LogMessageProps) {
   );
 }
 
+interface FileMessageProps {
+  file: {
+    name: string;
+    mime?: string;
+    size?: number;
+    url: string;
+  };
+}
+
+function FileMessage({ file }: FileMessageProps) {
+  if (file.mime && file.mime.startsWith('image/')) {
+    return (
+      <a href={file.url} target="_blank">
+        <img className="w-[100px] h-[100px] object-contain" src={file.url} />
+      </a>
+    );
+  }
+  return (
+    <a
+      className="flex items-center bg-white w-[200px] h-[50px] pl-1 pr-2"
+      href={file.url}
+      target="_blank"
+    >
+      <FaFile className="w-8 h-8 shrink-0" />
+      <div className="ml-1 grow text-sm truncate">{file.name}</div>
+    </a>
+  );
+}
+
 interface MessageItemProps {
   message: Message;
 }
@@ -64,6 +94,7 @@ function MessageItem({ message }: MessageItemProps) {
   if (message.type === 'message') {
     return (
       <TextMessage position={message.from.type === 'visitor' ? 'right' : 'left'}>
+        {message.data.file && <FileMessage file={message.data.file} />}
         {message.data.text}
       </TextMessage>
     );
