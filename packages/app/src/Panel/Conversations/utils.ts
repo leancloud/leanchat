@@ -25,3 +25,18 @@ export function diffTime(a: number | string | Date, b: number | string | Date) {
   }
   return '现在';
 }
+
+export function bytesToSize(bytes: number) {
+  if (bytes === 0) return '0 Byte';
+
+  const sizes = ['Bytes', 'KB', 'MB', 'GB', 'TB'];
+  const i = Math.floor(Math.log(bytes) / Math.log(1024));
+  const size = (bytes / Math.pow(1024, i)).toFixed(2);
+
+  // Check if the result has no decimal point
+  if (size.slice(-3) === '.00') {
+    return size.slice(0, -3) + ' ' + sizes[i];
+  }
+
+  return size + ' ' + sizes[i];
+}

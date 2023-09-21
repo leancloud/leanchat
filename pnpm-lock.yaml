@@ -41,6 +41,9 @@ importers:
       immer:
         specifier: ^10.0.2
         version: 10.0.2
+      leancloud-storage:
+        specifier: ^4.15.0
+        version: 4.15.0
       lodash:
         specifier: ^4.17.21
         version: 4.17.21

@@ -13,6 +13,7 @@ import {
   useRef,
   useState,
 } from 'react';
+import { AiOutlineFile } from 'react-icons/ai';
 import { FiArrowDown } from 'react-icons/fi';
 import { Divider } from 'antd';
 import dayjs from 'dayjs';
@@ -24,6 +25,7 @@ import { useNow } from '../contexts/NowContext';
 import { useConversationMessages, useVisitorMessages } from '../hooks/message';
 import { useConversationContext } from './ConversationContext';
 import style from './MessageList.module.css';
+import { bytesToSize } from './utils';
 
 interface DateGroup {
   date: dayjs.Dayjs;
@@ -58,6 +60,39 @@ function DateDivider({ date }: DateDividerProps) {
   );
 }
 
+interface FileMessageProps {
+  file: {
+    name: string;
+    mime?: string;
+    size?: number;
+    url: string;
+  };
+}
+
+function FileMessage({ file }: FileMessageProps) {
+  if (file.mime && file.mime.startsWith('image/')) {
+    return (
+      <a href={file.url} target="_blank">
+        <img className="w-[100px] h-[100px] object-contain" src={file.url} />
+      </a>
+    );
+  }
+  return (
+    <div className="flex items-center bg-white w-[200px] h-[50px] pl-1 pr-2">
+      <AiOutlineFile className="w-8 h-8 shrink-0" />
+      <div className="ml-1 grow overflow-hidden">
+        <div className="text-sm truncate">{file.name}</div>
+        <div className="flex text-xs mt-1">
+          {file.size !== undefined && <div>{bytesToSize(file.size)}</div>}
+          <a className="ml-auto text-primary" href={file.url} target="_blank">
+            下载
+          </a>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 interface MessageGroupProps {
   isLeft: boolean;
   from: MessageGroup['from'];
@@ -82,6 +117,7 @@ function MessageGroup({ from, isLeft, messages }: MessageGroupProps) {
         >
           <Bubble className="" isVisitor={isLeft}>
             {message.data.text}
+            {message.data.file && <FileMessage file={message.data.file} />}
           </Bubble>
           <div className="text-gray-500 text-xs">{dayjs(message.createdAt).format('HH:mm')}</div>
         </div>

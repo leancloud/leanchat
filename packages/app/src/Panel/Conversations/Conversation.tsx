@@ -1,11 +1,11 @@
 import { PropsWithChildren, useMemo, useRef, useState } from 'react';
 import { useMutation } from '@tanstack/react-query';
-import { AiOutlineClockCircle } from 'react-icons/ai';
+import { AiOutlineClockCircle, AiOutlinePaperClip } from 'react-icons/ai';
 import { FiCheck } from 'react-icons/fi';
 import { HiDotsHorizontal } from 'react-icons/hi';
 import { FaUserEdit } from 'react-icons/fa';
 import { useToggle } from 'react-use';
-import { Button, Dropdown, Input, Tooltip, message } from 'antd';
+import { Button, Dropdown, Input, Progress, Tooltip, message } from 'antd';
 import cx from 'classnames';
 import _ from 'lodash';
 
@@ -20,6 +20,7 @@ import { useOperators } from '../hooks/operator';
 import { ReassignModal } from './ReassignModal';
 import { QuickReply, QuickReplyRef } from './QuickReply';
 import { closeConversation, inviteEvaluation, assignconversation } from '../api/conversation';
+import { uploadFile } from '../leancloud';
 
 interface OperatorLabelProps {
   operatorId: string;
@@ -65,6 +66,7 @@ export function Conversation({ conversationId }: ConversationProps) {
   const [showQuickReply, setShowQuickReply] = useState(false);
 
   const textareaRef = useRef<HTMLTextAreaElement>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null!);
 
   const handleCreateMessage = async () => {
     const trimedContent = content.trim();
@@ -80,6 +82,32 @@ export function Conversation({ conversationId }: ConversationProps) {
     setContent('');
     textareaRef.current?.focus();
     messageListRef.current?.setScrollBehavior('attachBottom');
+  };
+
+  const [uploading, setUploading] = useState(false);
+  const [uploadPercent, setUploadPercent] = useState(50);
+
+  const handleChangeFiles = async (files: FileList | null) => {
+    if (!files || !files.length) {
+      return;
+    }
+    setUploading(true);
+    try {
+      const id = await uploadFile(files[0], {
+        onProgress: (e) => setUploadPercent(e.percent || 0),
+      });
+      socket.emit('message', {
+        conversationId,
+        data: {
+          file: { id },
+        },
+      });
+      messageListRef.current?.setScrollBehavior('attachBottom');
+    } finally {
+      setUploading(false);
+      setUploadPercent(0);
+      fileInputRef.current.value = '';
+    }
   };
 
   const { mutate: joinConversation } = useMutation({
@@ -195,7 +223,7 @@ export function Conversation({ conversationId }: ConversationProps) {
                 邀请评价
               </Button>
             </div>
-            <div>
+            <div className="relative">
               <Input.TextArea
                 ref={textareaRef}
                 className="placeholder:!text-[#a8a8a8]"
@@ -227,9 +255,32 @@ export function Conversation({ conversationId }: ConversationProps) {
                   padding: '16px 14px',
                 }}
               />
+              {uploading && (
+                <div className="absolute inset-0 p-4 bg-white flex flex-col justify-center items-center">
+                  <Progress
+                    percent={uploadPercent}
+                    showInfo={false}
+                    size="small"
+                    style={{ margin: 0 }}
+                  />
+                  <div className="text-xs mt-1">上传中</div>
+                </div>
+              )}
             </div>
             <div className="p-5 flex justify-between">
-              <div></div>
+              <div>
+                <input
+                  ref={fileInputRef}
+                  type="file"
+                  className="hidden"
+                  onChange={(e) => handleChangeFiles(e.target.files)}
+                />
+                <Button
+                  icon={<AiOutlinePaperClip className="w-[18px] h-[18px] mt-0.5" />}
+                  onClick={() => fileInputRef.current.click()}
+                  disabled={uploading}
+                />
+              </div>
               <Button
                 className="h-[34px] border-none"
                 type="primary"

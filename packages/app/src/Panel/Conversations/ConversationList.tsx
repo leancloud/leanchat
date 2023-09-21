@@ -31,7 +31,9 @@ export function ConversationList({
             </Avatar>
           }
           title={conv.id}
-          message={conv.lastMessage?.data.text}
+          message={
+            conv.lastMessage && (conv.lastMessage.data.file ? '[文件]' : conv.lastMessage.data.text)
+          }
           unreadAlert={unreadAlert}
         />
       </button>
