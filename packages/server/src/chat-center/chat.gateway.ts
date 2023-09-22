@@ -12,6 +12,8 @@ import { Request } from 'express';
 import { Namespace, Socket } from 'socket.io';
 import { OnEvent } from '@nestjs/event-emitter';
 import { ZodValidationPipe } from 'nestjs-zod';
+import { Cron } from '@nestjs/schedule';
+import _ from 'lodash';
 
 import {
   ChatService,
@@ -27,6 +29,7 @@ import { LeanCloudService } from 'src/leancloud';
 import { WsInterceptor } from 'src/common/interceptors';
 import { ConversationDto } from './dtos/conversation';
 import { CreateMessageDto, MessageDto } from './dtos/message';
+import { OnlineTimeService } from './services';
 
 @WebSocketGateway({ namespace: 'o' })
 @UsePipes(ZodValidationPipe)
@@ -42,6 +45,7 @@ export class ChatGateway
     private messageService: MessageService,
     private chatService: ChatService,
     private leancloudService: LeanCloudService,
+    private onlineTimeService: OnlineTimeService,
   ) {}
 
   onModuleInit() {
@@ -53,6 +57,17 @@ export class ChatGateway
       socket.data.id = req.session.uid;
       next();
     });
+  }
+
+  @Cron('0 * * * * *')
+  chenkOnline() {
+    const operatorIds = Array.from(this.server.sockets.values()).map(
+      (socket) => socket.data.id,
+    );
+    if (operatorIds.length === 0) {
+      return;
+    }
+    this.onlineTimeService.recordOnlineTime(_.uniq(operatorIds));
   }
 
   async handleConnection(socket: Socket) {

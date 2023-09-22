@@ -135,6 +135,18 @@ export class ChatService {
   }
 
   async setOperatorStatus(operatorId: string, status: string) {
+    if (status === 'busy') {
+      const workload = await this.getOperatorWorkload(operatorId);
+      if (workload === 0) {
+        status = 'leave';
+      }
+    }
+
+    const fromStatus = await this.getOperatorStatus(operatorId);
+    if (fromStatus === status) {
+      return;
+    }
+
     await this.redis.hset('operator_status', operatorId, status);
 
     if (status === 'ready') {
@@ -168,8 +180,9 @@ export class ChatService {
     );
   }
 
-  getOperatorStatus(operatorId: string) {
-    return this.redis.hget('operator_status', operatorId);
+  async getOperatorStatus(operatorId: string) {
+    const status = await this.redis.hget('operator_status', operatorId);
+    return status || 'leave';
   }
 
   async getOperatorWorkloads(operatorIds: string[]) {
@@ -187,6 +200,14 @@ export class ChatService {
       },
       {},
     );
+  }
+
+  async getOperatorWorkload(operatorId: string) {
+    const workload = await this.redis.hget('operator_workload', operatorId);
+    if (workload) {
+      return parseInt(workload);
+    }
+    return 0;
   }
 
   async getRandomReadyOperator() {
@@ -283,15 +304,10 @@ export class ChatService {
   }
 
   async assignQueuedConversationToOperator(operatorId: string) {
-    const operator = await this.operatorService.getOperator(operatorId);
-    if (!operator) {
-      return;
-    }
-
     const results = await this.redis
       .pipeline()
-      .hget('operator_status', operator.id)
-      .hget('operator_workload', operator.id)
+      .hget('operator_status', operatorId)
+      .hget('operator_workload', operatorId)
       .exec();
     if (!results) {
       return;
@@ -299,12 +315,27 @@ export class ChatService {
 
     const status = results[0][1] as string | null;
     const workloadStr = results[1][1] as string | null;
-    if (status !== 'ready' || !workloadStr) {
+
+    if (!workloadStr) {
       return;
     }
 
     const workload = parseInt(workloadStr);
     if (workload < 0) {
+      return;
+    }
+    if (status === 'busy' && workload === 0) {
+      // 后处理阶段结束, 将客服状态改为 leave
+      this.setOperatorStatus(operatorId, 'leave');
+      return;
+    }
+
+    if (status !== 'ready') {
+      return;
+    }
+
+    const operator = await this.operatorService.getOperator(operatorId);
+    if (!operator) {
       return;
     }
 

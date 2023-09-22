@@ -43,7 +43,7 @@ export class SessionController {
     const status = await this.chatService.getOperatorStatus(operator.id);
 
     const dto = OperatorDto.fromDocument(operator);
-    dto.status = status || 'leave';
+    dto.status = status;
     return dto;
   }
 

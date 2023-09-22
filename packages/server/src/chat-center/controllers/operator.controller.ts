@@ -52,7 +52,7 @@ export class OperatorController {
   async getCurrentOperator(@CurrentOperator() operator: Operator) {
     const status = await this.chatService.getOperatorStatus(operator.id);
     const dto = OperatorDto.fromDocument(operator);
-    dto.status = status || 'leave';
+    dto.status = status;
     return dto;
   }
 
@@ -64,7 +64,7 @@ export class OperatorController {
     }
     const status = await this.chatService.getOperatorStatus(operator.id);
     const dto = OperatorDto.fromDocument(operator);
-    dto.status = status || 'leave';
+    dto.status = status;
     return dto;
   }
 
@@ -79,7 +79,7 @@ export class OperatorController {
     }
     const status = await this.chatService.getOperatorStatus(operator.id);
     const dto = OperatorDto.fromDocument(operator);
-    dto.status = status || 'leave';
+    dto.status = status;
     return dto;
   }
 
