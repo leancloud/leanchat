@@ -25,8 +25,8 @@ export function Avatar({ size = 32, type, status }: AvatarProps) {
             'w-[25%] h-[25%] rounded-full absolute right-0 bottom-0 outline outline-offset-0 outline-[10%] outline-white',
             {
               'bg-[#34b857]': status === 'ready',
-              'bg-[#d7dae1]': status === 'leave',
-              'bg-[#e81332]': status === 'busy',
+              'bg-[#ffaf3d]': status === 'busy',
+              'bg-[#e81332]': status === 'leave',
             },
           )}
         />

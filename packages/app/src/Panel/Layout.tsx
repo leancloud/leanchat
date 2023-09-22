@@ -79,15 +79,17 @@ function User() {
           {
             key: 'busy',
             name: '忙碌',
-            color: '#e81332',
+            color: '#ffaf3d',
           },
           {
             key: 'leave',
             name: '离开',
-            color: '#d7dae1',
+            color: '#e81332',
+            disabled: true,
           },
-        ].map(({ key, name, color }) => ({
+        ].map(({ key, name, color, disabled }) => ({
           key,
+          disabled,
           label: (
             <div className="flex items-center">
               <div
