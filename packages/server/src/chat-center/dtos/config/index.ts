@@ -7,7 +7,7 @@ export const GreetingConfigSchema = z.object({
   }),
 });
 
-export const AutoCloseConversationSchema = z.object({
+export const AutoCloseConfigSchema = z.object({
   timeout: z.number().int().min(0),
 });
 

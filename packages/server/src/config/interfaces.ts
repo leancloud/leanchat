@@ -5,7 +5,7 @@ export interface GreetingConfig {
   };
 }
 
-export interface AutoCloseConversationConfig {
+export interface AutoCloseConfig {
   timeout: number;
 }
 
@@ -22,5 +22,7 @@ export interface QueueConfig {
 }
 
 export interface ConfigKeys {
+  greeting: GreetingConfig;
+  autoClose: AutoCloseConfig;
   queue: QueueConfig;
 }

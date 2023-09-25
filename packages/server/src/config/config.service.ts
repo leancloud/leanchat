@@ -4,11 +4,7 @@ import { Injectable } from '@nestjs/common';
 import { LRUCache } from 'lru-cache';
 
 import { Config } from './config.model';
-import {
-  AutoCloseConversationConfig,
-  ConfigKeys,
-  GreetingConfig,
-} from './interfaces';
+import { ConfigKeys } from './interfaces';
 
 @Injectable()
 export class ConfigService {
@@ -52,14 +48,6 @@ export class ConfigService {
       this.cache.set(key, config.value);
       return config.value as T;
     }
-  }
-
-  getGreetingConfig() {
-    return this.getConfig<GreetingConfig>('greeting');
-  }
-
-  getAutoCloseConversationConfig() {
-    return this.getConfig<AutoCloseConversationConfig>('autoCloseConversation');
   }
 
   get<T extends keyof ConfigKeys>(key: T): Promise<ConfigKeys[T] | undefined> {

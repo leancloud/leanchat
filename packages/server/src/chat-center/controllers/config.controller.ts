@@ -15,13 +15,13 @@ import { ConfigService } from 'src/config';
 import { AuthGuard } from '../guards/auth.guard';
 import {
   GreetingConfigSchema,
-  AutoCloseConversationSchema,
+  AutoCloseConfigSchema,
   QueueConfigSchema,
 } from '../dtos/config';
 
 const schemas: Record<string, ZodSchema> = {
   greeting: GreetingConfigSchema,
-  autoCloseConversation: AutoCloseConversationSchema,
+  autoClose: AutoCloseConfigSchema,
   queue: QueueConfigSchema,
 };
 

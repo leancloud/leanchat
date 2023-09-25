@@ -36,7 +36,7 @@ export class AutoCloseConversationService {
       return;
     }
 
-    const config = await this.configService.getAutoCloseConversationConfig();
+    const config = await this.configService.get('autoClose');
     if (!config || config.timeout <= 0) {
       return;
     }
