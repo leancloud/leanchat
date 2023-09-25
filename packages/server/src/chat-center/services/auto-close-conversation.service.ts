@@ -48,6 +48,18 @@ export class AutoCloseConversationService {
       });
 
     for (const conversationId of conversationIds) {
+      if (config.message.enabled) {
+        await this.chatService.createMessage({
+          conversationId,
+          from: {
+            type: 'system',
+          },
+          data: {
+            text: config.message.text,
+          },
+        });
+      }
+
       await this.chatService.closeConversation({
         conversationId,
         by: {

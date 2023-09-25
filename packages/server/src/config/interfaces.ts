@@ -7,6 +7,10 @@ export interface GreetingConfig {
 
 export interface AutoCloseConfig {
   timeout: number;
+  message: {
+    enabled: boolean;
+    text: string;
+  };
 }
 
 export interface QueueConfig {
