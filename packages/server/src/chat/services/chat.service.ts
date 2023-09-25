@@ -125,7 +125,7 @@ export class ChatService {
       closedAt: new Date(),
     });
     await this.messageService.createMessage(conversation, {
-      type: 'closeConversation',
+      type: 'close',
       from: by,
       data: { reason },
     });

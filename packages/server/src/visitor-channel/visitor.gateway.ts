@@ -105,7 +105,7 @@ export class VisitorGateway implements OnModuleInit, OnGatewayConnection {
     const messageCount = 25;
     const messages = await this.messageService.getMessages({
       visitorId,
-      type: ['message', 'evaluate'],
+      type: ['message', 'evaluate', 'close'],
       desc: true,
       limit: messageCount,
     });
@@ -181,7 +181,11 @@ export class VisitorGateway implements OnModuleInit, OnGatewayConnection {
   }
 
   shouldDispatchMessage(message: Message) {
-    return message.type === 'message' || message.type === 'evaluate';
+    return (
+      message.type === 'message' ||
+      message.type === 'evaluate' ||
+      message.type === 'close'
+    );
   }
 
   @OnEvent('conversation.created', { async: true })

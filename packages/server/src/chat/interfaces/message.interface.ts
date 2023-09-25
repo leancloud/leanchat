@@ -8,7 +8,7 @@ export interface MessageSender {
   id?: string | Types.ObjectId;
 }
 
-export type MessageType = 'message' | 'evaluate' | 'closeConversation';
+export type MessageType = 'message' | 'evaluate' | 'close';
 
 export interface MessageData {
   text?: string;
