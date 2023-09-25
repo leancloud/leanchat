@@ -207,7 +207,7 @@ function CloseConversation({ message }: MessageComponentProps) {
 
 const MessageComponents: Record<string, JSXElementConstructor<MessageComponentProps>> = {
   evaluate: EvaluateMessage,
-  closeConversation: CloseConversation,
+  close: CloseConversation,
 };
 
 function useAtBottom(ref: RefObject<HTMLElement>) {
