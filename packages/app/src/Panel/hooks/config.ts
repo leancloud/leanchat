@@ -1,14 +1,32 @@
 import { useMutation, useQuery } from '@tanstack/react-query';
-import { getConfig, setConfig } from '../api/config';
 
-export function useConfig<T>(key: string) {
+import {
+  AutoCloseConversationConfig,
+  GreetingConfig,
+  QueueConfig,
+  getConfig,
+  setConfig,
+} from '../api/config';
+
+interface ConfigKeys {
+  greeting: GreetingConfig;
+  autoCloseConversation: AutoCloseConversationConfig;
+  queue: QueueConfig;
+}
+
+interface UseConfigOptions {
+  onSuccess?: () => void;
+}
+
+export function useConfig<T extends keyof ConfigKeys>(key: T, options?: UseConfigOptions) {
   const { data, isLoading } = useQuery({
     queryKey: ['Config', key],
-    queryFn: () => getConfig<T>(key),
+    queryFn: () => getConfig<ConfigKeys[T]>(key),
   });
 
   const { mutate: update, isLoading: isUpdating } = useMutation({
-    mutationFn: (value: T) => setConfig(key, value),
+    ...options,
+    mutationFn: (value: ConfigKeys[T]) => setConfig(key, value),
   });
 
   return { data, isLoading, update, isUpdating };

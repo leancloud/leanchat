@@ -1,43 +1,51 @@
-import { useEffect, useRef } from 'react';
 import { BsFillChatLeftDotsFill } from 'react-icons/bs';
-import { Button, Checkbox, Form, FormInstance, Input, InputNumber } from 'antd';
+import { Button, Checkbox, Form, Input, InputNumber, Spin, message } from 'antd';
 
-import { AutoCloseConversationConfig, GreetingConfig } from '@/Panel/api/config';
-import { Container } from '../components/Container';
 import { useConfig } from '@/Panel/hooks/config';
+import { Container } from '../components/Container';
+
+function Loading() {
+  return (
+    <div className="w-full h-[200px] flex justify-center items-center">
+      <Spin />
+    </div>
+  );
+}
 
 function GreetingConfigForm() {
-  const { data, update, isUpdating } = useConfig<GreetingConfig>('greeting');
+  const { data, isLoading, update, isUpdating } = useConfig('greeting', {
+    onSuccess: () => {
+      message.success('已保存');
+    },
+  });
 
-  const formRef = useRef<FormInstance>(null!);
-
-  useEffect(() => {
-    if (data) {
-      formRef.current.setFieldsValue({
-        enabled: data.enabled,
-        text: data.message.text,
-      });
-    }
-  }, [data]);
+  if (isLoading) {
+    return <Loading />;
+  }
 
   return (
     <Form
-      ref={formRef}
-      onFinish={(data) => {
-        update({
-          enabled: !!data.enabled,
+      initialValues={
+        data || {
+          enabled: false,
           message: {
-            text: data.text,
+            text: '您好，请问有什么可以帮您？',
           },
-        });
-      }}
+        }
+      }
+      onFinish={update}
     >
-      <Form.Item wrapperCol={{ offset: 4 }} name="enabled" valuePropName="checked">
+      <Form.Item
+        wrapperCol={{ offset: 4 }}
+        name="enabled"
+        valuePropName="checked"
+        style={{ marginBottom: 10 }}
+      >
         <Checkbox>开启</Checkbox>
       </Form.Item>
       <Form.Item
         wrapperCol={{ offset: 4 }}
-        name="text"
+        name={['message', 'text']}
         rules={[{ required: true }]}
         extra="开启后，用户打开聊天组件，系统将使用此说辞作为欢迎语"
       >
@@ -53,19 +61,23 @@ function GreetingConfigForm() {
 }
 
 function AutoCloseConversationForm() {
-  const { data, update, isUpdating } =
-    useConfig<AutoCloseConversationConfig>('autoCloseConversation');
+  const { data, isLoading, update, isUpdating } = useConfig('autoCloseConversation', {
+    onSuccess: () => {
+      message.success('已保存');
+    },
+  });
 
-  const formRef = useRef<FormInstance>(null!);
-
-  useEffect(() => {
-    formRef.current.setFieldsValue({
-      timeout: data ? Math.floor(data.timeout / 60) : 0,
-    });
-  }, [data]);
+  if (isLoading) {
+    return <Loading />;
+  }
 
   return (
-    <Form ref={formRef} onFinish={(data) => update({ timeout: data.timeout * 60 })}>
+    <Form
+      initialValues={{
+        timeout: data ? Math.floor(data.timeout / 60) : 0,
+      }}
+      onFinish={(data) => update({ timeout: data.timeout * 60 })}
+    >
       <Form.Item
         labelCol={{ span: 4 }}
         wrapperCol={{ span: 22 }}
@@ -75,6 +87,89 @@ function AutoCloseConversationForm() {
         extra="客服回复后，用户在指定时间内未进行操作，系统自动关闭会话。设为 0 关闭该功能"
       >
         <InputNumber min={0} suffix="分钟" />
+      </Form.Item>
+      <Form.Item wrapperCol={{ offset: 4 }}>
+        <Button type="primary" htmlType="submit" loading={isUpdating}>
+          保存
+        </Button>
+      </Form.Item>
+    </Form>
+  );
+}
+
+function QueueConfigForm() {
+  const { data, isLoading, update, isUpdating } = useConfig('queue', {
+    onSuccess: () => {
+      message.success('已保存');
+    },
+  });
+
+  if (isLoading) {
+    return <Loading />;
+  }
+
+  return (
+    <Form
+      initialValues={
+        data || {
+          capacity: 0,
+          queuedMessage: {
+            enabled: false,
+            text: '您已进入排队系统，当前人数 {{ queue.length }}，您排在第 {{ queue.position }} 位。',
+          },
+          fullMessage: {
+            enabled: false,
+            text: '您好，当前排队人数较多，请您稍后再试。',
+          },
+        }
+      }
+      onFinish={update}
+    >
+      <Form.Item
+        labelCol={{ span: 4 }}
+        wrapperCol={{ span: 22 }}
+        label="排队上限"
+        name="capacity"
+        extra="设为 0 关闭该功能"
+        rules={[{ required: true }]}
+      >
+        <InputNumber />
+      </Form.Item>
+
+      <Form.Item
+        labelCol={{ span: 4 }}
+        wrapperCol={{ span: 22 }}
+        label="排队提示"
+        name={['queuedMessage', 'enabled']}
+        valuePropName="checked"
+        style={{ marginBottom: 10 }}
+      >
+        <Checkbox>开启</Checkbox>
+      </Form.Item>
+      <Form.Item
+        wrapperCol={{ offset: 4 }}
+        name={['queuedMessage', 'text']}
+        rules={[{ required: true }]}
+        extra="可使用占位符 {{ queue.length }}, {{ queue.position }}"
+      >
+        <Input.TextArea rows={5} />
+      </Form.Item>
+      <Form.Item
+        labelCol={{ span: 4 }}
+        wrapperCol={{ span: 22 }}
+        label="上限提示"
+        name={['fullMessage', 'enabled']}
+        valuePropName="checked"
+        style={{ marginBottom: 10 }}
+      >
+        <Checkbox>开启</Checkbox>
+      </Form.Item>
+      <Form.Item
+        wrapperCol={{ offset: 4 }}
+        name={['fullMessage', 'text']}
+        rules={[{ required: true }]}
+      >
+        <Input.TextArea rows={5} />
       </Form.Item>
       <Form.Item wrapperCol={{ offset: 4 }}>
         <Button type="primary" htmlType="submit" loading={isUpdating}>
@@ -99,6 +194,9 @@ export function ChatConfig() {
 
         <h2 className="text-base font-medium my-4">自动踢线</h2>
         <AutoCloseConversationForm />
+
+        <h2 className="text-base font-medium my-4">排队设置</h2>
+        <QueueConfigForm />
       </div>
     </Container>
   );

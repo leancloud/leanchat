@@ -11,6 +11,18 @@ export interface AutoCloseConversationConfig {
   timeout: number;
 }
 
+export interface QueueConfig {
+  capacity: number;
+  fullMessage: {
+    enabled: boolean;
+    text: string;
+  };
+  queuedMessage: {
+    enabled: boolean;
+    text: string;
+  };
+}
+
 export async function getConfig<T>(key: string) {
   const res = await client.get<T | null>(`/config/${key}`);
   return res.data;
