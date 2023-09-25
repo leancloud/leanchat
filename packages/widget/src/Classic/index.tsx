@@ -98,9 +98,10 @@ function MessageItem({ message }: MessageItemProps) {
         {message.data.text}
       </TextMessage>
     );
-  }
-  if (message.type === 'evaluate') {
+  } else if (message.type === 'evaluate') {
     return <LogMessage content="消息提示：感谢您的评价" />;
+  } else if (message.type === 'closeConversation') {
+    return <LogMessage content="会话已结束" />;
   }
 }
 
@@ -209,15 +210,19 @@ export function Classic() {
     setShowEvaluationModal(true);
   };
 
-  const { conversation, messages, sendMessage, evaluate } = useChat({
+  const { status, conversation, messages, sendMessage, evaluate } = useChat({
     onInviteEvaluation: () => {
       setShowEvaluationModal(true);
     },
   });
 
-  const evaluated = !!conversation?.evaluation;
+  const isBusy = status === 'busy';
+  const evaluated = conversation && !!conversation.evaluation;
 
   const handleSendMessage = () => {
+    if (status !== 'inService') {
+      return;
+    }
     const trimedContent = content.trim();
     if (trimedContent) {
       sendMessage(content);
@@ -238,7 +243,7 @@ export function Classic() {
   };
 
   const handleClose = () => {
-    if (!evaluated) {
+    if (evaluated === false) {
       setShowEvaluationModal(true);
       return;
     }
@@ -262,7 +267,7 @@ export function Classic() {
           <FaArrowLeft className="m-auto" />
         </button>
 
-        {!evaluated && (
+        {evaluated === false && (
           <button
             className="sm:hidden absolute top-4 right-4 w-8 h-8 bg-white flex rounded-full bg-opacity-70 text-[#999999] shadow-sm"
             onClick={handleClose}
@@ -301,16 +306,20 @@ export function Classic() {
           </div>
           {showControl && (
             <div className="p-2 grid grid-cols-[repeat(auto-fill,minmax(80px,1fr))] justify-items-center gap-2">
-              <BigControlButton title="图片">
+              <BigControlButton title="图片" disabled={isBusy}>
                 <FaImage className="w-8 h-8" />
               </BigControlButton>
-              <BigControlButton title="文件">
+              <BigControlButton title="文件" disabled={isBusy}>
                 <FaFolderOpen className="w-8 h-8" />
               </BigControlButton>
-              <BigControlButton title="评价" disabled={evaluated} onClick={handleShowEvaluation}>
+              <BigControlButton
+                title="评价"
+                disabled={isBusy || evaluated}
+                onClick={handleShowEvaluation}
+              >
                 <FaStar className="w-8 h-8" />
               </BigControlButton>
-              <BigControlButton title="转人工">
+              <BigControlButton title="转人工" disabled>
                 <FaHeadset className="w-8 h-8" />
               </BigControlButton>
             </div>
@@ -318,19 +327,19 @@ export function Classic() {
         </div>
 
         <div className="hidden h-[29px] shrink-0 sm:flex items-center px-3 bg-[#f9f9f9] text-[rgb(102,102,102)] gap-4 border-t border-t-[#d5d5d5]">
-          <ControlButton title="表情">
+          <ControlButton title="表情" disabled={isBusy}>
             <FaRegFaceSmile className="w-4 h-4" />
           </ControlButton>
-          <ControlButton title="图片">
+          <ControlButton title="图片" disabled={isBusy}>
             <FaImage className="w-4 h-4" />
           </ControlButton>
-          <ControlButton title="文件">
+          <ControlButton title="文件" disabled={isBusy}>
             <FaFolderOpen className="w-4 h-4" />
           </ControlButton>
-          <ControlButton title="评价" disabled={evaluated} onClick={handleShowEvaluation}>
+          <ControlButton title="评价" disabled={isBusy || evaluated} onClick={handleShowEvaluation}>
             <FaStar className="w-4 h-4" />
           </ControlButton>
-          <ControlButton title="转人工">
+          <ControlButton title="转人工" disabled>
             <FaHeadset className="w-4 h-4" />
           </ControlButton>
         </div>

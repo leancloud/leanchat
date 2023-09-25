@@ -14,6 +14,7 @@ import { Conversation, EvaluateData, Message } from './types';
 
 interface ChatContextValue {
   socket: Socket;
+  status?: string;
   conversation?: Conversation;
   messages: Message[];
   sendMessage: (content: string) => void;
@@ -77,12 +78,14 @@ export function Chat({ children }: ChatProps) {
     [socket],
   );
 
+  const [status, setStatus] = useState<string>();
   const [conversation, setConversation] = useState<Conversation>();
   const [messages, setMessages] = useState<Message[]>([]);
 
   useEvent(socket, 'signedUp', ({ token }) => setToken(token));
   useEvent(socket, 'currentConversation', setConversation);
   useEvent(socket, 'initialized', (data) => {
+    setStatus(data.status);
     if (data.conversation) {
       setConversation(data.conversation);
     }
@@ -119,7 +122,7 @@ export function Chat({ children }: ChatProps) {
   }
 
   return (
-    <ChatContext.Provider value={{ socket, conversation, messages, sendMessage, evaluate }}>
+    <ChatContext.Provider value={{ socket, status, conversation, messages, sendMessage, evaluate }}>
       {children}
     </ChatContext.Provider>
   );
