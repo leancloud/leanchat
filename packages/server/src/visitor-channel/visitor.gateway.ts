@@ -80,7 +80,7 @@ export class VisitorGateway implements OnModuleInit, OnGatewayConnection {
     const queueConfig = await this.configService.get('queue');
     if (queueConfig?.capacity) {
       const queueLength = await this.chatService.getQueueLength();
-      if (queueLength >= queueConfig.capacity) {
+      if (queueLength > queueConfig.capacity) {
         initData.status = 'busy';
         if (queueConfig.fullMessage.enabled) {
           initData.messages = [
