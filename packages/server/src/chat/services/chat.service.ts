@@ -4,8 +4,10 @@ import { InjectQueue } from '@nestjs/bull';
 import { Queue } from 'bull';
 import { Redis } from 'ioredis';
 import _ from 'lodash';
+import Handlebars from 'handlebars';
 
 import { REDIS } from 'src/redis';
+import { ConfigService } from 'src/config';
 import {
   CloseConversationOptions,
   ConversationEvaluation,
@@ -32,6 +34,7 @@ export class ChatService {
     private conversationService: ConversationService,
     private messageService: MessageService,
     private operatorService: OperatorService,
+    private configService: ConfigService,
 
     @InjectQueue('auto_assign_conversation')
     private autoAssignQueue: Queue<AutoAssignJobData>,
@@ -269,6 +272,14 @@ export class ChatService {
     return this.redis.zcard('conversation_queue');
   }
 
+  async getQueuePosition(key: string) {
+    const rank = await this.redis.zrank('conversation_queue', key);
+    if (rank === null) {
+      return 0;
+    }
+    return rank + 1;
+  }
+
   @OnEvent('conversation.created', { async: true })
   async addAutoAssignJob({ conversation }: ConversationCreatedEvent) {
     const queueSize = await this.getQueueLength();
@@ -296,6 +307,25 @@ export class ChatService {
     await this.conversationService.updateConversation(conversationId, {
       queuedAt,
     });
+
+    const queueConfig = await this.configService.get('queue');
+    if (queueConfig && queueConfig.queuedMessage.enabled) {
+      const queuePosition = await this.getQueuePosition(conversationId);
+      const template = Handlebars.compile(queueConfig.queuedMessage.text);
+      await this.createMessage({
+        conversationId,
+        from: {
+          type: 'system',
+        },
+        data: {
+          text: template({
+            queue: {
+              position: queuePosition,
+            },
+          }),
+        },
+      });
+    }
   }
 
   async dequeueConversation() {
