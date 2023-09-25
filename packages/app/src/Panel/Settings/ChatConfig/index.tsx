@@ -49,7 +49,7 @@ function GreetingConfigForm() {
         rules={[{ required: true }]}
         extra="开启后，用户打开聊天组件，系统将使用此说辞作为欢迎语"
       >
-        <Input.TextArea rows={5} />
+        <Input.TextArea rows={3} />
       </Form.Item>
       <Form.Item wrapperCol={{ offset: 4 }}>
         <Button type="primary" htmlType="submit" loading={isUpdating}>
@@ -73,10 +73,26 @@ function AutoCloseConversationForm() {
 
   return (
     <Form
-      initialValues={{
-        timeout: data ? Math.floor(data.timeout / 60) : 0,
-      }}
-      onFinish={(data) => update({ timeout: data.timeout * 60 })}
+      initialValues={
+        data
+          ? {
+              ...data,
+              timeout: Math.floor(data.timeout / 60),
+            }
+          : {
+              timeout: 0,
+              message: {
+                enabled: false,
+                text: '由于您长时间未回复，系统关闭了该会话',
+              },
+            }
+      }
+      onFinish={(data) =>
+        update({
+          ...data,
+          timeout: data.timeout * 60,
+        })
+      }
     >
       <Form.Item
         labelCol={{ span: 4 }}
@@ -87,6 +103,24 @@ function AutoCloseConversationForm() {
         extra="客服回复后，用户在指定时间内未进行操作，系统自动关闭会话。设为 0 关闭该功能"
       >
         <InputNumber min={0} suffix="分钟" />
+      </Form.Item>
+      <Form.Item
+        labelCol={{ span: 4 }}
+        wrapperCol={{ span: 22 }}
+        label="提示消息"
+        name={['message', 'enabled']}
+        valuePropName="checked"
+        style={{ marginBottom: 10 }}
+      >
+        <Checkbox>开启</Checkbox>
+      </Form.Item>
+      <Form.Item
+        wrapperCol={{ offset: 4 }}
+        name={['message', 'text']}
+        rules={[{ required: true }]}
+        extra="开启后，系统关闭会话时将向用户发送此消息"
+      >
+        <Input.TextArea rows={3} />
       </Form.Item>
       <Form.Item wrapperCol={{ offset: 4 }}>
         <Button type="primary" htmlType="submit" loading={isUpdating}>
@@ -152,7 +186,7 @@ function QueueConfigForm() {
         rules={[{ required: true }]}
         extra="可使用占位符 {{ queue.position }}"
       >
-        <Input.TextArea rows={5} />
+        <Input.TextArea rows={3} />
       </Form.Item>
       <Form.Item
         labelCol={{ span: 4 }}
@@ -169,7 +203,7 @@ function QueueConfigForm() {
         name={['fullMessage', 'text']}
         rules={[{ required: true }]}
       >
-        <Input.TextArea rows={5} />
+        <Input.TextArea rows={3} />
       </Form.Item>
       <Form.Item wrapperCol={{ offset: 4 }}>
         <Button type="primary" htmlType="submit" loading={isUpdating}>
