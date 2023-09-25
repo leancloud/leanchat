@@ -93,6 +93,21 @@ function FileMessage({ file }: FileMessageProps) {
   );
 }
 
+interface SenderProps {
+  from: MessageGroup['from'];
+}
+
+function Sender({ from }: SenderProps) {
+  switch (from.type) {
+    case 'visitor':
+      return `用户${from.id.slice(-6)}`;
+    case 'operator':
+      return `客服 ${from.id.slice(-6)}`;
+    case 'system':
+      return '机器人客服';
+  }
+}
+
 interface MessageGroupProps {
   isLeft: boolean;
   from: MessageGroup['from'];
@@ -107,7 +122,9 @@ function MessageGroup({ from, isLeft, messages }: MessageGroupProps) {
         'items-end': !isLeft,
       })}
     >
-      <div className={cx('text-xs px-1 mb-1')}>{isLeft ? '用户' : from.id}</div>
+      <div className={cx('text-xs px-1 mb-1')}>
+        <Sender from={from} />
+      </div>
       {messages.map((message) => (
         <div
           key={message.id}

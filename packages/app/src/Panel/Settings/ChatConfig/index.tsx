@@ -150,7 +150,7 @@ function QueueConfigForm() {
         wrapperCol={{ offset: 4 }}
         name={['queuedMessage', 'text']}
         rules={[{ required: true }]}
-        extra="可使用占位符 {{ queue.length }}, {{ queue.position }}"
+        extra="可使用占位符 {{ queue.position }}"
       >
         <Input.TextArea rows={5} />
       </Form.Item>

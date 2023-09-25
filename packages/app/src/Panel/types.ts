@@ -4,7 +4,7 @@ export interface Message {
   conversationId: string;
   type: string;
   from: {
-    type: 'visitor' | 'operator';
+    type: 'visitor' | 'operator' | 'system';
     id: string;
   };
   data: any;
