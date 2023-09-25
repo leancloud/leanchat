@@ -73,7 +73,24 @@ export class VisitorGateway implements OnModuleInit, OnGatewayConnection {
     const visitorId = socket.data.id;
     socket.join(visitorId);
 
-    const initData: WidgetInitialized = {};
+    const initData: WidgetInitialized = {
+      status: 'inService',
+    };
+
+    const queueConfig = await this.configService.get('queue');
+    if (queueConfig?.capacity) {
+      const queueLength = await this.chatService.getQueueLength();
+      if (queueLength >= queueConfig.capacity) {
+        initData.status = 'busy';
+        if (queueConfig.fullMessage.enabled) {
+          initData.messages = [
+            MessageDto.fromText('busy', queueConfig.fullMessage.text),
+          ];
+        }
+        socket.emit('initialized', initData);
+        return;
+      }
+    }
 
     const visitor = await this.visitorService.getVisitor(visitorId);
     if (visitor && visitor.currentConversationId) {

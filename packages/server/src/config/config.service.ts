@@ -4,7 +4,11 @@ import { Injectable } from '@nestjs/common';
 import { LRUCache } from 'lru-cache';
 
 import { Config } from './config.model';
-import { AutoCloseConversationConfig, GreetingConfig } from './interfaces';
+import {
+  AutoCloseConversationConfig,
+  ConfigKeys,
+  GreetingConfig,
+} from './interfaces';
 
 @Injectable()
 export class ConfigService {
@@ -54,15 +58,11 @@ export class ConfigService {
     return this.getConfig<GreetingConfig>('greeting');
   }
 
-  setGreetingConfig(value: GreetingConfig) {
-    return this.setConfig('greeting', value);
-  }
-
-  setAutoCloseConversationConfig(value: AutoCloseConversationConfig) {
-    return this.setConfig('autoCloseConversation', value);
-  }
-
   getAutoCloseConversationConfig() {
     return this.getConfig<AutoCloseConversationConfig>('autoCloseConversation');
+  }
+
+  get<T extends keyof ConfigKeys>(key: T): Promise<ConfigKeys[T] | undefined> {
+    return this.getConfig(key);
   }
 }

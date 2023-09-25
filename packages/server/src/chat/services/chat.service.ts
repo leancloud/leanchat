@@ -265,9 +265,13 @@ export class ChatService {
     }
   }
 
+  getQueueLength() {
+    return this.redis.zcard('conversation_queue');
+  }
+
   @OnEvent('conversation.created', { async: true })
   async addAutoAssignJob({ conversation }: ConversationCreatedEvent) {
-    const queueSize = await this.redis.zcard('conversation_queue');
+    const queueSize = await this.getQueueLength();
     if (queueSize === 0) {
       await this.autoAssignQueue.add({
         conversationId: conversation.id,

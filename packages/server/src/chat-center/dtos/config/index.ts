@@ -10,3 +10,15 @@ export const GreetingConfigSchema = z.object({
 export const AutoCloseConversationSchema = z.object({
   timeout: z.number().int().min(0),
 });
+
+export const QueueConfigSchema = z.object({
+  capacity: z.number().int().min(0),
+  fullMessage: z.object({
+    enabled: z.boolean(),
+    text: z.string(),
+  }),
+  queuedMessage: z.object({
+    enabled: z.boolean(),
+    text: z.string(),
+  }),
+});

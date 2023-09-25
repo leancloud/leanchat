@@ -16,11 +16,13 @@ import { AuthGuard } from '../guards/auth.guard';
 import {
   GreetingConfigSchema,
   AutoCloseConversationSchema,
+  QueueConfigSchema,
 } from '../dtos/config';
 
 const schemas: Record<string, ZodSchema> = {
   greeting: GreetingConfigSchema,
   autoCloseConversation: AutoCloseConversationSchema,
+  queue: QueueConfigSchema,
 };
 
 @Controller('config')
