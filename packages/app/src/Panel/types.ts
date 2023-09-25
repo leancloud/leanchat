@@ -22,6 +22,7 @@ export interface Conversation {
     feedback: string;
   };
   status: string;
+  visitorWaitingSince?: string;
 }
 
 export interface Operator {

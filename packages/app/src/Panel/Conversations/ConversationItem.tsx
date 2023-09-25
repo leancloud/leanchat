@@ -46,13 +46,6 @@ export function ConversationItem({
   message,
   unreadAlert,
 }: ConversationItemProps) {
-  const visitorWaitedAt = useMemo(() => {
-    if (!unreadAlert) return;
-    if (conversation.lastMessage?.from.type === 'visitor') {
-      return conversation.lastMessage.createdAt;
-    }
-  }, [conversation.lastMessage, unreadAlert]);
-
   const now = useNow();
 
   return (
@@ -81,12 +74,14 @@ export function ConversationItem({
       <div className="mt-4 flex items-center">
         <div
           className={cx('text-sm text-[#646464] mr-auto truncate', {
-            'font-bold': visitorWaitedAt,
+            'font-bold': unreadAlert && conversation.visitorWaitingSince,
           })}
         >
           {message}
         </div>
-        {visitorWaitedAt && <UnreadAlert waitedAt={visitorWaitedAt} />}
+        {unreadAlert && conversation.visitorWaitingSince && (
+          <UnreadAlert waitedAt={conversation.visitorWaitingSince} />
+        )}
       </div>
     </div>
   );

@@ -174,6 +174,18 @@ export function useSubscribeConversations(socket: Socket) {
         removeConversation(e.conversation.id);
       }
       setConversation(e.conversation);
+      queryClient.setQueriesData<Conversation[] | undefined>(['Conversations'], (conversations) => {
+        if (conversations) {
+          const index = conversations.findIndex((c) => c.id === e.conversation.id);
+          if (index >= 0) {
+            return [
+              ...conversations.slice(0, index),
+              e.conversation,
+              ...conversations.slice(index + 1),
+            ];
+          }
+        }
+      });
     };
 
     socket.on('conversationCreated', onConversationCreated);
