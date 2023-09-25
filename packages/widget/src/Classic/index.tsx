@@ -100,7 +100,7 @@ function MessageItem({ message }: MessageItemProps) {
     );
   } else if (message.type === 'evaluate') {
     return <LogMessage content="消息提示：感谢您的评价" />;
-  } else if (message.type === 'closeConversation') {
+  } else if (message.type === 'close') {
     return <LogMessage content="会话已结束" />;
   }
 }
