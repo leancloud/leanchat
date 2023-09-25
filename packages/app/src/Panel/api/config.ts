@@ -7,7 +7,7 @@ export interface GreetingConfig {
   };
 }
 
-export interface AutoCloseConversationConfig {
+export interface AutoCloseConfig {
   timeout: number;
 }
 

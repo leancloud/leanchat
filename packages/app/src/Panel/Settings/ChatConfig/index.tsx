@@ -61,7 +61,7 @@ function GreetingConfigForm() {
 }
 
 function AutoCloseConversationForm() {
-  const { data, isLoading, update, isUpdating } = useConfig('autoCloseConversation', {
+  const { data, isLoading, update, isUpdating } = useConfig('autoClose', {
     onSuccess: () => {
       message.success('已保存');
     },
