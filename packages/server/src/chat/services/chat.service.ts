@@ -63,8 +63,12 @@ export class ChatService {
     const updateConversationData: UpdateConversationData = {};
     if (from.type === 'visitor') {
       updateConversationData.visitorLastActivityAt = message.createdAt;
+      if (!conversation.visitorWaitingSince) {
+        updateConversationData.visitorWaitingSince = message.createdAt;
+      }
     } else if (from.type === 'operator') {
       updateConversationData.operatorLastActivityAt = message.createdAt;
+      updateConversationData.visitorWaitingSince = null;
     }
 
     if (!_.isEmpty(updateConversationData)) {

@@ -2,6 +2,7 @@ import { Injectable } from '@nestjs/common';
 import { EventEmitter2 } from '@nestjs/event-emitter';
 import { InjectModel } from '@m8a/nestjs-typegoose';
 import { ReturnModelType } from '@typegoose/typegoose';
+import { AnyKeys } from 'mongoose';
 import _ from 'lodash';
 
 import { Conversation } from '../models';
@@ -109,24 +110,26 @@ export class ConversationService {
       }
     }
 
+    const $set: AnyKeys<Conversation> = {
+      operatorId: data.operatorId,
+      categoryId: data.categoryId,
+      evaluation: data.evaluation,
+      closedAt: data.closedAt,
+      queuedAt: data.queuedAt,
+      visitorLastActivityAt: data.visitorLastActivityAt,
+      operatorLastActivityAt: data.operatorLastActivityAt,
+    };
+
+    const $unset: AnyKeys<Conversation> = {};
+
+    if (data.visitorWaitingSince) {
+      $set.visitorWaitingSince = data.visitorWaitingSince;
+    } else if (data.visitorWaitingSince === null) {
+      $unset.visitorWaitingSince = '';
+    }
+
     const conversation = await this.conversationModel
-      .findOneAndUpdate(
-        { _id: id },
-        {
-          $set: {
-            operatorId: data.operatorId,
-            categoryId: data.categoryId,
-            evaluation: data.evaluation,
-            closedAt: data.closedAt,
-            queuedAt: data.queuedAt,
-            visitorLastActivityAt: data.visitorLastActivityAt,
-            operatorLastActivityAt: data.operatorLastActivityAt,
-          },
-        },
-        {
-          new: true,
-        },
-      )
+      .findOneAndUpdate({ _id: id }, { $set, $unset }, { new: true })
       .exec();
 
     if (conversation) {

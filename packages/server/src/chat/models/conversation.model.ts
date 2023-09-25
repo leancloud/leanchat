@@ -49,6 +49,9 @@ export class Conversation {
   @Prop()
   operatorLastActivityAt?: Date;
 
+  @Prop()
+  visitorWaitingSince?: Date;
+
   createdAt: Date;
 
   updatedAt: Date;

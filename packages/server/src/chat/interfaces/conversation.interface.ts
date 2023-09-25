@@ -25,6 +25,7 @@ export interface UpdateConversationData {
   queuedAt?: Date;
   visitorLastActivityAt?: Date;
   operatorLastActivityAt?: Date;
+  visitorWaitingSince?: Date | null;
 }
 
 export interface GetInactiveConversationIdsOptions {

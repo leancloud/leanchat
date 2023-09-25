@@ -130,6 +130,7 @@ export class ChatGateway
       'categoryId',
       'evaluation',
       'closedAt',
+      'visitorWaitingSince',
     ];
     if (!subscribedFields.some((field) => field in payload.data)) {
       return;

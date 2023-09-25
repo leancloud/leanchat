@@ -16,6 +16,8 @@ export class ConversationDto {
 
   status: string;
 
+  visitorWaitingSince?: string;
+
   createdAt: string;
 
   updatedAt: string;
@@ -30,6 +32,7 @@ export class ConversationDto {
     dto.categoryId = conv.categoryId?.toString();
     dto.evaluation = conv.evaluation;
     dto.status = conv.closedAt ? 'closed' : 'open';
+    dto.visitorWaitingSince = conv.visitorWaitingSince?.toISOString();
     dto.createdAt = conv.createdAt.toISOString();
     dto.updatedAt = conv.updatedAt.toISOString();
     return dto;
