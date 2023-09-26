@@ -146,6 +146,11 @@ export class VisitorGateway implements OnModuleInit, OnGatewayConnection {
       );
     }
     if (!conversation || conversation.closedAt) {
+      const isBusy = await this.widgetService.isBusy();
+      if (isBusy) {
+        return;
+      }
+
       conversation = await this.conversationService.createConversation({
         channel: 'widget',
         visitorId,
