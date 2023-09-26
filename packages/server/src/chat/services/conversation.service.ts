@@ -78,7 +78,7 @@ export class ConversationService {
             $expr: {
               $gte: ['$operatorLastActivityAt', '$visitorLastActivityAt'],
             },
-            visitorLastActivityAt: {
+            operatorLastActivityAt: {
               $lte: lastActivityBefore,
             },
           },
