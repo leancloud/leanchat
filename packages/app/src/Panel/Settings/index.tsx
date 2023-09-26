@@ -158,7 +158,7 @@ function Layout() {
       <div className="bg-[#f5f7f9] p-2 shadow-[rgba(0,27,71,0.12)_0px_2px_6px] max-h-full overflow-y-auto">
         <Navs />
       </div>
-      <div className="p-[20px] max-w-[1280px] max-h-full overflow-auto">
+      <div className="p-[20px] max-h-full overflow-auto">
         <Outlet />
       </div>
     </div>
