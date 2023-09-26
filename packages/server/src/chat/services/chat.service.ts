@@ -97,8 +97,7 @@ export class ChatService {
     await this.createMessage({
       conversationId: conversation.id,
       from: {
-        type: 'operator',
-        id: operator.id,
+        type: 'system',
       },
       data: { text },
     });
