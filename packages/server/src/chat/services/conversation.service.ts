@@ -2,7 +2,7 @@ import { Injectable } from '@nestjs/common';
 import { EventEmitter2 } from '@nestjs/event-emitter';
 import { InjectModel } from '@m8a/nestjs-typegoose';
 import { ReturnModelType } from '@typegoose/typegoose';
-import { AnyKeys } from 'mongoose';
+import { AnyKeys, Types } from 'mongoose';
 import _ from 'lodash';
 
 import { Conversation } from '../models';
@@ -40,7 +40,7 @@ export class ConversationService {
     return conversation;
   }
 
-  getConversation(id: string) {
+  getConversation(id: string | Types.ObjectId) {
     return this.conversationModel.findById(id).exec();
   }
 
@@ -97,7 +97,10 @@ export class ConversationService {
     return results.map((result) => result._id.toString()) as string[];
   }
 
-  async updateConversation(id: string, data: UpdateConversationData) {
+  async updateConversation(
+    id: string | Types.ObjectId,
+    data: UpdateConversationData,
+  ) {
     data = _.omitBy(data, _.isUndefined);
     if (_.isEmpty(data)) {
       return;

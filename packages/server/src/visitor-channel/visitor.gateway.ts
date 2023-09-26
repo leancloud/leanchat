@@ -19,6 +19,7 @@ import {
   Conversation,
   ConversationCreatedEvent,
   ConversationService,
+  ConversationUpdatedEvent,
   Message,
   MessageCreatedEvent,
   MessageData,
@@ -199,6 +200,23 @@ export class VisitorGateway implements OnModuleInit, OnGatewayConnection {
     await this.chatService.evaluateConversation(conversation.id, data);
   }
 
+  @SubscribeMessage('close')
+  async handleClose(@ConnectedSocket() socket: Socket) {
+    const visitorId = socket.data.id;
+    const visitor = await this.visitorService.getVisitor(visitorId);
+    if (!visitor || !visitor.currentConversationId) {
+      return;
+    }
+
+    await this.chatService.closeConversation({
+      conversationId: visitor.currentConversationId,
+      by: {
+        type: 'visitor',
+        id: visitorId,
+      },
+    });
+  }
+
   shouldDispatchMessage(message: Message) {
     return (
       message.type === 'message' ||
@@ -215,6 +233,18 @@ export class VisitorGateway implements OnModuleInit, OnGatewayConnection {
         'currentConversation',
         ConversationDto.fromDocument(payload.conversation),
       );
+  }
+
+  @OnEvent('conversation.updated', { async: true })
+  dispatchConversationUpdated(payload: ConversationUpdatedEvent) {
+    if (payload.data.evaluation || payload.data.closedAt) {
+      this.server
+        .to(payload.conversation.visitorId.toString())
+        .emit(
+          'currentConversation',
+          ConversationDto.fromDocument(payload.conversation),
+        );
+    }
   }
 
   @OnEvent('message.created', { async: true })

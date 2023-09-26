@@ -1,3 +1,5 @@
+import { Types } from 'mongoose';
+
 import { MessageSender } from './message.interface';
 
 export interface CreateConversationData {
@@ -34,7 +36,7 @@ export interface GetInactiveConversationIdsOptions {
 }
 
 export interface CloseConversationOptions {
-  conversationId: string;
+  conversationId: string | Types.ObjectId;
   by: MessageSender;
   reason?: string;
 }
