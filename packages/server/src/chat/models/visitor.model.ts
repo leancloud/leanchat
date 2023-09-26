@@ -16,6 +16,12 @@ export class Visitor {
   @Prop()
   currentConversationId?: Types.ObjectId;
 
+  @Prop()
+  name?: string;
+
+  @Prop()
+  comment?: string;
+
   createdAt: Date;
 
   updatedAt: Date;

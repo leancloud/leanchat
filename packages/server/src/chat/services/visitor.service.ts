@@ -30,6 +30,8 @@ export class VisitorService {
         {
           $set: {
             currentConversationId: data.currentVisitorId,
+            name: data.name,
+            comment: data.comment,
           },
         },
         {
