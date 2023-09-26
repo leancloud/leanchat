@@ -7,7 +7,11 @@ import { QuickReplyModule } from 'src/quick-reply';
 import { OnlineTime } from './models/online-time.model';
 import { ChatGateway } from './chat.gateway';
 import { CurrentOperatorMiddleware } from './middlewares/current-operator.middleware';
-import { AutoCloseConversationService, OnlineTimeService } from './services';
+import {
+  AutoCloseConversationService,
+  ConversationTransformService,
+  OnlineTimeService,
+} from './services';
 import {
   CategoryController,
   ConfigController,
@@ -25,7 +29,12 @@ import {
     CategoryModule,
     QuickReplyModule,
   ],
-  providers: [ChatGateway, AutoCloseConversationService, OnlineTimeService],
+  providers: [
+    ChatGateway,
+    AutoCloseConversationService,
+    OnlineTimeService,
+    ConversationTransformService,
+  ],
   controllers: [
     OperatorController,
     SessionController,

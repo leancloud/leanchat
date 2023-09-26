@@ -1,4 +1,5 @@
 import type { Conversation } from 'src/chat';
+import type { VisitorDto } from '../visitor';
 
 export class ConversationDto {
   id: string;
@@ -23,6 +24,8 @@ export class ConversationDto {
   updatedAt: string;
 
   lastMessage?: any;
+
+  visitor?: VisitorDto;
 
   static fromDocument(conv: Conversation) {
     const dto = new ConversationDto();

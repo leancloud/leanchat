@@ -1,5 +1,5 @@
 export interface UpdateVisitorData {
-  currentVisitorId?: string;
+  currentConversationId?: string;
   name?: string;
   comment?: string;
 }

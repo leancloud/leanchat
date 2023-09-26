@@ -1,6 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import { InjectModel } from '@m8a/nestjs-typegoose';
 import { ReturnModelType } from '@typegoose/typegoose';
+import { AnyKeys, Types } from 'mongoose';
 
 import { Visitor } from '../models/visitor.model';
 import { UpdateVisitorData } from '../interfaces/visitor.interface';
@@ -15,8 +16,19 @@ export class VisitorService {
     return visitor.save();
   }
 
-  getVisitor(id: string) {
+  getVisitor(id: string | Types.ObjectId) {
     return this.visitorModel.findById(id);
+  }
+
+  async getVisitors(ids: string[] | Types.ObjectId[]) {
+    if (ids.length === 0) {
+      return [];
+    }
+    if (typeof ids[0] === 'string') {
+      ids = ids.map((id) => new Types.ObjectId(id));
+    }
+
+    return this.visitorModel.find({ _id: { $in: ids } }).exec();
   }
 
   getVisitorByChannel(channel: string, channelId: string) {
@@ -24,20 +36,29 @@ export class VisitorService {
   }
 
   updateVisitor(visitorId: string, data: UpdateVisitorData) {
+    const $set: AnyKeys<Visitor> = {};
+    const $unset: AnyKeys<Visitor> = {};
+
+    if (data.currentConversationId) {
+      $set.currentConversationId = data.currentConversationId;
+    }
+    if (data.name !== undefined) {
+      if (data.name) {
+        $set.name = data.name;
+      } else {
+        $unset.name = '';
+      }
+    }
+    if (data.comment !== undefined) {
+      if (data.comment) {
+        $set.comment = data.comment;
+      } else {
+        $unset.comment = '';
+      }
+    }
+
     return this.visitorModel
-      .findOneAndUpdate(
-        { _id: visitorId },
-        {
-          $set: {
-            currentConversationId: data.currentVisitorId,
-            name: data.name,
-            comment: data.comment,
-          },
-        },
-        {
-          new: true,
-        },
-      )
+      .findOneAndUpdate({ _id: visitorId }, { $set, $unset }, { new: true })
       .exec();
   }
 }

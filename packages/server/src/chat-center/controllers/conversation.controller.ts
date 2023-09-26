@@ -3,7 +3,6 @@ import {
   Body,
   Controller,
   Get,
-  NotFoundException,
   Param,
   Patch,
   Post,
@@ -13,7 +12,6 @@ import {
 } from '@nestjs/common';
 import { EventEmitter2 } from '@nestjs/event-emitter';
 import { ZodValidationPipe } from 'nestjs-zod';
-import _ from 'lodash';
 
 import { InviteEvaluationEvent } from 'src/event';
 import {
@@ -29,11 +27,11 @@ import { GetConversationsDto } from '../dtos/conversation/get-conversations.dto'
 import { GetMessagesDto, MessageDto } from '../dtos/message';
 import {
   AssignConversationDto,
-  ConversationDto,
   UpdateConversationDto,
 } from '../dtos/conversation';
 import { CurrentOperator } from '../decorators/current-operator.decorator';
 import { FindConversationPipe } from '../pipes';
+import { ConversationTransformService } from '../services/conversation-transform.service';
 
 @Controller('conversations')
 @UseGuards(AuthGuard)
@@ -45,6 +43,7 @@ export class ConversationController {
     private messageService: MessageService,
     private chatService: ChatService,
     private operatorService: OperatorService,
+    private convTransformService: ConversationTransformService,
   ) {}
 
   @Get()
@@ -52,29 +51,12 @@ export class ConversationController {
     const conversations = await this.conversationService.getConversations(
       query,
     );
-    const lastMessages = await this.messageService.getLastMessages(
-      conversations.map((c) => c.id),
-    );
-    const lastMessageByCid = _.keyBy(lastMessages, (m) =>
-      m.conversationId.toString(),
-    );
-    return conversations.map((conversation) => {
-      const dto = ConversationDto.fromDocument(conversation);
-      const lastMessage = lastMessageByCid[conversation.id];
-      if (lastMessage) {
-        dto.lastMessage = MessageDto.fromDocument(lastMessage);
-      }
-      return dto;
-    });
+    return this.convTransformService.composeConversations(conversations);
   }
 
   @Get(':id')
-  async getConversation(@Param('id') id: string) {
-    const conversation = await this.conversationService.getConversation(id);
-    if (!conversation) {
-      throw new NotFoundException(`会话 ${id} 不存在`);
-    }
-    return ConversationDto.fromDocument(conversation);
+  getConversation(@Param('id', FindConversationPipe) conv: Conversation) {
+    return this.convTransformService.composeConversation(conv);
   }
 
   @Get(':id/messages')
@@ -91,14 +73,10 @@ export class ConversationController {
 
   @Patch(':id')
   async updateConversation(
-    @Param('id') id: string,
+    @Param('id', FindConversationPipe) conv: Conversation,
     @Body() data: UpdateConversationDto,
   ) {
-    const conversation = await this.conversationService.getConversation(id);
-    if (!conversation) {
-      throw new NotFoundException(`会话 ${id} 不存在`);
-    }
-    await this.conversationService.updateConversation(id, data);
+    await this.conversationService.updateConversation(conv.id, data);
   }
 
   @Post(':id/close')

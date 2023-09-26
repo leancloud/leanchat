@@ -146,7 +146,7 @@ export class VisitorGateway implements OnModuleInit, OnGatewayConnection {
         visitorId,
       });
       await this.visitorService.updateVisitor(visitorId, {
-        currentVisitorId: conversation.id,
+        currentConversationId: conversation.id,
       });
     }
     await this.chatService.createMessage({

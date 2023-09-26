@@ -23,13 +23,12 @@ import {
   OperatorStatusChangedEvent,
   MessageCreatedEvent,
   MessageData,
-  MessageService,
 } from 'src/chat';
 import { LeanCloudService } from 'src/leancloud';
 import { WsInterceptor } from 'src/common/interceptors';
 import { ConversationDto } from './dtos/conversation';
 import { CreateMessageDto, MessageDto } from './dtos/message';
-import { OnlineTimeService } from './services';
+import { ConversationTransformService, OnlineTimeService } from './services';
 
 @WebSocketGateway({ namespace: 'o' })
 @UsePipes(ZodValidationPipe)
@@ -42,10 +41,10 @@ export class ChatGateway
 
   constructor(
     private conversationService: ConversationService,
-    private messageService: MessageService,
     private chatService: ChatService,
     private leancloudService: LeanCloudService,
     private onlineTimeService: OnlineTimeService,
+    private convTransformService: ConversationTransformService,
   ) {}
 
   onModuleInit() {
@@ -136,13 +135,10 @@ export class ChatGateway
       return;
     }
 
-    const dto = ConversationDto.fromDocument(payload.conversation);
-    const lastMessage = await this.messageService.getLastMessage(
-      payload.conversation.id,
+    const dto = await this.convTransformService.composeConversation(
+      payload.conversation,
     );
-    if (lastMessage) {
-      dto.lastMessage = MessageDto.fromDocument(lastMessage);
-    }
+
     this.server.emit('conversationUpdated', {
       conversation: dto,
       fields: Object.keys(payload.data),
