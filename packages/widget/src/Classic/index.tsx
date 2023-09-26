@@ -1,4 +1,4 @@
-import { ComponentProps, ReactNode, KeyboardEvent, useState, useRef, useEffect } from 'react';
+import { ComponentProps, KeyboardEvent, useState, useRef, useEffect, ChangeEvent } from 'react';
 import Textarea from 'react-textarea-autosize';
 import {
   FaXmark,
@@ -10,38 +10,14 @@ import {
   FaHeadset,
   FaArrowLeft,
   FaPlus,
-  FaFile,
+  FaRegFile,
 } from 'react-icons/fa6';
 import cx from 'classnames';
 import { useChat } from '../chat';
 import { EvaluateData, Message } from '../types';
-
-interface TextMessageProps {
-  children?: ReactNode;
-  position?: 'left' | 'right';
-}
-
-function TextMessage({ children, position = 'left' }: TextMessageProps) {
-  return (
-    <div
-      className={cx('flex', {
-        'flex-row-reverse': position === 'right',
-      })}
-    >
-      <div
-        className={cx(
-          'bg-white text-[#6c6c6c] p-2 inline-block max-w-[85%] rounded-md min-w-[32px] whitespace-pre-line break-all',
-          {
-            'rounded-bl-none': position === 'left',
-            'rounded-br-none !bg-[#CEF2FF] text-black': position === 'right',
-          },
-        )}
-      >
-        {children}
-      </div>
-    </div>
-  );
-}
+import { Modal } from './Modal';
+import { ProgressMessage, TextMessage } from './Message';
+import { UploadTask, useUpload } from './useUpload';
 
 interface LogMessageProps {
   content: string;
@@ -75,13 +51,9 @@ function FileMessage({ file }: FileMessageProps) {
     );
   }
   return (
-    <a
-      className="flex items-center bg-white w-[200px] h-[50px] pl-1 pr-2"
-      href={file.url}
-      target="_blank"
-    >
-      <FaFile className="w-8 h-8 shrink-0" />
-      <div className="ml-1 grow text-sm truncate">{file.name}</div>
+    <a className="flex items-center w-[200px] h-[30px]" href={file.url} target="_blank">
+      <FaRegFile className="w-5 h-5 shrink-0 mx-1" />
+      <div className="ml-1 grow truncate text-xs">{file.name}</div>
     </a>
   );
 }
@@ -128,15 +100,16 @@ function BigControlButton({ children, title, ...props }: ComponentProps<'button'
 
 interface MessageListProps {
   messages: Message[];
+  uploadTasks: UploadTask[];
 }
 
-function MessageList({ messages }: MessageListProps) {
+function MessageList({ messages, uploadTasks }: MessageListProps) {
   const containerRef = useRef<HTMLDivElement>(null!);
 
   useEffect(() => {
     const el = containerRef.current;
     el.scrollTop = el.scrollHeight;
-  }, [messages]);
+  }, [messages, uploadTasks.length]);
 
   return (
     <div
@@ -146,6 +119,7 @@ function MessageList({ messages }: MessageListProps) {
       {messages.map((msg) => (
         <MessageItem key={msg.id} message={msg} />
       ))}
+      {uploadTasks?.map((task) => <ProgressMessage key={task.id} progress={task.progress} />)}
     </div>
   );
 }
@@ -162,7 +136,7 @@ function EvaluationModal({ onEvaluate, onCancel }: EvaluationModalProps) {
   const evaluations = ['非常不满意', '不满意', '一般', '满意', '非常满意'];
 
   return (
-    <div className="absolute top-0 left-0 w-full h-full bg-[rgba(0,0,0,0.6)] flex">
+    <Modal>
       <div className="bg-white m-auto rounded-[5px] w-[80%] max-w-[400px]">
         <div className="flex flex-col items-center p-4">
           <div className="font-bold mb-4">请您评价我的服务</div>
@@ -197,7 +171,7 @@ function EvaluationModal({ onEvaluate, onCancel }: EvaluationModalProps) {
           </button>
         </div>
       </div>
-    </div>
+    </Modal>
   );
 }
 
@@ -220,12 +194,9 @@ export function Classic() {
   const evaluated = conversation && !!conversation.evaluation;
 
   const handleSendMessage = () => {
-    if (status !== 'inService') {
-      return;
-    }
     const trimedContent = content.trim();
     if (trimedContent) {
-      sendMessage(content);
+      sendMessage({ text: content });
       setContent('');
     }
   };
@@ -247,6 +218,27 @@ export function Classic() {
       setShowEvaluationModal(true);
       return;
     }
+  };
+
+  const { tasks, upload } = useUpload({
+    onUploaded: (fileId) => {
+      sendMessage({ fileId });
+    },
+  });
+
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  const imageInputRef = useRef<HTMLInputElement>(null);
+
+  const onFileInputChange = (e: ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.item(0);
+    if (!file) {
+      return;
+    }
+    e.target.value = '';
+    if (isBusy) {
+      return;
+    }
+    upload(file);
   };
 
   return (
@@ -276,9 +268,17 @@ export function Classic() {
           </button>
         )}
 
-        <MessageList messages={messages} />
+        <MessageList messages={messages} uploadTasks={tasks} />
 
         <div className="sm:hidden bg-[#f9f9f9]">
+          <input ref={fileInputRef} className="hidden" type="file" onChange={onFileInputChange} />
+          <input
+            ref={imageInputRef}
+            className="hidden"
+            type="file"
+            accept="image/jpg,image/png,image/gif,image/jpeg,image/bmp"
+            onChange={onFileInputChange}
+          />
           <div className="p-[5px] flex">
             <Textarea
               className="grow resize-none outline-none border border-[#d4d4d4] rounded leading-4 px-[5px] py-3 focus:border-[#cef2ff]"
@@ -306,10 +306,18 @@ export function Classic() {
           </div>
           {showControl && (
             <div className="p-2 grid grid-cols-[repeat(auto-fill,minmax(80px,1fr))] justify-items-center gap-2">
-              <BigControlButton title="图片" disabled={isBusy}>
+              <BigControlButton
+                title="图片"
+                disabled={isBusy}
+                onClick={() => imageInputRef.current?.click()}
+              >
                 <FaImage className="w-8 h-8" />
               </BigControlButton>
-              <BigControlButton title="文件" disabled={isBusy}>
+              <BigControlButton
+                title="文件"
+                disabled={isBusy}
+                onClick={() => fileInputRef.current?.click()}
+              >
                 <FaFolderOpen className="w-8 h-8" />
               </BigControlButton>
               <BigControlButton
@@ -330,10 +338,18 @@ export function Classic() {
           <ControlButton title="表情" disabled={isBusy}>
             <FaRegFaceSmile className="w-4 h-4" />
           </ControlButton>
-          <ControlButton title="图片" disabled={isBusy}>
+          <ControlButton
+            title="图片"
+            disabled={isBusy}
+            onClick={() => imageInputRef.current?.click()}
+          >
             <FaImage className="w-4 h-4" />
           </ControlButton>
-          <ControlButton title="文件" disabled={isBusy}>
+          <ControlButton
+            title="文件"
+            disabled={isBusy}
+            onClick={() => fileInputRef.current?.click()}
+          >
             <FaFolderOpen className="w-4 h-4" />
           </ControlButton>
           <ControlButton title="评价" disabled={isBusy || evaluated} onClick={handleShowEvaluation}>

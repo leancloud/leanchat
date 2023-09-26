@@ -42,8 +42,8 @@ importers:
         specifier: ^10.0.2
         version: 10.0.2
       leancloud-storage:
-        specifier: ^4.15.0
-        version: 4.15.0
+        specifier: ^4.15.1
+        version: 4.15.1
       lodash:
         specifier: ^4.17.21
         version: 4.17.21
@@ -286,6 +286,9 @@ importers:
       classnames:
         specifier: ^2.3.2
         version: 2.3.2
+      leancloud-storage:
+        specifier: ^4.15.1
+        version: 4.15.1
       react:
         specifier: ^18.2.0
         version: 18.2.0
@@ -5623,6 +5626,28 @@ packages:
 
   /leancloud-storage@4.15.0:
     resolution: {integrity: sha512-iEbg+xjcMBW2J0CrzmXwtnzID9uZkK+x1HBVZHGIE4xW+h1QpuPkFBVAK7CVmdLRmKiVt68OKboeUM48Rav9qQ==}
+    dependencies:
+      '@babel/runtime-corejs3': 7.22.6
+      '@leancloud/adapter-types': 5.0.0
+      '@leancloud/platform-adapters-browser': 1.5.3
+      '@leancloud/platform-adapters-node': 1.6.0
+      '@leancloud/platform-adapters-weapp': 1.6.2
+      debug: 3.2.7
+      eventemitter3: 2.0.3
+      leancloud-realtime: 5.0.0-rc.8
+      leancloud-realtime-plugin-live-query: 1.2.0(leancloud-realtime@5.0.0-rc.8)
+      md5: 2.3.0
+      promise-timeout: 1.3.0
+      underscore: 1.13.6
+      uuid: 3.4.0
+    transitivePeerDependencies:
+      - bufferutil
+      - supports-color
+      - utf-8-validate
+    dev: false
+
+  /leancloud-storage@4.15.1:
+    resolution: {integrity: sha512-7VD1o0skitc0scG5wWuVaKUwrukW0oOp1dgxktjdcOLzKXiEbhIYvdDUp59oZuY718j9Z02K/h9Bersc0xW6Cw==}
     dependencies:
       '@babel/runtime-corejs3': 7.22.6
       '@leancloud/adapter-types': 5.0.0

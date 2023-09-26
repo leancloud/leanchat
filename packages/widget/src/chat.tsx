@@ -17,7 +17,7 @@ interface ChatContextValue {
   status?: string;
   conversation?: Conversation;
   messages: Message[];
-  sendMessage: (content: string) => void;
+  sendMessage: (data: any) => void;
   evaluate: (data: EvaluateData) => void;
 }
 
@@ -72,8 +72,8 @@ export function Chat({ children }: ChatProps) {
   }, [socket]);
 
   const sendMessage = useCallback(
-    (text: string) => {
-      socket?.emit('message', { text });
+    (data: any) => {
+      socket?.emit('message', data);
     },
     [socket],
   );
