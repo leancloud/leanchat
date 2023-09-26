@@ -10,6 +10,7 @@ import {
 import { OnEvent } from '@nestjs/event-emitter';
 import { Server, Socket } from 'socket.io';
 import { ZodValidationPipe } from 'nestjs-zod';
+import _ from 'lodash';
 
 import { ConfigService } from 'src/config';
 import { InviteEvaluationEvent } from 'src/event';
@@ -20,9 +21,11 @@ import {
   ConversationService,
   Message,
   MessageCreatedEvent,
+  MessageData,
   MessageService,
   VisitorService,
 } from 'src/chat';
+import { LeanCloudService } from 'src/leancloud';
 import { CreateMessageDto } from './dtos/create-message.dto';
 import { EvaluationDto } from './dtos/evaluation.dto';
 import { VisitorChannelService } from './visitor-channel.service';
@@ -43,6 +46,7 @@ export class VisitorGateway implements OnModuleInit, OnGatewayConnection {
     private conversationService: ConversationService,
     private messageService: MessageService,
     private configService: ConfigService,
+    private leancloudService: LeanCloudService,
   ) {}
 
   onModuleInit() {
@@ -149,13 +153,28 @@ export class VisitorGateway implements OnModuleInit, OnGatewayConnection {
         currentConversationId: conversation.id,
       });
     }
+
+    const messageData: MessageData = {};
+    if (data.text) {
+      messageData.text = data.text;
+    } else if (data.fileId) {
+      const file = await this.leancloudService.getFile(data.fileId);
+      if (file) {
+        messageData.file = file;
+      }
+    }
+
+    if (_.isEmpty(messageData)) {
+      return;
+    }
+
     await this.chatService.createMessage({
       conversationId: conversation.id,
       from: {
         type: 'visitor',
         id: visitorId,
       },
-      data,
+      data: messageData,
     });
   }
 
