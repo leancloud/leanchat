@@ -7,6 +7,11 @@ export interface GreetingConfig {
   };
 }
 
+export interface OperatorWelcomeMessageConfig {
+  enabled: boolean;
+  text: string;
+}
+
 export interface AutoCloseConfig {
   timeout: number;
   message: {

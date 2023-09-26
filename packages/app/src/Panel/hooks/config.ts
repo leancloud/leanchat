@@ -1,9 +1,17 @@
 import { useMutation, useQuery } from '@tanstack/react-query';
 
-import { AutoCloseConfig, GreetingConfig, QueueConfig, getConfig, setConfig } from '../api/config';
+import {
+  AutoCloseConfig,
+  GreetingConfig,
+  OperatorWelcomeMessageConfig,
+  QueueConfig,
+  getConfig,
+  setConfig,
+} from '../api/config';
 
 interface ConfigKeys {
   greeting: GreetingConfig;
+  operatorWelcomeMessage: OperatorWelcomeMessageConfig;
   autoClose: AutoCloseConfig;
   queue: QueueConfig;
 }
