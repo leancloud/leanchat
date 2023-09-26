@@ -31,7 +31,7 @@ function CategoryForm({ initData, onSave }: CategoryFormProps) {
 }
 
 export function Categories() {
-  const { data: categories, refetch } = useCategories();
+  const { data: categories, isLoading, refetch } = useCategories();
 
   const tree = useCategoryTree(categories);
 
@@ -75,6 +75,7 @@ export function Categories() {
       }}
     >
       <Table
+        loading={isLoading}
         dataSource={tree}
         rowKey="id"
         pagination={false}
