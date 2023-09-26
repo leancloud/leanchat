@@ -20,12 +20,13 @@ import dayjs from 'dayjs';
 import cx from 'classnames';
 import _ from 'lodash';
 
-import { Message as IMessage } from '@/Panel/types';
+import { Message as IMessage, Operator } from '@/Panel/types';
 import { useNow } from '../contexts/NowContext';
 import { useConversationMessages, useVisitorMessages } from '../hooks/message';
 import { useConversationContext } from './ConversationContext';
 import style from './MessageList.module.css';
 import { bytesToSize } from './utils';
+import { useOperators } from '../hooks/operator';
 
 interface DateGroup {
   date: dayjs.Dayjs;
@@ -93,30 +94,31 @@ function FileMessage({ file }: FileMessageProps) {
   );
 }
 
-interface SenderProps {
-  from: MessageGroup['from'];
-}
-
-function Sender({ from }: SenderProps) {
-  const { conversation } = useConversationContext();
-
-  switch (from.type) {
-    case 'visitor':
-      return conversation.visitor?.name || `用户${from.id.slice(-6)}`;
-    case 'operator':
-      return `客服 ${from.id.slice(-6)}`;
-    case 'system':
-      return '机器人客服';
-  }
-}
-
 interface MessageGroupProps {
   isLeft: boolean;
   from: MessageGroup['from'];
   messages: IMessage[];
+  operatorMap: Record<string, Operator>;
 }
 
-function MessageGroup({ from, isLeft, messages }: MessageGroupProps) {
+function MessageGroup({ from, isLeft, messages, operatorMap }: MessageGroupProps) {
+  const { conversation } = useConversationContext();
+
+  const getSenderName = () => {
+    switch (from.type) {
+      case 'visitor':
+        return conversation.visitor?.name || `用户${from.id.slice(-6)}`;
+      case 'operator':
+        const operator = operatorMap[from.id];
+        if (operator) {
+          return `${operator.externalName} (${operator.internalName})`;
+        }
+        return `客服 ${from.id.slice(-6)}`;
+      case 'system':
+        return '机器人客服';
+    }
+  };
+
   return (
     <div
       className={cx('my-5 px-5 flex flex-col', {
@@ -124,9 +126,7 @@ function MessageGroup({ from, isLeft, messages }: MessageGroupProps) {
         'items-end': !isLeft,
       })}
     >
-      <div className={cx('text-xs px-1 mb-1')}>
-        <Sender from={from} />
-      </div>
+      <div className={cx('text-xs px-1 mb-1')}>{getSenderName()}</div>
       {messages.map((message) => (
         <div
           key={message.id}
@@ -382,6 +382,9 @@ export const MessageList = forwardRef<MessageListRef, MessageListProps>((props, 
     setScrollBehavior: (behavior) => (scrollBehavior.current = behavior),
   }));
 
+  const { data: operators } = useOperators();
+  const operatorMap = useMemo(() => _.keyBy(operators, (o) => o.id), []);
+
   return (
     <div className="grow relative overflow-hidden">
       <div ref={containerRef} className={cx('h-full overflow-y-auto', style.messageList)}>
@@ -412,6 +415,7 @@ export const MessageList = forwardRef<MessageListRef, MessageListProps>((props, 
                     isLeft={item.from.type === 'visitor'}
                     from={item.from}
                     messages={item.messages}
+                    operatorMap={operatorMap}
                   />
                 );
               }
