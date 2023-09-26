@@ -98,9 +98,11 @@ interface SenderProps {
 }
 
 function Sender({ from }: SenderProps) {
+  const { conversation } = useConversationContext();
+
   switch (from.type) {
     case 'visitor':
-      return `用户${from.id.slice(-6)}`;
+      return conversation.visitor?.name || `用户${from.id.slice(-6)}`;
     case 'operator':
       return `客服 ${from.id.slice(-6)}`;
     case 'system':

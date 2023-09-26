@@ -1,8 +1,9 @@
-import { Tabs, TabsProps } from 'antd';
+import { Button, Form, Input, Tabs, TabsProps } from 'antd';
 
 import { CategoryCascader } from '../components/CategoryCascader';
 import { useUpdateConversation } from '../hooks/conversation';
 import { useConversationContext } from './ConversationContext';
+import { useVisitor } from '../hooks/visitor';
 
 const tabsItems: TabsProps['items'] = [
   {
@@ -13,7 +14,7 @@ const tabsItems: TabsProps['items'] = [
   {
     key: 'userInfo',
     label: '用户信息',
-    children: null,
+    children: <VisitorInfo />,
   },
 ];
 
@@ -36,6 +37,32 @@ function ConversationInfo() {
           style={{ width: '100%' }}
         />
       </div>
+    </div>
+  );
+}
+
+function VisitorInfo() {
+  const { conversation } = useConversationContext();
+
+  const { data, isLoading, update, isUpdating } = useVisitor(conversation.visitorId);
+
+  if (isLoading) {
+    return null;
+  }
+
+  return (
+    <div className="pt-2">
+      <Form layout="vertical" initialValues={data} onFinish={update}>
+        <Form.Item label="昵称" name="name">
+          <Input />
+        </Form.Item>
+        <Form.Item label="备注" name="comment">
+          <Input.TextArea autoSize={{ minRows: 2, maxRows: 5 }} />
+        </Form.Item>
+        <Button type="primary" htmlType="submit" loading={isUpdating}>
+          保存
+        </Button>
+      </Form>
     </div>
   );
 }

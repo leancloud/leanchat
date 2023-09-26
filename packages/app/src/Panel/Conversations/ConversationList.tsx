@@ -30,7 +30,7 @@ export function ConversationList({
               {conv.id.slice(0, 1)}
             </Avatar>
           }
-          title={`用户${conv.visitorId.slice(-6)}`}
+          title={conv.visitor?.name || `用户${conv.visitorId.slice(-6)}`}
           message={
             conv.lastMessage && (conv.lastMessage.data.file ? '[文件]' : conv.lastMessage.data.text)
           }

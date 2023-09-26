@@ -14,6 +14,10 @@ export interface Message {
 export interface Conversation {
   id: string;
   visitorId: string;
+  visitor?: {
+    id: string;
+    name?: string;
+  };
   operatorId?: string;
   lastMessage?: Message;
   categoryId?: string;
@@ -44,4 +48,10 @@ export interface QuickReply {
   id: string;
   content: string;
   tags?: string[];
+}
+
+export interface Visitor {
+  id: string;
+  name?: string;
+  comment?: string;
 }
