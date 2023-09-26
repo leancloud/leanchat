@@ -13,7 +13,7 @@ export class AutoAssignProcessor {
     const { conversationId } = job.data;
     const operator = await this.chatService.getRandomReadyOperator();
     if (operator) {
-      await this.chatService.assignConversation(conversationId, operator.id);
+      await this.chatService.assignConversation(conversationId, operator);
     } else {
       await this.chatService.enqueueConversation(conversationId);
     }

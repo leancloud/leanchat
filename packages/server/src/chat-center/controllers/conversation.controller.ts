@@ -136,6 +136,6 @@ export class ConversationController {
     if (!operator) {
       throw new BadRequestException('Invalid operator id');
     }
-    await this.chatService.assignConversation(conversation.id, operator.id);
+    await this.chatService.assignConversation(conversation, operator);
   }
 }

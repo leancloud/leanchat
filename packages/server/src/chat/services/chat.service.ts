@@ -14,7 +14,6 @@ import {
   UpdateConversationData,
 } from '../interfaces/conversation.interface';
 import { CreateMessageData } from '../interfaces/chat.interface';
-import { ChatError } from '../errors';
 import { ConversationService } from './conversation.service';
 import { MessageService } from './message.service';
 import { AssignQueuedJobData, AutoAssignJobData } from '../interfaces';
@@ -23,6 +22,7 @@ import {
   OperatorStatusChangedEvent,
 } from '../events';
 import { OperatorService } from './operator.service';
+import { Conversation, Operator } from '../models';
 
 @Injectable()
 export class ChatService {
@@ -47,11 +47,8 @@ export class ChatService {
     const conversation = await this.conversationService.getConversation(
       conversationId,
     );
-    if (!conversation) {
-      throw new ChatError('CONVERSATION_NOT_EXIST');
-    }
-    if (conversation.closedAt) {
-      throw new ChatError('CONVERSATION_CLOSED');
+    if (!conversation || conversation.closedAt) {
+      return;
     }
 
     const message = await this.messageService.createMessage(conversation, {
@@ -60,25 +57,51 @@ export class ChatService {
       data,
     });
 
-    const updateConversationData: UpdateConversationData = {};
+    const convData: UpdateConversationData = {};
     if (from.type === 'visitor') {
-      updateConversationData.visitorLastActivityAt = message.createdAt;
+      convData.visitorLastActivityAt = message.createdAt;
       if (!conversation.visitorWaitingSince) {
-        updateConversationData.visitorWaitingSince = message.createdAt;
+        convData.visitorWaitingSince = message.createdAt;
       }
     } else if (from.type === 'operator') {
-      updateConversationData.operatorLastActivityAt = message.createdAt;
-      updateConversationData.visitorWaitingSince = null;
+      convData.operatorLastActivityAt = message.createdAt;
+      convData.visitorWaitingSince = null;
     }
 
-    if (!_.isEmpty(updateConversationData)) {
-      await this.conversationService.updateConversation(
-        conversation.id,
-        updateConversationData,
-      );
-    }
+    await this.conversationService.updateConversation(
+      conversation.id,
+      convData,
+    );
 
     return message;
+  }
+
+  private async createOperatorWelcomeMessage(
+    conversation: Conversation,
+    operator: Operator,
+  ) {
+    const welcomeMessage = await this.configService.get(
+      'operatorWelcomeMessage',
+    );
+    if (!welcomeMessage || !welcomeMessage.enabled) {
+      return;
+    }
+
+    const template = Handlebars.compile(welcomeMessage.text);
+    const text = template({
+      operator: {
+        name: operator.externalName,
+      },
+    });
+
+    await this.createMessage({
+      conversationId: conversation.id,
+      from: {
+        type: 'operator',
+        id: operator.id,
+      },
+      data: { text },
+    });
   }
 
   async evaluateConversation(
@@ -88,11 +111,8 @@ export class ChatService {
     const conversation = await this.conversationService.getConversation(
       conversationId,
     );
-    if (!conversation) {
-      throw new ChatError('CONVERSATION_NOT_EXIST');
-    }
-    if (conversation.evaluation) {
-      throw new ChatError('CONVERSATION_EVALUATED');
+    if (!conversation || conversation.evaluation) {
+      return;
     }
 
     await this.conversationService.updateConversation(conversationId, {
@@ -116,10 +136,7 @@ export class ChatService {
     const conversation = await this.conversationService.getConversation(
       conversationId,
     );
-    if (!conversation) {
-      throw new ChatError('CONVERSATION_NOT_EXIST');
-    }
-    if (conversation.closedAt) {
+    if (!conversation || conversation.closedAt) {
       return;
     }
 
@@ -245,26 +262,41 @@ export class ChatService {
     }
   }
 
-  async assignConversation(conversationId: string, operatorId: string) {
-    const conversation = await this.conversationService.getConversation(
-      conversationId,
-    );
-    if (!conversation || conversation.operatorId?.equals(operatorId)) {
+  async assignConversation(
+    conversation: Conversation | string,
+    operator: Operator | string,
+  ) {
+    if (typeof conversation === 'string') {
+      const conv = await this.conversationService.getConversation(conversation);
+      if (!conv) return;
+      conversation = conv;
+    }
+
+    if (typeof operator === 'string') {
+      const op = await this.operatorService.getOperator(operator);
+      if (!op) return;
+      operator = op;
+    }
+
+    if (conversation.operatorId?.equals(operator.id)) {
       return;
     }
+
     const fromOperatorId = conversation.operatorId?.toString();
 
-    await this.conversationService.updateConversation(conversationId, {
-      operatorId,
+    await this.conversationService.updateConversation(conversation.id, {
+      operatorId: operator.id,
     });
 
     const pl = this.redis.pipeline();
     if (fromOperatorId) {
       pl.hincrby('operator_workload', fromOperatorId, -1);
     }
-    pl.hincrby('operator_workload', operatorId, 1);
+    pl.hincrby('operator_workload', operator.id, 1);
     pl.zrem('conversation_queue', conversation.id);
     await pl.exec();
+
+    await this.createOperatorWelcomeMessage(conversation, operator);
 
     if (fromOperatorId) {
       // 为原客服重新分配会话
