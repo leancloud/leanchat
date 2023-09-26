@@ -184,14 +184,13 @@ export function Classic() {
     setShowEvaluationModal(true);
   };
 
-  const { status, conversation, messages, sendMessage, evaluate } = useChat({
+  const { status, conversation, messages, sendMessage, evaluate, close } = useChat({
     onInviteEvaluation: () => {
       setShowEvaluationModal(true);
     },
   });
 
   const isBusy = status === 'busy';
-  const evaluated = conversation && !!conversation.evaluation;
 
   const handleSendMessage = () => {
     const trimedContent = content.trim();
@@ -214,10 +213,11 @@ export function Classic() {
   };
 
   const handleClose = () => {
-    if (evaluated === false) {
+    if (conversation && !conversation.evaluation) {
       setShowEvaluationModal(true);
       return;
     }
+    close();
   };
 
   const { tasks, upload } = useUpload({
@@ -259,7 +259,7 @@ export function Classic() {
           <FaArrowLeft className="m-auto" />
         </button>
 
-        {evaluated === false && (
+        {conversation && !conversation.closedAt && (
           <button
             className="sm:hidden absolute top-4 right-4 w-8 h-8 bg-white flex rounded-full bg-opacity-70 text-[#999999] shadow-sm"
             onClick={handleClose}
@@ -285,6 +285,7 @@ export function Classic() {
               placeholder="我想问..."
               maxRows={5}
               value={content}
+              disabled={isBusy}
               onChange={(e) => setContent(e.target.value)}
               onKeyDown={handleTextareaKeyDown}
             />
@@ -322,7 +323,7 @@ export function Classic() {
               </BigControlButton>
               <BigControlButton
                 title="评价"
-                disabled={isBusy || evaluated}
+                disabled={!!(!conversation || conversation.evaluation)}
                 onClick={handleShowEvaluation}
               >
                 <FaStar className="w-8 h-8" />
@@ -352,7 +353,11 @@ export function Classic() {
           >
             <FaFolderOpen className="w-4 h-4" />
           </ControlButton>
-          <ControlButton title="评价" disabled={isBusy || evaluated} onClick={handleShowEvaluation}>
+          <ControlButton
+            title="评价"
+            disabled={!!(!conversation || conversation.evaluation)}
+            onClick={handleShowEvaluation}
+          >
             <FaStar className="w-4 h-4" />
           </ControlButton>
           <ControlButton title="转人工" disabled>
@@ -366,6 +371,7 @@ export function Classic() {
               className="resize-none w-full h-full outline-none p-[10px] leading-5 border border-[#d5d5d5] outline outline-0 outline-offset-0 outline-[#0088ff] focus:outline-1"
               placeholder="我想问..."
               value={content}
+              disabled={isBusy}
               onChange={(e) => setContent(e.target.value)}
               onKeyDown={handleTextareaKeyDown}
             />
@@ -373,9 +379,16 @@ export function Classic() {
 
           <div className="flex h-10 items-center px-[10px]">
             <div className="ml-auto space-x-[10px]">
-              <button className="h-6 px-[10px] hover:text-[rgb(0,95,234)]">结束会话</button>
               <button
-                className="px-6 border rounded border-[#cccccc] h-7 hover:bg-[#f1f1f1]"
+                className="h-6 px-[10px] enabled:hover:text-[rgb(0,95,234)] disabled:text-gray-400"
+                disabled={!!(!conversation || conversation.closedAt)}
+                onClick={handleClose}
+              >
+                结束会话
+              </button>
+              <button
+                className="px-6 border rounded border-[#cccccc] h-7 enabled:hover:bg-[#f1f1f1] disabled:text-gray-400"
+                disabled={isBusy}
                 onClick={handleSendMessage}
               >
                 发送

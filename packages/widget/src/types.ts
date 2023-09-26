@@ -4,6 +4,7 @@ export interface Conversation {
     star: number;
     feedback: string;
   };
+  closedAt?: string;
 }
 
 export interface Message {

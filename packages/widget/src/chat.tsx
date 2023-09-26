@@ -19,6 +19,7 @@ interface ChatContextValue {
   messages: Message[];
   sendMessage: (data: any) => void;
   evaluate: (data: EvaluateData) => void;
+  close: () => void;
 }
 
 const ChatContext = createContext<ChatContextValue>(undefined as any);
@@ -71,13 +72,6 @@ export function Chat({ children }: ChatProps) {
     };
   }, [socket]);
 
-  const sendMessage = useCallback(
-    (data: any) => {
-      socket?.emit('message', data);
-    },
-    [socket],
-  );
-
   const [status, setStatus] = useState<string>();
   const [conversation, setConversation] = useState<Conversation>();
   const [messages, setMessages] = useState<Message[]>([]);
@@ -105,24 +99,35 @@ export function Chat({ children }: ChatProps) {
     };
   }, [socket]);
 
+  const sendMessage = useCallback(
+    (data: any) => {
+      if (status !== 'inService') {
+        return;
+      }
+      socket?.emit('message', data);
+    },
+    [status, socket],
+  );
+
   const evaluate = useCallback(
     (evaluation: EvaluateData) => {
       socket?.emit('evaluate', evaluation);
-      setConversation((conv) => {
-        if (conv) {
-          return { ...conv, evaluation };
-        }
-      });
     },
     [socket],
   );
+
+  const close = useCallback(() => {
+    socket?.emit('close');
+  }, [socket]);
 
   if (!socket || !connected) {
     return;
   }
 
   return (
-    <ChatContext.Provider value={{ socket, status, conversation, messages, sendMessage, evaluate }}>
+    <ChatContext.Provider
+      value={{ socket, status, conversation, messages, sendMessage, evaluate, close }}
+    >
       {children}
     </ChatContext.Provider>
   );
