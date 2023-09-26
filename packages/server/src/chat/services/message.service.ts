@@ -62,7 +62,11 @@ export class MessageService {
 
   getLastMessage(conversationId: string) {
     return this.messageModel
-      .findOne({ conversationId, type: 'message' })
+      .findOne({
+        conversationId,
+        type: 'message',
+        'from.type': { $in: ['operator', 'visitor'] },
+      })
       .sort({ createdAt: -1 })
       .exec();
   }
@@ -76,6 +80,7 @@ export class MessageService {
               $in: conversationIds.map((id) => new Types.ObjectId(id)),
             },
             type: 'message',
+            'from.type': { $in: ['operator', 'visitor'] },
           },
         },
         {
