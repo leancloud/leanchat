@@ -86,7 +86,7 @@ export function QuickReplyModal({
         <Form.Item name="content" rules={[{ required: true }]}>
           <Input.TextArea rows={5} placeholder="回复内容" style={{ resize: 'none' }} />
         </Form.Item>
-        <Form.Item name="tags">
+        <Form.Item name="tags" rules={[{ required: true }]}>
           <Select mode="tags" placeholder="添加标签" options={tagOptions} />
         </Form.Item>
       </Form>
@@ -187,10 +187,14 @@ export function QuickReplies() {
               <div className="flex justify-between items-end mt-2">
                 <div className="flex flex-wrap gap-2">
                   {quickReply.tags?.map((tag) => (
-                    <div key={tag} className="bg-gray-100 px-2 leading-7 rounded text-[#969696]">
+                    <button
+                      key={tag}
+                      className="bg-gray-100 px-2 leading-7 rounded text-[#969696]"
+                      onClick={() => setCurrentTag(tag)}
+                    >
                       <span className="mr-0.5">#</span>
                       {tag}
-                    </div>
+                    </button>
                   ))}
                 </div>
                 <div className="space-x-2 shrink-0">
