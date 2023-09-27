@@ -199,7 +199,7 @@ function CloseConversation({ message }: MessageComponentProps) {
             visitor: '用户',
             operator: '客服',
             system: '系统',
-          }[message.from.type]
+          }[message.data.by.type as string]
         }
         关闭了会话
       </div>
@@ -210,6 +210,9 @@ function CloseConversation({ message }: MessageComponentProps) {
 const MessageComponents: Record<string, JSXElementConstructor<MessageComponentProps>> = {
   evaluate: EvaluateMessage,
   close: CloseConversation,
+  operatorJoin: ({ message }) => {
+    return <LogMessage>客服 {message.data.operatorId} 进入会话</LogMessage>;
+  },
 };
 
 function useAtBottom(ref: RefObject<HTMLElement>) {
