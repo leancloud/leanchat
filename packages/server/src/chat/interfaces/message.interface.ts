@@ -8,8 +8,6 @@ export interface MessageSender {
   id?: string | Types.ObjectId;
 }
 
-export type MessageType = 'message' | 'evaluate' | 'close';
-
 export interface MessageData {
   text?: string;
   file?: LeanCloudFile;
@@ -19,8 +17,8 @@ export interface MessageData {
 
 export interface CreateMessageData {
   from: MessageSender;
-  type: MessageType;
-  data: MessageData;
+  type: string;
+  data: any;
 }
 
 export interface GetMessagesOptions {

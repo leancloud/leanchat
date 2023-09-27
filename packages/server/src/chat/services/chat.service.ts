@@ -127,11 +127,7 @@ export class ChatService {
     });
   }
 
-  async closeConversation({
-    conversationId,
-    by,
-    reason,
-  }: CloseConversationOptions) {
+  async closeConversation({ conversationId, by }: CloseConversationOptions) {
     const conversation = await this.conversationService.getConversation(
       conversationId,
     );
@@ -146,8 +142,8 @@ export class ChatService {
     });
     await this.messageService.createMessage(conversation, {
       type: 'close',
-      from: by,
-      data: { reason },
+      from: { type: 'system' },
+      data: { by },
     });
 
     if (conversation.operatorId) {
@@ -267,7 +263,7 @@ export class ChatService {
   ) {
     if (typeof conversation === 'string') {
       const conv = await this.conversationService.getConversation(conversation);
-      if (!conv) return;
+      if (!conv || conv.closedAt) return;
       conversation = conv;
     }
 
@@ -285,6 +281,15 @@ export class ChatService {
 
     await this.conversationService.updateConversation(conversation.id, {
       operatorId: operator.id,
+    });
+    await this.messageService.createMessage(conversation, {
+      type: 'operatorJoin',
+      from: {
+        type: 'system',
+      },
+      data: {
+        operatorId: operator.id,
+      },
     });
 
     const pl = this.redis.pipeline();

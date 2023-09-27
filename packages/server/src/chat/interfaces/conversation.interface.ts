@@ -38,5 +38,4 @@ export interface GetInactiveConversationIdsOptions {
 export interface CloseConversationOptions {
   conversationId: string | Types.ObjectId;
   by: MessageSender;
-  reason?: string;
 }

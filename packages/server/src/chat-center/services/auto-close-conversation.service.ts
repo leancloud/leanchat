@@ -65,7 +65,6 @@ export class AutoCloseConversationService {
         by: {
           type: 'system',
         },
-        reason: 'visitorNoResponse',
       });
     }
   }
