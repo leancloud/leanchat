@@ -16,15 +16,14 @@ interface StatsListProps {
 }
 
 function StatsList({ data }: StatsListProps) {
+  const { operatorMessageCount = 0, visitorMessageCount = 0 } = data;
+
   return (
     <>
       <StatsGroup title="会话消息概览">
-        <StatsCard
-          title="总会话消息数"
-          value={data.operatorMessageCount + data.visitorMessageCount}
-        />
-        <StatsCard title="用户消息数" value={data.visitorMessageCount} />
-        <StatsCard title="客服消息数" value={data.operatorMessageCount} />
+        <StatsCard title="总会话消息数" value={operatorMessageCount + visitorMessageCount} />
+        <StatsCard title="用户消息数" value={visitorMessageCount} />
+        <StatsCard title="客服消息数" value={operatorMessageCount} />
       </StatsGroup>
     </>
   );

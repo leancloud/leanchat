@@ -41,8 +41,8 @@ export async function getConversationStatistics(options: GetConversationStatisti
 }
 
 export interface ConversationMessageStatistics {
-  operatorMessageCount: number;
-  visitorMessageCount: number;
+  operatorMessageCount?: number;
+  visitorMessageCount?: number;
 }
 
 export async function getConversationMessageStatistics(options: GetConversationStatisticsFilters) {
