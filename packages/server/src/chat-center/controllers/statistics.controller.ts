@@ -15,14 +15,13 @@ export class StatisticsController {
   constructor(private conversationService: ConversationService) {}
 
   @Get('conversation')
-  async getConversationStatistics(@Query() query: GetConversationStatsDto) {
-    const stats = await this.conversationService.getConversationStats(query);
-    return stats || {};
+  getConversationStatistics(@Query() query: GetConversationStatsDto) {
+    return this.conversationService.getConversationStats(query);
   }
 
   @Get('conversation-message')
   getConversationMessageStatistics(@Query() query: GetConversationStatsDto) {
-    // return this.conversationStatsService.getConversationMessageStats(query);
+    return this.conversationService.getConversationMessageStats(query);
   }
 
   @Get('conversation-record')

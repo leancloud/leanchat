@@ -8,6 +8,7 @@ import _ from 'lodash';
 import { Conversation } from '../models';
 import {
   CreateConversationData,
+  GetConversationMessageStatsOptions,
   GetConversationOptions,
   GetConversationStatsOptions,
   GetInactiveConversationIdsOptions,
@@ -169,7 +170,7 @@ export class ConversationService {
         $gte: from,
         $lte: to,
       },
-      closedAt: {
+      stats: {
         $exists: true,
       },
     };
@@ -178,133 +179,166 @@ export class ConversationService {
       $match.channel = channel;
     }
     if (operatorId) {
-      if (Array.isArray(operatorId)) {
-        $match.operatorId = {
-          $in: operatorId.map((id) => new Types.ObjectId(id)),
-        };
-      } else {
-        $match.operatorId = new Types.ObjectId(operatorId);
-      }
+      $match.operatorId = {
+        $in: operatorId.map((id) => new Types.ObjectId(id)),
+      };
     }
 
-    const results = await this.conversationModel
-      .aggregate([
-        { $match },
-        {
-          $group: {
-            _id: null,
-            incoming: { $sum: 1 },
-            queued: {
-              $sum: {
-                $cond: ['$queuedAt', 1, 0],
-              },
-            },
-            queuedAndConnected: {
-              $sum: {
-                $cond: ['$stats.queueConnectionTime', 1, 0],
-              },
-            },
-            queuedAndLeft: {
-              $sum: {
-                $cond: ['$stats.queueTimeToLeave', 1, 0],
-              },
-            },
-            operatorCommunicated: {
-              $sum: {
-                $cond: ['$stats.operatorMessageCount', 1, 0],
-              },
-            },
-            operatorIndependentCommunicated: {
-              $sum: {
-                $cond: [
-                  {
-                    $and: [
-                      '$stats.operatorMessageCount',
-                      { $eq: [{ $size: '$stats.joinedOperatorIds' }, 1] },
-                    ],
-                  },
-                  1,
-                  0,
-                ],
-              },
-            },
-            valid: {
-              $sum: {
-                $cond: [
-                  {
-                    $and: [
-                      '$stats.operatorMessageCount',
-                      '$stats.visitorMessageCount',
-                    ],
-                  },
-                  1,
-                  0,
-                ],
-              },
-            },
-            invalid: {
-              $sum: {
-                $cond: [
-                  {
-                    $and: [
-                      { $gt: ['$stats.operatorMessageCount', 0] },
-                      { $eq: ['$stats.visitorMessageCount', 0] },
-                    ],
-                  },
-                  1,
-                  0,
-                ],
-              },
-            },
-            operatorNoResponse: {
-              $sum: {
-                $cond: [{ $eq: ['$stats.operatorMessageCount', 0] }, 1, 0],
-              },
-            },
-            receptionTime: { $sum: '$stats.receptionTime' },
-            receptionCount: {
-              $sum: {
-                $cond: ['$stats.receptionTime', 1, 0],
-              },
-            },
-            firstResponseTime: { $sum: '$stats.firstResponseTime' },
-            firstResponseCount: {
-              $sum: {
-                $cond: ['$stats.firstResponseTime', 1, 0],
-              },
-            },
-            responseTime: { $sum: '$stats.responseTime' },
-            responseCount: { $sum: '$stats.responseCount' },
-            overtime: {
-              $sum: {
-                $cond: [
-                  {
-                    $gt: [
-                      {
-                        $subtract: [
-                          '$stats.firstOperatorMessageCreatedAt',
-                          '$stats.firstOperatorJoinedAt',
-                        ],
-                      },
-                      60 * 1000 * 3,
-                    ],
-                  },
-                  1,
-                  0,
-                ],
-              },
-            },
-            queueConnectionTime: {
-              $sum: '$stats.queueConnectionTime',
-            },
-            queueTimeToLeave: {
-              $sum: '$stats.queueTimeToLeave',
+    const results = await this.conversationModel.aggregate([
+      { $match },
+      {
+        $group: {
+          _id: null,
+          incoming: { $sum: 1 },
+          queued: {
+            $sum: {
+              $cond: ['$queuedAt', 1, 0],
             },
           },
+          queuedAndConnected: {
+            $sum: {
+              $cond: ['$stats.queueConnectionTime', 1, 0],
+            },
+          },
+          queuedAndLeft: {
+            $sum: {
+              $cond: ['$stats.queueTimeToLeave', 1, 0],
+            },
+          },
+          operatorCommunicated: {
+            $sum: {
+              $cond: ['$stats.operatorMessageCount', 1, 0],
+            },
+          },
+          operatorIndependentCommunicated: {
+            $sum: {
+              $cond: [
+                {
+                  $and: [
+                    '$stats.operatorMessageCount',
+                    { $eq: [{ $size: '$stats.joinedOperatorIds' }, 1] },
+                  ],
+                },
+                1,
+                0,
+              ],
+            },
+          },
+          valid: {
+            $sum: {
+              $cond: [
+                {
+                  $and: [
+                    '$stats.operatorMessageCount',
+                    '$stats.visitorMessageCount',
+                  ],
+                },
+                1,
+                0,
+              ],
+            },
+          },
+          invalid: {
+            $sum: {
+              $cond: [
+                {
+                  $and: [
+                    { $gt: ['$stats.operatorMessageCount', 0] },
+                    { $eq: ['$stats.visitorMessageCount', 0] },
+                  ],
+                },
+                1,
+                0,
+              ],
+            },
+          },
+          operatorNoResponse: {
+            $sum: {
+              $cond: [{ $eq: ['$stats.operatorMessageCount', 0] }, 1, 0],
+            },
+          },
+          receptionTime: { $sum: '$stats.receptionTime' },
+          receptionCount: {
+            $sum: {
+              $cond: ['$stats.receptionTime', 1, 0],
+            },
+          },
+          firstResponseTime: { $sum: '$stats.firstResponseTime' },
+          firstResponseCount: {
+            $sum: {
+              $cond: ['$stats.firstResponseTime', 1, 0],
+            },
+          },
+          responseTime: { $sum: '$stats.responseTime' },
+          responseCount: { $sum: '$stats.responseCount' },
+          overtime: {
+            $sum: {
+              $cond: [
+                {
+                  $gt: [
+                    {
+                      $subtract: [
+                        '$stats.firstOperatorMessageCreatedAt',
+                        '$stats.firstOperatorJoinedAt',
+                      ],
+                    },
+                    60 * 1000 * 3,
+                  ],
+                },
+                1,
+                0,
+              ],
+            },
+          },
+          queueConnectionTime: {
+            $sum: '$stats.queueConnectionTime',
+          },
+          queueTimeToLeave: {
+            $sum: '$stats.queueTimeToLeave',
+          },
         },
-      ])
-      .exec();
+      },
+    ]);
 
-    return results[0];
+    return results[0] || {};
+  }
+
+  async getConversationMessageStats({
+    from,
+    to,
+    channel,
+    operatorId,
+  }: GetConversationMessageStatsOptions) {
+    const $match: FilterQuery<Conversation> = {
+      createdAt: {
+        $gte: from,
+        $lte: to,
+      },
+      stats: {
+        $exists: true,
+      },
+    };
+
+    if (channel) {
+      $match.channel = channel;
+    }
+    if (operatorId) {
+      $match.operatorId = {
+        $in: operatorId.map((id) => new Types.ObjectId(id)),
+      };
+    }
+
+    const results = await this.conversationModel.aggregate([
+      { $match },
+      {
+        $group: {
+          _id: null,
+          operatorMessageCount: { $sum: '$stats.operatorMessageCount' },
+          visitorMessageCount: { $sum: '$stats.visitorMessageCount' },
+        },
+      },
+    ]);
+
+    return results[0] || {};
   }
 }

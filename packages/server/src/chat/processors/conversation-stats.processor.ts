@@ -2,6 +2,7 @@ import { Process, Processor } from '@nestjs/bull';
 import { Job } from 'bull';
 import { differenceInMilliseconds, isBefore } from 'date-fns';
 import _ from 'lodash';
+import { Types } from 'mongoose';
 
 import { ConversationStatsJobData } from '../interfaces';
 import { ConversationService, MessageService } from '../services';
@@ -82,6 +83,16 @@ export class ConversationStatsProcessor {
           conversation.queuedAt,
         );
       }
+    }
+
+    const joinedOperatorIds = messages
+      .filter((message) => message.type === 'operatorJoin')
+      .slice(0, 100)
+      .map((message) => message.data.operatorId as string);
+    if (joinedOperatorIds.length) {
+      stats.joinedOperatorIds = joinedOperatorIds.map(
+        (id) => new Types.ObjectId(id),
+      );
     }
 
     await this.conversationService.updateConversation(conversation.id, {

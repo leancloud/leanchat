@@ -50,5 +50,12 @@ export interface GetConversationStatsOptions {
   from: Date;
   to: Date;
   channel?: string;
-  operatorId?: string | string[];
+  operatorId?: string[];
+}
+
+export interface GetConversationMessageStatsOptions {
+  from: Date;
+  to: Date;
+  channel?: string;
+  operatorId?: string[];
 }
