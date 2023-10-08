@@ -143,11 +143,11 @@ export class ChatService {
 
     await this.conversationService.updateConversation(conversationId, {
       closedAt: new Date(),
+      closedBy: by,
     });
     await this.messageService.createMessage(conversation, {
       type: 'close',
-      from: { type: 'system' },
-      data: { by },
+      from: by,
     });
     await this.conversationStatsQueue.add({
       conversationId: conversation.id,
@@ -290,12 +290,10 @@ export class ChatService {
       operatorId: operator.id,
     });
     await this.messageService.createMessage(conversation, {
-      type: 'operatorJoin',
+      type: 'join',
       from: {
-        type: 'system',
-      },
-      data: {
-        operatorId: operator.id,
+        type: 'operator',
+        id: operator.id,
       },
     });
 

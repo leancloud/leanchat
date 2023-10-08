@@ -120,6 +120,7 @@ export class ConversationService {
       categoryId: data.categoryId,
       evaluation: data.evaluation,
       closedAt: data.closedAt,
+      closedBy: data.closedBy,
       queuedAt: data.queuedAt,
       visitorLastActivityAt: data.visitorLastActivityAt,
       operatorLastActivityAt: data.operatorLastActivityAt,

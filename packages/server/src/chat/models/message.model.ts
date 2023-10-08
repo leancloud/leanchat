@@ -1,13 +1,6 @@
 import { Index, ModelOptions, Prop, Severity } from '@typegoose/typegoose';
 import { Types } from 'mongoose';
-
-class MessageSender {
-  @Prop()
-  type: 'visitor' | 'operator';
-
-  @Prop()
-  id: Types.ObjectId;
-}
+import { UserInfo } from './user-info.model';
 
 @Index({ visitorId: 1 })
 @Index({ conversationId: 1 })
@@ -33,7 +26,7 @@ export class Message {
   conversationId: Types.ObjectId;
 
   @Prop({ _id: false })
-  from: MessageSender;
+  from: UserInfo;
 
   @Prop()
   type: string;

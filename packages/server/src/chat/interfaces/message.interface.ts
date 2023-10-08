@@ -1,12 +1,6 @@
-import { Types } from 'mongoose';
-
 import { LeanCloudFile } from 'src/leancloud';
 import { ConversationEvaluation } from './conversation.interface';
-
-export interface MessageSender {
-  type: 'visitor' | 'operator' | 'system';
-  id?: string | Types.ObjectId;
-}
+import { UserInfo } from './common';
 
 export interface MessageData {
   text?: string;
@@ -16,9 +10,9 @@ export interface MessageData {
 }
 
 export interface CreateMessageData {
-  from: MessageSender;
+  from: UserInfo;
   type: string;
-  data: any;
+  data?: any;
 }
 
 export interface GetMessagesOptions {

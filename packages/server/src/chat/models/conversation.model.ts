@@ -1,6 +1,8 @@
 import { Index, ModelOptions, Prop } from '@typegoose/typegoose';
 import { Types } from 'mongoose';
 
+import { UserInfo } from './user-info.model';
+
 class Evaluation {
   @Prop()
   star: number;
@@ -77,6 +79,9 @@ export class Conversation {
 
   @Prop({ index: true })
   closedAt?: Date;
+
+  @Prop({ _id: false })
+  closedBy?: UserInfo;
 
   @Prop()
   queuedAt?: Date;

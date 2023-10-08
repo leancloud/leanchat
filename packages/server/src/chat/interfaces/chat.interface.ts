@@ -1,7 +1,8 @@
-import { MessageData, MessageSender } from './message.interface';
+import { UserInfo } from './common';
+import { MessageData } from './message.interface';
 
 export interface CreateMessageData {
   conversationId: string;
-  from: MessageSender;
+  from: UserInfo;
   data: MessageData;
 }
