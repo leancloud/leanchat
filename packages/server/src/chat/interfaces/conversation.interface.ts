@@ -30,6 +30,7 @@ export interface UpdateConversationData {
   visitorLastActivityAt?: Date;
   operatorLastActivityAt?: Date;
   visitorWaitingSince?: Date | null;
+  inviteEvaluationAt?: Date;
   stats?: Conversation['stats'];
 }
 

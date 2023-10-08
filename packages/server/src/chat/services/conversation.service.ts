@@ -124,6 +124,7 @@ export class ConversationService {
       queuedAt: data.queuedAt,
       visitorLastActivityAt: data.visitorLastActivityAt,
       operatorLastActivityAt: data.operatorLastActivityAt,
+      inviteEvaluationAt: data.inviteEvaluationAt,
       stats: data.stats,
     };
 

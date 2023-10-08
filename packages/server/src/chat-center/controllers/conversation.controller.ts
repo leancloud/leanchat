@@ -94,12 +94,15 @@ export class ConversationController {
   }
 
   @Post(':id/inviteEvaluation')
-  inviteEvaluation(
+  async inviteEvaluation(
     @Param('id', FindConversationPipe) conversation: Conversation,
   ) {
     if (conversation.evaluation) {
       return;
     }
+    await this.conversationService.updateConversation(conversation.id, {
+      inviteEvaluationAt: new Date(),
+    });
     this.events.emit('inviteEvaluation', {
       conversation,
     } satisfies InviteEvaluationEvent);

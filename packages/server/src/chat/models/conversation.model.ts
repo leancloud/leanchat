@@ -95,6 +95,9 @@ export class Conversation {
   @Prop()
   visitorWaitingSince?: Date;
 
+  @Prop()
+  inviteEvaluationAt?: Date;
+
   @Prop({ _id: false })
   stats?: Stats;
 
