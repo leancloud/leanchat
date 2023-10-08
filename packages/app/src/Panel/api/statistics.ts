@@ -8,25 +8,24 @@ export interface GetConversationStatisticsFilters {
 }
 
 export interface ConversationStatistics {
-  incoming: number;
-  queued: number;
-  queuedAndLeft: number;
-  queuedAndProcessed: number;
-  notQueued: number;
-  operatorCommunicated: number;
-  oneOperatorCommunicated: number;
-  valid: number;
-  invalid: number;
-  noResponse: number;
-  receptionTime: number;
-  receptionCount: number;
-  firstResponseTime: number;
-  firstResponseCount: number;
-  responseTime: number;
-  responseCount: number;
-  overtime: number;
-  queuedAndLeftTime: number;
-  queuedAndProcessedTime: number;
+  incoming?: number;
+  queued?: number;
+  queuedAndConnected?: number;
+  queuedAndLeft?: number;
+  operatorCommunicated?: number;
+  operatorIndependentCommunicated?: number;
+  valid?: number;
+  invalid?: number;
+  operatorNoResponse?: number;
+  receptionTime?: number;
+  receptionCount?: number;
+  firstResponseTime?: number;
+  firstResponseCount?: number;
+  responseTime?: number;
+  responseCount?: number;
+  overtime?: number;
+  queueConnectionTime?: number;
+  queueTimeToLeave?: number;
 }
 
 export async function getConversationStatistics(options: GetConversationStatisticsFilters) {
