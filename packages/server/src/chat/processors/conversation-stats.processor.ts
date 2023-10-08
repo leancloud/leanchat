@@ -37,13 +37,11 @@ export class ConversationStatsProcessor {
 
     const stats: Conversation['stats'] = {};
 
-    const messageCount = _.countBy(messages, (m) => m.from.type);
+    const messageCount = _.countBy(chatMessages, (m) => m.from.type);
     stats.visitorMessageCount = messageCount.visitor || 0;
     stats.operatorMessageCount = messageCount.operator || 0;
 
-    const firstOperatorJoinMessage = messages.find(
-      (m) => m.type === 'operatorJoin',
-    );
+    const firstOperatorJoinMessage = messages.find((m) => m.type === 'join');
     if (firstOperatorJoinMessage) {
       stats.firstOperatorJoinedAt = firstOperatorJoinMessage.createdAt;
       const responseTimeList = this.getResponseTimeList(
@@ -54,6 +52,7 @@ export class ConversationStatsProcessor {
         stats.firstResponseTime = responseTimeList[0];
         stats.responseTime = _.sum(responseTimeList);
         stats.responseCount = responseTimeList.length;
+        stats.averageResponseTime = stats.responseTime / stats.responseCount;
       }
     }
 
@@ -86,9 +85,9 @@ export class ConversationStatsProcessor {
     }
 
     const joinedOperatorIds = messages
-      .filter((message) => message.type === 'operatorJoin')
-      .slice(0, 100)
-      .map((message) => message.data.operatorId as string);
+      .filter((message) => message.type === 'join')
+      .slice(0, 10)
+      .map((message) => message.from.id);
     if (joinedOperatorIds.length) {
       stats.joinedOperatorIds = joinedOperatorIds.map(
         (id) => new Types.ObjectId(id),

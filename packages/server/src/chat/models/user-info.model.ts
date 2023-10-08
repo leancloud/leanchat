@@ -6,5 +6,5 @@ export class UserInfo {
   type: string;
 
   @Prop()
-  id: Types.ObjectId;
+  id?: Types.ObjectId;
 }

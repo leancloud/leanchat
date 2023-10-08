@@ -28,6 +28,9 @@ class Stats {
   responseCount?: number;
 
   @Prop()
+  averageResponseTime?: number;
+
+  @Prop()
   receptionTime?: number;
 
   @Prop()
