@@ -11,6 +11,7 @@ import { ConfigService } from 'src/config';
 import {
   CloseConversationOptions,
   ConversationEvaluation,
+  ConversationStatsJobData,
   UpdateConversationData,
 } from '../interfaces/conversation.interface';
 import { CreateMessageData } from '../interfaces/chat.interface';
@@ -41,6 +42,9 @@ export class ChatService {
 
     @InjectQueue('assign_queued_conversation')
     private assignQueuedQueue: Queue<AssignQueuedJobData>,
+
+    @InjectQueue('conversation_stats')
+    private conversationStatsQueue: Queue<ConversationStatsJobData>,
   ) {}
 
   async createMessage({ conversationId, from, data }: CreateMessageData) {
@@ -144,6 +148,9 @@ export class ChatService {
       type: 'close',
       from: { type: 'system' },
       data: { by },
+    });
+    await this.conversationStatsQueue.add({
+      conversationId: conversation.id,
     });
 
     if (conversation.operatorId) {

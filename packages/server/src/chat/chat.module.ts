@@ -10,7 +10,11 @@ import {
   OperatorService,
   VisitorService,
 } from './services';
-import { AssignQueuedProcessor, AutoAssignProcessor } from './processors';
+import {
+  AssignQueuedProcessor,
+  AutoAssignProcessor,
+  ConversationStatsProcessor,
+} from './processors';
 
 @Module({
   imports: [
@@ -22,6 +26,9 @@ import { AssignQueuedProcessor, AutoAssignProcessor } from './processors';
       {
         name: 'assign_queued_conversation',
       },
+      {
+        name: 'conversation_stats',
+      },
     ),
   ],
   providers: [
@@ -32,6 +39,7 @@ import { AssignQueuedProcessor, AutoAssignProcessor } from './processors';
     OperatorService,
     AutoAssignProcessor,
     AssignQueuedProcessor,
+    ConversationStatsProcessor,
   ],
   exports: [
     ChatService,

@@ -33,7 +33,7 @@ export class Message {
   conversationId: Types.ObjectId;
 
   @Prop({ _id: false })
-  from?: MessageSender;
+  from: MessageSender;
 
   @Prop()
   type: string;

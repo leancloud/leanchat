@@ -1,7 +1,7 @@
 import { Controller, Get, Query, UseGuards, UsePipes } from '@nestjs/common';
 import { ZodValidationPipe } from 'nestjs-zod';
 
-import { ConversationStatsService } from 'src/conversation';
+import { ConversationService } from 'src/chat/services';
 import {
   GetConversationStatsDto,
   GetConversationRecordStatsDto,
@@ -12,20 +12,21 @@ import { AuthGuard } from '../guards/auth.guard';
 @UseGuards(AuthGuard)
 @UsePipes(ZodValidationPipe)
 export class StatisticsController {
-  constructor(private conversationStatsService: ConversationStatsService) {}
+  constructor(private conversationService: ConversationService) {}
 
   @Get('conversation')
-  getConversationStatistics(@Query() query: GetConversationStatsDto) {
-    return this.conversationStatsService.getConversationStats(query);
+  async getConversationStatistics(@Query() query: GetConversationStatsDto) {
+    const stats = await this.conversationService.getConversationStats(query);
+    return stats || {};
   }
 
   @Get('conversation-message')
   getConversationMessageStatistics(@Query() query: GetConversationStatsDto) {
-    return this.conversationStatsService.getConversationMessageStats(query);
+    // return this.conversationStatsService.getConversationMessageStats(query);
   }
 
   @Get('conversation-record')
   queryConversations(@Query() query: GetConversationRecordStatsDto) {
-    return this.conversationStatsService.getConversationRecordStats(query);
+    // return this.conversationStatsService.getConversationRecordStats(query);
   }
 }

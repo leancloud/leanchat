@@ -2,13 +2,14 @@ import { Injectable } from '@nestjs/common';
 import { EventEmitter2 } from '@nestjs/event-emitter';
 import { InjectModel } from '@m8a/nestjs-typegoose';
 import { ReturnModelType } from '@typegoose/typegoose';
-import { AnyKeys, Types } from 'mongoose';
+import { AnyKeys, FilterQuery, Types } from 'mongoose';
 import _ from 'lodash';
 
 import { Conversation } from '../models';
 import {
   CreateConversationData,
   GetConversationOptions,
+  GetConversationStatsOptions,
   GetInactiveConversationIdsOptions,
   UpdateConversationData,
 } from '../interfaces';
@@ -121,6 +122,7 @@ export class ConversationService {
       queuedAt: data.queuedAt,
       visitorLastActivityAt: data.visitorLastActivityAt,
       operatorLastActivityAt: data.operatorLastActivityAt,
+      stats: data.stats,
     };
 
     const $unset: AnyKeys<Conversation> = {};
@@ -154,5 +156,155 @@ export class ConversationService {
         },
       })
       .exec();
+  }
+
+  async getConversationStats({
+    from,
+    to,
+    channel,
+    operatorId,
+  }: GetConversationStatsOptions) {
+    const $match: FilterQuery<Conversation> = {
+      createdAt: {
+        $gte: from,
+        $lte: to,
+      },
+      closedAt: {
+        $exists: true,
+      },
+    };
+
+    if (channel) {
+      $match.channel = channel;
+    }
+    if (operatorId) {
+      if (Array.isArray(operatorId)) {
+        $match.operatorId = {
+          $in: operatorId.map((id) => new Types.ObjectId(id)),
+        };
+      } else {
+        $match.operatorId = new Types.ObjectId(operatorId);
+      }
+    }
+
+    const results = await this.conversationModel
+      .aggregate([
+        { $match },
+        {
+          $group: {
+            _id: null,
+            incoming: { $sum: 1 },
+            queued: {
+              $sum: {
+                $cond: ['$queuedAt', 1, 0],
+              },
+            },
+            queuedAndConnected: {
+              $sum: {
+                $cond: ['$stats.queueConnectionTime', 1, 0],
+              },
+            },
+            queuedAndLeft: {
+              $sum: {
+                $cond: ['$stats.queueTimeToLeave', 1, 0],
+              },
+            },
+            operatorCommunicated: {
+              $sum: {
+                $cond: ['$stats.operatorMessageCount', 1, 0],
+              },
+            },
+            operatorIndependentCommunicated: {
+              $sum: {
+                $cond: [
+                  {
+                    $and: [
+                      '$stats.operatorMessageCount',
+                      { $eq: [{ $size: '$stats.joinedOperatorIds' }, 1] },
+                    ],
+                  },
+                  1,
+                  0,
+                ],
+              },
+            },
+            valid: {
+              $sum: {
+                $cond: [
+                  {
+                    $and: [
+                      '$stats.operatorMessageCount',
+                      '$stats.visitorMessageCount',
+                    ],
+                  },
+                  1,
+                  0,
+                ],
+              },
+            },
+            invalid: {
+              $sum: {
+                $cond: [
+                  {
+                    $and: [
+                      { $gt: ['$stats.operatorMessageCount', 0] },
+                      { $eq: ['$stats.visitorMessageCount', 0] },
+                    ],
+                  },
+                  1,
+                  0,
+                ],
+              },
+            },
+            operatorNoResponse: {
+              $sum: {
+                $cond: [{ $eq: ['$stats.operatorMessageCount', 0] }, 1, 0],
+              },
+            },
+            receptionTime: { $sum: '$stats.receptionTime' },
+            receptionCount: {
+              $sum: {
+                $cond: ['$stats.receptionTime', 1, 0],
+              },
+            },
+            firstResponseTime: { $sum: '$stats.firstResponseTime' },
+            firstResponseCount: {
+              $sum: {
+                $cond: ['$stats.firstResponseTime', 1, 0],
+              },
+            },
+            responseTime: { $sum: '$stats.responseTime' },
+            responseCount: { $sum: '$stats.responseCount' },
+            overtime: {
+              $sum: {
+                $cond: [
+                  {
+                    $gt: [
+                      {
+                        $subtract: [
+                          '$stats.firstOperatorMessageCreatedAt',
+                          '$stats.firstOperatorJoinedAt',
+                        ],
+                      },
+                      60 * 1000 * 3,
+                    ],
+                  },
+                  1,
+                  0,
+                ],
+              },
+            },
+            queueConnectionTime: {
+              $sum: '$stats.queueConnectionTime',
+            },
+            queueTimeToLeave: {
+              $sum: '$stats.queueTimeToLeave',
+            },
+          },
+        },
+      ])
+      .exec();
+
+    return results[0];
   }
 }

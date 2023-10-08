@@ -19,6 +19,7 @@ import {
   OperatorController,
   QuickReplyController,
   SessionController,
+  StatisticsController,
   VisitorController,
 } from './controllers';
 
@@ -43,6 +44,7 @@ import {
     CategoryController,
     QuickReplyController,
     ConfigController,
+    StatisticsController,
   ],
 })
 export class ChatCenterModule implements NestModule {
