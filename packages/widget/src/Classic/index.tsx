@@ -63,17 +63,18 @@ interface MessageItemProps {
 }
 
 function MessageItem({ message }: MessageItemProps) {
-  if (message.type === 'message') {
-    return (
-      <TextMessage position={message.from.type === 0 ? 'right' : 'left'}>
-        {message.data.file && <FileMessage file={message.data.file} />}
-        {message.data.text}
-      </TextMessage>
-    );
-  } else if (message.type === 'evaluate') {
-    return <LogMessage content="消息提示：感谢您的评价" />;
-  } else if (message.type === 'close') {
-    return <LogMessage content="会话已结束" />;
+  switch (message.type) {
+    case 0:
+      return (
+        <TextMessage position={message.from.type === 0 ? 'right' : 'left'}>
+          {message.data.file && <FileMessage file={message.data.file} />}
+          {message.data.text}
+        </TextMessage>
+      );
+    case 1:
+      return <LogMessage content="消息提示：感谢您的评价" />;
+    case 2:
+      return <LogMessage content="会话已结束" />;
   }
 }
 

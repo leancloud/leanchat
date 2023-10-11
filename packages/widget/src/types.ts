@@ -9,7 +9,7 @@ export interface Conversation {
 
 export interface Message {
   id: string;
-  type: string;
+  type: number;
   from: {
     type: number;
     id: string;
