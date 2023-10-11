@@ -1,4 +1,4 @@
-import { Operator } from 'src/chat';
+import { Operator, OperatorStatus } from 'src/chat';
 
 export class OperatorDto {
   id: string;
@@ -11,7 +11,7 @@ export class OperatorDto {
 
   concurrency: number;
 
-  status?: string;
+  status?: number;
 
   static fromDocument(operator: Operator) {
     const dto = new OperatorDto();
@@ -20,6 +20,7 @@ export class OperatorDto {
     dto.externalName = operator.externalName;
     dto.internalName = operator.internalName;
     dto.concurrency = operator.concurrency;
+    dto.status = operator.status ?? OperatorStatus.Leave;
     return dto;
   }
 }

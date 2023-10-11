@@ -1,3 +1,5 @@
+import type { OperatorStatus } from '../constants';
+
 export interface CreateOperatorData {
   username: string;
   password: string;
@@ -14,4 +16,8 @@ export interface UpdateOperatorData {
   internalName?: string;
 
   concurrency?: number;
+
+  workload?: number;
+
+  status?: OperatorStatus;
 }

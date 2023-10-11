@@ -24,6 +24,7 @@ import {
   MessageCreatedEvent,
   MessageData,
   MessageService,
+  MessageType,
   UserType,
   VisitorService,
 } from 'src/chat';
@@ -111,7 +112,7 @@ export class VisitorGateway implements OnModuleInit, OnGatewayConnection {
     const messageCount = 25;
     const messages = await this.messageService.getMessages({
       visitorId,
-      type: ['message', 'evaluate', 'close'],
+      type: [MessageType.Message, MessageType.Evaluate, MessageType.Close],
       desc: true,
       limit: messageCount,
     });
@@ -225,9 +226,9 @@ export class VisitorGateway implements OnModuleInit, OnGatewayConnection {
 
   shouldDispatchMessage(message: Message) {
     return (
-      message.type === 'message' ||
-      message.type === 'evaluate' ||
-      message.type === 'close'
+      message.type === MessageType.Message ||
+      message.type === MessageType.Evaluate ||
+      message.type === MessageType.Close
     );
   }
 

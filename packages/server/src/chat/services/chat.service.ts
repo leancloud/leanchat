@@ -24,7 +24,7 @@ import {
 } from '../events';
 import { OperatorService } from './operator.service';
 import { Conversation, Operator } from '../models';
-import { UserType } from '../constants';
+import { MessageType, OperatorStatus, UserType } from '../constants';
 
 @Injectable()
 export class ChatService {
@@ -58,7 +58,7 @@ export class ChatService {
 
     const message = await this.messageService.createMessage(conversation, {
       from,
-      type: 'message',
+      type: MessageType.Message,
       data,
     });
 
@@ -124,7 +124,7 @@ export class ChatService {
       evaluation,
     });
     await this.messageService.createMessage(conversation, {
-      type: 'evaluate',
+      type: MessageType.Evaluate,
       from: {
         type: UserType.Visitor,
         id: conversation.visitorId,
@@ -148,7 +148,7 @@ export class ChatService {
       closedBy: by,
     });
     await this.messageService.createMessage(conversation, {
-      type: 'close',
+      type: MessageType.Close,
       from: by,
     });
     await this.conversationStatsQueue.add({
@@ -157,31 +157,38 @@ export class ChatService {
 
     if (conversation.operatorId) {
       const operatorId = conversation.operatorId.toString();
-      await this.redis.hincrby('operator_workload', operatorId, -1);
+      await this.operatorService.increaseOperatorWorkload(operatorId, -1);
       await this.assignQueuedConversationToOperator(operatorId);
     }
   }
 
-  async setOperatorStatus(operatorId: string, status: string) {
-    if (status === 'busy') {
-      const workload = await this.getOperatorWorkload(operatorId);
-      if (workload === 0) {
-        status = 'leave';
-      }
-    }
-
-    const fromStatus = await this.getOperatorStatus(operatorId);
-    if (fromStatus === status) {
+  async setOperatorStatus(operatorId: string, status: OperatorStatus) {
+    const operator = await this.operatorService.getOperator(operatorId);
+    if (!operator) {
       return;
     }
 
-    await this.redis.hset('operator_status', operatorId, status);
+    if (status === OperatorStatus.Busy && !operator.workload) {
+      status = OperatorStatus.Leave;
+    }
 
-    if (status === 'ready') {
+    if (operator.status === status) {
+      return;
+    }
+
+    if (status === OperatorStatus.Ready) {
       const workload = await this.conversationService.getOpenConversationCount(
         operatorId,
       );
-      await this.redis.hset('operator_workload', operatorId, workload);
+      await this.operatorService.updateOperator(operatorId, {
+        status,
+        workload,
+      });
+    } else {
+      await this.operatorService.updateOperator(operatorId, { status });
+    }
+
+    if (status === OperatorStatus.Ready) {
       await this.assignQueuedConversationToOperator(operatorId);
     }
 
@@ -191,79 +198,20 @@ export class ChatService {
     } satisfies OperatorStatusChangedEvent);
   }
 
-  async getOperatorStatuses(operatorIds?: string[]) {
-    if (!operatorIds) {
-      return this.redis.hgetall('operator_status');
-    }
-    const statuses = await this.redis.hmget('operator_status', ...operatorIds);
-    return operatorIds.reduce<Record<string, string>>(
-      (map, operatorId, index) => {
-        const status = statuses[index];
-        if (status !== null) {
-          map[operatorId] = status;
-        }
-        return map;
-      },
-      {},
-    );
-  }
-
-  async getOperatorStatus(operatorId: string) {
-    const status = await this.redis.hget('operator_status', operatorId);
-    return status || 'leave';
-  }
-
-  async getOperatorWorkloads(operatorIds: string[]) {
-    const workloads = await this.redis.hmget(
-      'operator_workload',
-      ...operatorIds,
-    );
-    return operatorIds.reduce<Record<string, number>>(
-      (map, operatorId, index) => {
-        const workload = workloads[index];
-        if (workload !== null) {
-          map[operatorId] = parseInt(workload);
-        }
-        return map;
-      },
-      {},
-    );
-  }
-
-  async getOperatorWorkload(operatorId: string) {
-    const workload = await this.redis.hget('operator_workload', operatorId);
-    if (workload) {
-      return parseInt(workload);
-    }
-    return 0;
-  }
-
   async getRandomReadyOperator() {
-    const operatorStatuses = await this.getOperatorStatuses();
-    const readyOperatorIds = Object.keys(operatorStatuses).filter(
-      (operatorId) => operatorStatuses[operatorId] === 'ready',
-    );
-    if (readyOperatorIds.length === 0) {
-      return;
-    }
+    let readyOperators = await this.operatorService.getReadyOperators();
 
-    const readyOperators = await this.operatorService.getOperators(
-      readyOperatorIds,
+    readyOperators = readyOperators.filter(
+      (operator) =>
+        operator.workload !== undefined &&
+        operator.workload < operator.concurrency,
     );
+
     if (readyOperators.length === 0) {
       return;
     }
 
-    const workloads = await this.getOperatorWorkloads(
-      readyOperators.map((o) => o.id),
-    );
-
-    for (const operator of _.shuffle(readyOperators)) {
-      const workload = workloads[operator.id];
-      if (workload !== undefined && workload < operator.concurrency) {
-        return operator;
-      }
-    }
+    return _.sample(readyOperators);
   }
 
   async assignConversation(
@@ -292,20 +240,19 @@ export class ChatService {
       operatorId: operator.id,
     });
     await this.messageService.createMessage(conversation, {
-      type: 'join',
+      type: MessageType.OperatorJoin,
       from: {
         type: UserType.Operator,
         id: operator.id,
       },
     });
 
-    const pl = this.redis.pipeline();
     if (fromOperatorId) {
-      pl.hincrby('operator_workload', fromOperatorId, -1);
+      await this.operatorService.increaseOperatorWorkload(fromOperatorId, -1);
     }
-    pl.hincrby('operator_workload', operator.id, 1);
-    pl.zrem('conversation_queue', conversation.id);
-    await pl.exec();
+    await this.operatorService.increaseOperatorWorkload(operator.id, 1);
+
+    await this.redis.zrem('conversation_queue', conversation.id);
 
     await this.createOperatorWelcomeMessage(conversation, operator);
 
@@ -385,42 +332,26 @@ export class ChatService {
   }
 
   async assignQueuedConversationToOperator(operatorId: string) {
-    const results = await this.redis
-      .pipeline()
-      .hget('operator_status', operatorId)
-      .hget('operator_workload', operatorId)
-      .exec();
-    if (!results) {
-      return;
-    }
-
-    const status = results[0][1] as string | null;
-    const workloadStr = results[1][1] as string | null;
-
-    if (!workloadStr) {
-      return;
-    }
-
-    const workload = parseInt(workloadStr);
-    if (workload < 0) {
-      return;
-    }
-    if (status === 'busy' && workload === 0) {
-      // 后处理阶段结束, 将客服状态改为 leave
-      this.setOperatorStatus(operatorId, 'leave');
-      return;
-    }
-
-    if (status !== 'ready') {
-      return;
-    }
-
     const operator = await this.operatorService.getOperator(operatorId);
     if (!operator) {
       return;
     }
 
-    const maxCount = operator.concurrency - workload;
+    if (operator.workload === undefined || operator.workload < 0) {
+      return;
+    }
+
+    if (operator.status === OperatorStatus.Busy && operator.workload === 0) {
+      // 后处理阶段结束, 将客服状态改为 leave
+      this.setOperatorStatus(operatorId, OperatorStatus.Leave);
+      return;
+    }
+
+    if (operator.status !== OperatorStatus.Ready) {
+      return;
+    }
+
+    const maxCount = operator.concurrency - operator.workload;
     if (maxCount > 0) {
       await this.assignQueuedQueue.add({ operatorId, maxCount });
     }

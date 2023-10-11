@@ -7,7 +7,7 @@ export class MessageDto {
 
   conversationId: string;
 
-  type: string;
+  type: number;
 
   from: any;
 

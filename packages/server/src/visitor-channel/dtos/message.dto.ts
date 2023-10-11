@@ -1,9 +1,9 @@
-import { Message } from 'src/chat';
+import { Message, MessageType, UserType } from 'src/chat';
 
 export class MessageDto {
   id: string;
 
-  type: string;
+  type: number;
 
   from: any;
 
@@ -21,9 +21,9 @@ export class MessageDto {
   static fromText(id: string, text: string) {
     const dto = new MessageDto();
     dto.id = id;
-    dto.type = 'message';
+    dto.type = MessageType.Message;
     dto.from = {
-      type: 'system',
+      type: UserType.System,
     };
     dto.data = {
       text,

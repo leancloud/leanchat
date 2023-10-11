@@ -1,5 +1,7 @@
 import { Index, ModelOptions, Prop, Severity } from '@typegoose/typegoose';
 import { Types } from 'mongoose';
+
+import { MessageType } from '../constants';
 import { UserInfo } from './user-info.model';
 
 @Index({ visitorId: 1 })
@@ -28,8 +30,8 @@ export class Message {
   @Prop({ _id: false })
   from: UserInfo;
 
-  @Prop()
-  type: string;
+  @Prop({ enum: MessageType })
+  type: MessageType;
 
   @Prop()
   data: any;

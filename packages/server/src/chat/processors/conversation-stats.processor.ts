@@ -7,7 +7,7 @@ import { Types } from 'mongoose';
 import { ConversationStatsJobData } from '../interfaces';
 import { ConversationService, MessageService } from '../services';
 import { Conversation, Message } from '../models';
-import { ConsultationResult, UserType } from '../constants';
+import { ConsultationResult, MessageType, UserType } from '../constants';
 
 @Processor('conversation_stats')
 export class ConversationStatsProcessor {
@@ -32,7 +32,7 @@ export class ConversationStatsProcessor {
 
     const chatMessages = messages.filter(
       (m) =>
-        m.type === 'message' &&
+        m.type === MessageType.Message &&
         (m.from.type === UserType.Visitor || m.from.type === UserType.Operator),
     );
 
@@ -42,7 +42,9 @@ export class ConversationStatsProcessor {
     stats.visitorMessageCount = messageCount[UserType.Visitor] || 0;
     stats.operatorMessageCount = messageCount[UserType.Operator] || 0;
 
-    const firstOperatorJoinMessage = messages.find((m) => m.type === 'join');
+    const firstOperatorJoinMessage = messages.find(
+      (m) => m.type === MessageType.OperatorJoin,
+    );
     if (firstOperatorJoinMessage) {
       stats.firstOperatorJoinedAt = firstOperatorJoinMessage.createdAt;
       const responseTimeList = this.getResponseTimeList(
@@ -117,7 +119,7 @@ export class ConversationStatsProcessor {
     }
 
     const joinedOperatorIds = messages
-      .filter((message) => message.type === 'join')
+      .filter((message) => message.type === MessageType.OperatorJoin)
       .slice(0, 10)
       .map((message) => message.from.id);
     if (joinedOperatorIds.length) {

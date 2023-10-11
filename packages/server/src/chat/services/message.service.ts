@@ -7,6 +7,7 @@ import { Types } from 'mongoose';
 import { Conversation, Message } from '../models';
 import { CreateMessageData, GetMessagesOptions } from '../interfaces';
 import { MessageCreatedEvent } from '../events';
+import { MessageType } from '../constants';
 
 @Injectable()
 export class MessageService {
@@ -62,7 +63,7 @@ export class MessageService {
 
   getLastMessage(conversationId: string) {
     return this.messageModel
-      .findOne({ conversationId, type: 'message' })
+      .findOne({ conversationId, type: MessageType.Message })
       .sort({ createdAt: -1 })
       .exec();
   }
@@ -75,7 +76,7 @@ export class MessageService {
             conversationId: {
               $in: conversationIds.map((id) => new Types.ObjectId(id)),
             },
-            type: 'message',
+            type: MessageType.Message,
           },
         },
         {

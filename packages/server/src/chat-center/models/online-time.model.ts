@@ -19,5 +19,5 @@ export class OnlineTime {
   operatorId: Types.ObjectId;
 
   @Prop()
-  status: string;
+  status: number;
 }

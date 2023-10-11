@@ -30,30 +30,18 @@ export class OperatorController {
   @Post()
   async createOperator(@Body() data: CreateOperatorDto) {
     const operator = await this.operatorService.createOperator(data);
-    const dto = OperatorDto.fromDocument(operator);
-    dto.status = 'leave';
-    return dto;
+    return OperatorDto.fromDocument(operator);
   }
 
   @Get()
   async getOperators() {
     const operators = await this.operatorService.getOperators();
-    const statuses = await this.chatService.getOperatorStatuses(
-      operators.map((o) => o.id),
-    );
-    return operators.map((operator) => {
-      const dto = OperatorDto.fromDocument(operator);
-      dto.status = statuses[operator.id] || 'leave';
-      return dto;
-    });
+    return operators.map(OperatorDto.fromDocument);
   }
 
   @Get('me')
-  async getCurrentOperator(@CurrentOperator() operator: Operator) {
-    const status = await this.chatService.getOperatorStatus(operator.id);
-    const dto = OperatorDto.fromDocument(operator);
-    dto.status = status;
-    return dto;
+  getCurrentOperator(@CurrentOperator() operator: Operator) {
+    return OperatorDto.fromDocument(operator);
   }
 
   @Get(':id')
@@ -62,10 +50,7 @@ export class OperatorController {
     if (!operator) {
       throw new NotFoundException(`客服 ${id} 不存在`);
     }
-    const status = await this.chatService.getOperatorStatus(operator.id);
-    const dto = OperatorDto.fromDocument(operator);
-    dto.status = status;
-    return dto;
+    return OperatorDto.fromDocument(operator);
   }
 
   @Patch(':id')
@@ -77,10 +62,7 @@ export class OperatorController {
     if (!operator) {
       throw new NotFoundException(`Operator ${id} does not exist`);
     }
-    const status = await this.chatService.getOperatorStatus(operator.id);
-    const dto = OperatorDto.fromDocument(operator);
-    dto.status = status;
-    return dto;
+    return OperatorDto.fromDocument(operator);
   }
 
   @Post('me/setStatus')

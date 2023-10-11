@@ -2,6 +2,8 @@ import { ModelOptions, Prop } from '@typegoose/typegoose';
 import { Types } from 'mongoose';
 import { hash, verify } from '@node-rs/argon2';
 
+import { OperatorStatus } from '../constants';
+
 @ModelOptions({
   schemaOptions: {
     collection: 'operator',
@@ -27,6 +29,12 @@ export class Operator {
 
   @Prop()
   concurrency: number;
+
+  @Prop()
+  workload?: number;
+
+  @Prop({ enum: OperatorStatus })
+  status?: OperatorStatus;
 
   createdAt: Date;
 

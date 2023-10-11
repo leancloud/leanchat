@@ -6,6 +6,7 @@ import { hash } from '@node-rs/argon2';
 
 import { Operator } from '../models';
 import { CreateOperatorData, UpdateOperatorData } from '../interfaces';
+import { OperatorStatus } from '../constants';
 
 @Injectable()
 export class OperatorService implements OnApplicationBootstrap {
@@ -66,6 +67,10 @@ export class OperatorService implements OnApplicationBootstrap {
     return this.operatorModel.find().exec();
   }
 
+  getReadyOperators() {
+    return this.operatorModel.find({ status: OperatorStatus.Ready }).exec();
+  }
+
   getOperatorByUsername(username: string, selectPassword?: boolean) {
     const query = this.operatorModel.findOne({ username });
     if (selectPassword) {
@@ -108,6 +113,8 @@ export class OperatorService implements OnApplicationBootstrap {
             externalName: data.externalName,
             internalName: data.internalName,
             concurrency: data.concurrency,
+            workload: data.workload,
+            status: data.status,
           },
         },
         {
@@ -115,5 +122,16 @@ export class OperatorService implements OnApplicationBootstrap {
         },
       )
       .exec();
+  }
+
+  async increaseOperatorWorkload(operatorId: string, value: number) {
+    await this.operatorModel.updateOne(
+      { _id: operatorId },
+      {
+        $inc: {
+          workload: value,
+        },
+      },
+    );
   }
 }
