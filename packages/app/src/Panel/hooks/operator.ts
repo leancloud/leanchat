@@ -9,7 +9,7 @@ import { useAuthContext } from '../auth';
 
 interface OperatorStatusChangedEvent {
   operatorId: string;
-  status: string;
+  status: number;
 }
 
 export function useOperators() {

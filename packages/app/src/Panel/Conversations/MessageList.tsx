@@ -20,7 +20,7 @@ import dayjs from 'dayjs';
 import cx from 'classnames';
 import _ from 'lodash';
 
-import { Message as IMessage, Operator, UserType } from '@/Panel/types';
+import { Message as IMessage, MessageType, Operator, UserType } from '@/Panel/types';
 import { useNow } from '../contexts/NowContext';
 import { useConversationMessages, useVisitorMessages } from '../hooks/message';
 import { useConversationContext } from './ConversationContext';
@@ -207,12 +207,12 @@ function CloseConversation({ message }: MessageComponentProps) {
   );
 }
 
-const MessageComponents: Record<string, JSXElementConstructor<MessageComponentProps>> = {
-  evaluate: EvaluateMessage,
-  join: ({ message }) => {
+const MessageComponents: Record<number, JSXElementConstructor<MessageComponentProps>> = {
+  [MessageType.Message]: EvaluateMessage,
+  [MessageType.OperatorJoin]: ({ message }) => {
     return <LogMessage>客服 {message.from.id} 进入会话</LogMessage>;
   },
-  close: CloseConversation,
+  [MessageType.Close]: CloseConversation,
 };
 
 function useAtBottom(ref: RefObject<HTMLElement>) {
@@ -276,7 +276,7 @@ export const MessageList = forwardRef<MessageListRef, MessageListProps>((props, 
       if (dateGroups.length > 0) {
         const dateGroup = dateGroups[dateGroups.length - 1];
         if (dateGroup.date.isSame(date)) {
-          if (message.type === 'message') {
+          if (message.type === MessageType.Message) {
             const lastMessage = dateGroup.messages[dateGroup.messages.length - 1];
             if (lastMessage.type === 'messageGroup') {
               if (lastMessage.from.id === message.from.id) {
@@ -298,7 +298,7 @@ export const MessageList = forwardRef<MessageListRef, MessageListProps>((props, 
           return;
         }
       }
-      if (message.type === 'message') {
+      if (message.type === MessageType.Message) {
         dateGroups.push({
           date,
           messages: [

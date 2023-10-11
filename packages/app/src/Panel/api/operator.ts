@@ -37,6 +37,6 @@ export async function updateOperator({ id, ...data }: UpdateOperatorData) {
   return res.data;
 }
 
-export async function setStatus(status: string) {
+export async function setStatus(status: number) {
   await client.post('/operators/me/setStatus', { status });
 }

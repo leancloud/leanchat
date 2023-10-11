@@ -142,7 +142,7 @@ export function Conversation({ conversationId }: ConversationProps) {
     return;
   }
 
-  const closed = conversation.status === 'closed';
+  const closed = !!conversation.closedAt;
 
   return (
     <ConversationContext.Provider value={{ conversation }}>

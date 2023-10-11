@@ -4,7 +4,7 @@ import cx from 'classnames';
 interface AvatarProps {
   size?: number;
   type?: string;
-  status?: string;
+  status?: number;
 }
 
 export function Avatar({ size = 32, type, status }: AvatarProps) {
@@ -19,14 +19,14 @@ export function Avatar({ size = 32, type, status }: AvatarProps) {
       }}
     >
       <Icon className="m-auto w-[60%] h-[60%]" />
-      {status && (
+      {status !== undefined && (
         <div
           className={cx(
             'w-[25%] h-[25%] rounded-full absolute right-0 bottom-0 outline outline-offset-0 outline-[10%] outline-white',
             {
-              'bg-[#34b857]': status === 'ready',
-              'bg-[#ffaf3d]': status === 'busy',
-              'bg-[#e81332]': status === 'leave',
+              'bg-[#34b857]': status === 0,
+              'bg-[#ffaf3d]': status === 1,
+              'bg-[#e81332]': status === 2,
             },
           )}
         />

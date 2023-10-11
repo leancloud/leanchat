@@ -69,20 +69,20 @@ function User() {
     <Dropdown
       trigger={['click']}
       menu={{
-        onClick: (e) => setStatus(e.key),
+        onClick: (e) => setStatus(parseInt(e.key)),
         items: [
           {
-            key: 'ready',
+            key: 0,
             name: '在线',
             color: '#34b857',
           },
           {
-            key: 'busy',
+            key: 1,
             name: '忙碌',
             color: '#ffaf3d',
           },
           {
-            key: 'leave',
+            key: 2,
             name: '离开',
             color: '#e81332',
             disabled: true,

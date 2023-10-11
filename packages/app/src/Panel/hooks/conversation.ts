@@ -3,7 +3,7 @@ import { InfiniteData, useMutation, useQuery, useQueryClient } from '@tanstack/r
 import { Socket } from 'socket.io-client';
 import { produce } from 'immer';
 
-import { Conversation, Message } from '@/Panel/types';
+import { Conversation, Message, MessageType } from '@/Panel/types';
 import { getConversation, getConversations, updateConversation } from '@/Panel/api/conversation';
 
 export type ConversationsQueryVariables =
@@ -101,7 +101,7 @@ export function useAutoPushNewMessage(socket: Socket) {
           }
         },
       );
-      if (message.type === 'message') {
+      if (message.type === MessageType.Message) {
         queryClient.setQueriesData<Conversation[] | undefined>(
           ['Conversations'],
           (conversations) => {

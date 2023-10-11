@@ -2,7 +2,7 @@ export interface Message {
   id: string;
   visitorId: string;
   conversationId: string;
-  type: string;
+  type: number;
   from: {
     type: number;
     id: string;
@@ -25,8 +25,8 @@ export interface Conversation {
     star: number;
     feedback: string;
   };
-  status: string;
   visitorWaitingSince?: string;
+  closedAt?: string;
 }
 
 export interface Operator {
@@ -35,7 +35,7 @@ export interface Operator {
   externalName: string;
   internalName: string;
   concurrency: number;
-  status: string;
+  status: number;
 }
 
 export interface Category {
@@ -66,4 +66,11 @@ export enum ConsultationResult {
   Valid = 0,
   Invalid = 1,
   OperatorNoResponse = 2,
+}
+
+export enum MessageType {
+  Message = 0,
+  Evaluate = 1,
+  Close = 2,
+  OperatorJoin = 3,
 }
