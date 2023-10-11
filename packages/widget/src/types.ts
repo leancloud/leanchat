@@ -11,7 +11,7 @@ export interface Message {
   id: string;
   type: string;
   from: {
-    type: string;
+    type: number;
     id: string;
   };
   data: any;

@@ -65,7 +65,7 @@ interface MessageItemProps {
 function MessageItem({ message }: MessageItemProps) {
   if (message.type === 'message') {
     return (
-      <TextMessage position={message.from.type === 'visitor' ? 'right' : 'left'}>
+      <TextMessage position={message.from.type === 0 ? 'right' : 'left'}>
         {message.data.file && <FileMessage file={message.data.file} />}
         {message.data.text}
       </TextMessage>
