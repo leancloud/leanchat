@@ -1,6 +1,7 @@
 import { ReactNode, useMemo, useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
-import { Button, Checkbox, DatePicker, Input, InputNumber, Select, Table } from 'antd';
+import { Controller, FormProvider, useController, useForm, useWatch } from 'react-hook-form';
+import { Button, Checkbox, DatePicker, Form, Input, InputNumber, Select, Table } from 'antd';
 import dayjs from 'dayjs';
 import _ from 'lodash';
 
@@ -9,6 +10,8 @@ import { OperatorSelect } from '../components/OperatorSelect';
 import { CategoryCascader } from '../components/CategoryCascader';
 import { GetConversationRecordStatsOptions, getConversationRecordStats } from '../api/statistics';
 import { useCategories } from '../hooks/category';
+import { UserType } from '../types';
+import { useOperators } from '../hooks/operator';
 
 interface FilterGroupProps {
   label?: ReactNode;
@@ -19,247 +22,277 @@ function FilterGroup({ label, children }: FilterGroupProps) {
   return (
     <div className="grid grid-cols-[66px_1fr]">
       <div className="leading-8">{label}</div>
-      <div>{children}</div>
+      <div className="flex flex-wrap items-center gap-2">{children}</div>
     </div>
   );
 }
 
-interface ExtraData {
-  visitor: {
-    type: 'id' | 'name';
-    value?: string;
-  };
-  keyword: {
-    type: 'visitor' | 'operator';
-    value?: string;
-  };
-  duration: {
-    type: 'gt' | 'lt';
-    value?: number;
-  };
-  averageResponseTime: {
-    type: 'gt' | 'lt';
-    value?: number;
-  };
-  categoryId?: string;
-  evaluationStar?: number;
+function DateRangeField() {
+  const fromController = useController({ name: 'from', rules: { required: true } });
+  const toController = useController({ name: 'to', rules: { required: true } });
+
+  return (
+    <DatePicker.RangePicker
+      value={[fromController.field.value, toController.field.value]}
+      onChange={(values) => {
+        fromController.field.onChange(values?.[0] ?? undefined);
+        toController.field.onChange(values?.[1] ?? undefined);
+      }}
+      status={(fromController.fieldState.error || toController.fieldState.error) && 'error'}
+    />
+  );
+}
+
+function KeywordField() {
+  const typeController = useController({ name: 'keyword.type', defaultValue: 1 });
+  const valueController = useController({ name: 'keyword.value' });
+
+  return (
+    <Input
+      {...valueController.field}
+      allowClear
+      addonBefore={
+        <Select
+          {...typeController.field}
+          options={[
+            { label: '客服会话内容', value: 1 },
+            { label: '用户会话内容', value: 0 },
+          ]}
+          style={{ width: 140, textAlign: 'left' }}
+        />
+      }
+      style={{ width: 300 }}
+    />
+  );
+}
+
+interface NumberFieldProps {
+  name: string;
+  label: ReactNode;
+  suffix?: ReactNode;
+}
+
+function NumberField({ name, label, suffix }: NumberFieldProps) {
+  const typeController = useController({ name: `${name}.type`, defaultValue: '>' });
+  const valueController = useController({ name: `${name}.value` });
+
+  return (
+    <div className="flex items-center">
+      <div className="mr-2">{label}</div>
+      <InputNumber
+        {...valueController.field}
+        addonBefore={
+          <Select
+            {...typeController.field}
+            options={[
+              { label: '大于', value: '>' },
+              { label: '小于', value: '<' },
+            ]}
+            style={{ width: 70, textAlign: 'left' }}
+          />
+        }
+        suffix={suffix}
+        style={{ width: 180 }}
+      />
+    </div>
+  );
+}
+
+interface NumberFieldValue {
+  type: string;
+  value: number;
+}
+
+function encodeNumberFieldValue({ type, value }: NumberFieldValue) {
+  return `${type}${value * 1000}`;
+}
+
+function QueuedField() {
+  return (
+    <Controller
+      name="queued"
+      render={({ field }) => (
+        <Select
+          {...field}
+          allowClear
+          placeholder="排队情况"
+          options={[
+            { label: '未排队', value: false },
+            { label: '排队', value: true },
+          ]}
+          style={{ width: 100 }}
+        />
+      )}
+    />
+  );
+}
+
+function ClosedByField() {
+  return (
+    <Controller
+      name="closedBy"
+      render={({ field }) => (
+        <Select
+          {...field}
+          allowClear
+          placeholder="会话结束方式"
+          options={[
+            { label: '客服关闭', value: UserType.Operator },
+            { label: '用户关闭', value: UserType.Visitor },
+            { label: '系统关闭', value: UserType.System },
+          ]}
+        />
+      )}
+    />
+  );
+}
+
+function ConsultationResultField() {
+  return (
+    <Controller
+      name="consultationResult"
+      render={({ field }) => (
+        <Select
+          {...field}
+          allowClear
+          placeholder="咨询结果"
+          options={[
+            { label: '有效咨询', value: 0 },
+            { label: '无效咨询', value: 1 },
+            { label: '客服无应答', value: 2 },
+          ]}
+          style={{ width: 150 }}
+        />
+      )}
+    />
+  );
 }
 
 interface FilterFormData {
-  from: Date;
-  to: Date;
+  from: dayjs.Dayjs;
+  to: dayjs.Dayjs;
   channel?: string;
   operatorId?: string;
-  visitorId?: string;
-  extra?: ExtraData;
-}
-
-interface FilterFormInternalData {
-  timeRange?: [dayjs.Dayjs, dayjs.Dayjs];
-  channel?: string;
-  operatorId?: string;
-  visitorId?: string;
-  extra?: ExtraData;
+  extra?: boolean;
+  keyword?: {
+    type: number;
+    value: string;
+  };
+  duration?: {
+    type: '>' | '<';
+    value: number;
+  };
+  averageResponseTime?: {
+    type: '>' | '<';
+    value: number;
+  };
+  evaluationStar?: number;
+  queued?: boolean;
+  closedBy?: number;
+  consultationResult?: number;
+  categoryId?: string;
 }
 
 interface FilterFormProps {
+  initData?: FilterFormData;
   onChange: (data: FilterFormData) => void;
 }
 
-function FilterForm({ onChange }: FilterFormProps) {
-  const [data, setData] = useState<FilterFormInternalData>({});
-  const [extraEnabled, setExtraEnabled] = useState(false);
+function FilterForm({ initData, onChange }: FilterFormProps) {
+  const form = useForm({ defaultValues: initData });
 
-  const [extra, setExtra] = useState<ExtraData>({
-    visitor: { type: 'id' },
-    keyword: { type: 'operator' },
-    duration: { type: 'gt' },
-    averageResponseTime: { type: 'gt' },
-  });
-
-  const handleReset = () => {
-    setData({});
-    setExtra({
-      visitor: { type: 'id' },
-      keyword: { type: 'operator' },
-      duration: { type: 'gt' },
-      averageResponseTime: { type: 'gt' },
-    });
-  };
-
-  const handleChange = () => {
-    if (!data.timeRange) {
-      return;
-    }
-
-    onChange({
-      from: data.timeRange[0].toDate(),
-      to: data.timeRange[1].toDate(),
-      channel: data.channel,
-      operatorId: data.operatorId,
-      visitorId: data.visitorId,
-    });
-  };
+  const extra = useWatch({ control: form.control, name: 'extra' });
 
   return (
-    <div>
-      <div className="flex flex-wrap items-center gap-2">
-        <DatePicker.RangePicker
-          value={data.timeRange}
-          onChange={(timeRange) =>
-            setData({ ...data, timeRange: timeRange as [dayjs.Dayjs, dayjs.Dayjs] })
-          }
-        />
+    <FormProvider {...form}>
+      <Form onFinish={form.handleSubmit(onChange)} onReset={() => form.reset()}>
+        <div className="flex flex-wrap items-center gap-2">
+          <DateRangeField />
 
-        <ChannelSelect value={data.channel} onChange={(channel) => setData({ ...data, channel })} />
+          <Controller
+            name="channel"
+            render={({ field }) => (
+              <ChannelSelect {...field} allowClear style={{ minWidth: 120 }} />
+            )}
+          />
 
-        <OperatorSelect
-          allowClear
-          placeholder="最后接待人工客服"
-          value={data.operatorId}
-          onChange={(operatorId) => setData({ ...data, operatorId })}
-        />
-
-        <Checkbox checked={extraEnabled} onChange={(e) => setExtraEnabled(e.target.checked)}>
-          更多筛选
-        </Checkbox>
-      </div>
-
-      {extraEnabled && (
-        <div className="mt-3 border bg-[#f7f7f7] rounded p-4 space-y-3">
-          <FilterGroup label="客户筛选">
-            <Input
-              allowClear
-              addonBefore={
-                <Select
-                  options={[
-                    { label: '客户ID', value: 'id' },
-                    { label: '客户昵称', value: 'name' },
-                  ]}
-                  value={extra.visitor.type}
-                  onChange={(type) => setExtra({ ...extra, visitor: { ...extra.visitor, type } })}
-                  style={{ width: 140, textAlign: 'left' }}
-                />
-              }
-              value={extra.visitor.value}
-              onChange={(e) =>
-                setExtra({ ...extra, visitor: { ...extra.visitor, value: e.target.value } })
-              }
-              style={{ width: 360 }}
-            />
-          </FilterGroup>
-
-          <FilterGroup label="会话筛选">
-            <div className="flex flex-wrap items-center gap-2">
-              <Input
+          <Controller
+            name="operatorId"
+            render={({ field }) => (
+              <OperatorSelect
+                {...field}
                 allowClear
-                addonBefore={
-                  <Select
-                    options={[
-                      { label: '客服会话内容', value: 'operator' },
-                      { label: '用户会话内容', value: 'visitor' },
-                    ]}
-                    value={extra.keyword.type}
-                    onChange={(type) => setExtra({ ...extra, keyword: { ...extra.keyword, type } })}
-                    style={{ width: 140, textAlign: 'left' }}
-                  />
-                }
-                value={extra.keyword.value}
-                onChange={(e) =>
-                  setExtra({ ...extra, keyword: { ...extra.keyword, value: e.target.value } })
-                }
-                style={{ width: 360 }}
+                placeholder="最后接待人工客服"
+                style={{ minWidth: 150 }}
               />
-              <div className="flex items-center shrink-0">
-                <div className="mr-2">会话持续时长</div>
-                <InputNumber
-                  addonBefore={
-                    <Select
-                      options={[
-                        { label: '大于', value: 'gt' },
-                        { label: '小于', value: 'lt' },
-                      ]}
-                      value={extra.duration.type}
-                      onChange={(type) =>
-                        setExtra({ ...extra, duration: { ...extra.duration, type } })
-                      }
-                      style={{ width: 80, textAlign: 'left' }}
-                    />
-                  }
-                  value={extra.duration.value}
-                  onChange={(value) =>
-                    setExtra({
-                      ...extra,
-                      duration: { ...extra.duration, value: value ?? undefined },
-                    })
-                  }
-                  suffix="秒"
-                  style={{ width: 200 }}
-                />
-              </div>
-              <div className="flex items-center shrink-0">
-                <div className="mr-2">会话平均响应时长</div>
-                <InputNumber
-                  addonBefore={
-                    <Select
-                      options={[
-                        { label: '大于', value: 'gt' },
-                        { label: '小于', value: 'lt' },
-                      ]}
-                      value={extra.averageResponseTime.type}
-                      onChange={(type) =>
-                        setExtra({
-                          ...extra,
-                          averageResponseTime: { ...extra.averageResponseTime, type },
-                        })
-                      }
-                      style={{ width: 80, textAlign: 'left' }}
-                    />
-                  }
-                  value={extra.averageResponseTime.value}
-                  onChange={(value) =>
-                    setExtra({
-                      ...extra,
-                      averageResponseTime: {
-                        ...extra.averageResponseTime,
-                        value: value ?? undefined,
-                      },
-                    })
-                  }
-                  suffix="秒"
-                  style={{ width: 200 }}
-                />
-              </div>
-            </div>
-            <div className="mt-2">
-              <CategoryCascader
-                placeholder="会话分类"
-                categoryId={extra.categoryId}
-                onCategoryIdChange={(categoryId) => setExtra({ ...extra, categoryId })}
-              />
-            </div>
-          </FilterGroup>
+            )}
+          />
 
-          <FilterGroup label="评价筛选">
-            <Select
-              allowClear
-              options={[5, 4, 3, 2, 1].map((value) => ({ label: '⭐️'.repeat(value), value }))}
-              placeholder="五星评价"
-              value={extra.evaluationStar}
-              onChange={(evaluationStar) => setExtra({ ...extra, evaluationStar })}
-              style={{ width: 120 }}
-            />
-          </FilterGroup>
+          <Controller
+            name="extra"
+            render={({ field }) => (
+              <Checkbox checked={field.value} onChange={field.onChange}>
+                更多筛选
+              </Checkbox>
+            )}
+          />
         </div>
-      )}
 
-      <div className="mt-3 space-x-2">
-        <Button type="primary" onClick={handleChange}>
-          查询
-        </Button>
-        <Button onClick={handleReset}>重置</Button>
-      </div>
-    </div>
+        {extra && (
+          <div className="mt-3 border bg-[#f7f7f7] rounded p-4 space-y-3">
+            <FilterGroup label="会话筛选">
+              <KeywordField />
+              <NumberField name="duration" label="会话持续时长" suffix="秒" />
+              <NumberField name="averageResponseTime" label="会话平均响应时长" suffix="秒" />
+            </FilterGroup>
+
+            <FilterGroup label="评价筛选">
+              <Controller
+                name="evaluationStar"
+                render={({ field }) => (
+                  <Select
+                    {...field}
+                    allowClear
+                    options={[5, 4, 3, 2, 1].map((value) => ({
+                      label: '⭐️'.repeat(value),
+                      value,
+                    }))}
+                    placeholder="五星评价"
+                    style={{ width: 120 }}
+                  />
+                )}
+              />
+            </FilterGroup>
+
+            <FilterGroup label="状态情况">
+              <QueuedField />
+              <ClosedByField />
+              <ConsultationResultField />
+            </FilterGroup>
+
+            <FilterGroup label="服务总结">
+              <Controller
+                name="categoryId"
+                render={({ field }) => (
+                  <CategoryCascader
+                    placeholder="会话分类"
+                    categoryId={field.value}
+                    onCategoryIdChange={field.onChange}
+                  />
+                )}
+              />
+            </FilterGroup>
+          </div>
+        )}
+
+        <div className="mt-3 space-x-2">
+          <Button type="primary" htmlType="submit">
+            查询
+          </Button>
+          <Button htmlType="reset">重置</Button>
+        </div>
+      </Form>
+    </FormProvider>
   );
 }
 
@@ -275,7 +308,7 @@ function renderDuration(ms?: number) {
   return `${second}秒`;
 }
 
-function renderDate(date?: string) {
+function renderDate(date?: string | number | dayjs.Dayjs) {
   if (date === undefined) {
     return '-';
   }
@@ -283,12 +316,61 @@ function renderDate(date?: string) {
 }
 
 export function ConversationRecord() {
-  const [options, setOptions] = useState<GetConversationRecordStatsOptions>();
+  const [formData, setFormData] = useState<FilterFormData>(() => ({
+    from: dayjs().startOf('day'),
+    to: dayjs().endOf('day'),
+  }));
 
-  const { data } = useQuery({
-    enabled: !!options,
+  const [page, setPage] = useState(1);
+  const [pageSize, setPageSize] = useState(20);
+
+  const options = useMemo(() => {
+    const {
+      from,
+      to,
+      channel,
+      operatorId,
+      extra,
+      keyword,
+      duration,
+      averageResponseTime,
+      evaluationStar,
+      queued,
+      closedBy,
+      consultationResult,
+    } = formData;
+
+    const options: GetConversationRecordStatsOptions = {
+      from: from.toISOString(),
+      to: to.toISOString(),
+      channel,
+      operatorId,
+      page,
+      pageSize,
+    };
+    if (extra) {
+      if (keyword?.value) {
+        options.messageKeyword = keyword.value;
+        options.messageFrom = keyword.type;
+      }
+      if (duration?.value) {
+        options.duration = encodeNumberFieldValue(duration);
+      }
+      if (averageResponseTime?.value) {
+        options.averageResponseTime = encodeNumberFieldValue(averageResponseTime);
+      }
+      options.evaluationStar = evaluationStar;
+      options.queued = queued;
+      options.closedBy = closedBy;
+      options.consultationResult = consultationResult;
+      options.categoryId = formData.categoryId;
+    }
+    return options;
+  }, [formData, page, pageSize]);
+
+  const { data, isFetching } = useQuery({
     queryKey: ['ConversationRecordStats', options],
-    queryFn: () => getConversationRecordStats(options!),
+    queryFn: () => getConversationRecordStats(options),
   });
 
   const { data: categories } = useCategories();
@@ -304,21 +386,28 @@ export function ConversationRecord() {
     return [];
   };
 
+  const { data: operators } = useOperators();
+  const operatorMap = useMemo(() => _.keyBy(operators, (o) => o.id), [operators]);
+
   return (
     <div>
-      <FilterForm
-        onChange={(data) => {
-          setOptions({
-            from: data.from.toISOString(),
-            to: data.to.toISOString(),
-          });
-        }}
-      />
+      <FilterForm initData={formData} onChange={setFormData} />
+
       <Table
         className="mt-5"
-        dataSource={data}
+        dataSource={data?.items}
         rowKey="id"
         scroll={{ x: 'max-content' }}
+        loading={isFetching}
+        pagination={{
+          total: data?.totalCount,
+          current: page,
+          onChange: (page, pageSize) => {
+            setPage(page);
+            setPageSize(pageSize);
+          },
+          showSizeChanger: true,
+        }}
         columns={[
           {
             dataIndex: 'id',
@@ -330,13 +419,18 @@ export function ConversationRecord() {
             render: renderDate,
           },
           {
-            dataIndex: ['timestamps', 'closedAt'],
+            dataIndex: 'closedAt',
             title: '会话结束时间',
             render: renderDate,
           },
           {
             dataIndex: 'visitorId',
-            title: '客户ID',
+            title: '用户ID',
+          },
+          {
+            dataIndex: 'visitorName',
+            title: '用户名称',
+            render: (name) => name || '-',
           },
           {
             dataIndex: 'categoryId',
@@ -363,11 +457,37 @@ export function ConversationRecord() {
             render: (record) => {
               const visitor = record.stats.visitorMessageCount || 0;
               const operator = record.stats.operatorMessageCount || 0;
-              return `${visitor + operator}(用户${visitor},客服${operator})`;
+              return visitor + operator;
             },
           },
           {
-            dataIndex: ['stats', 'duration'],
+            dataIndex: 'operatorId',
+            title: '客服ID',
+          },
+          {
+            key: 'operatorName',
+            dataIndex: 'operatorId',
+            title: '客服名称',
+            render: (operatorId) => {
+              const operator = operatorMap[operatorId];
+              if (operator) {
+                return `${operator.internalName}(${operator.externalName})`;
+              }
+              return 'unknown';
+            },
+          },
+          {
+            dataIndex: ['stats', 'consultationResult'],
+            title: '咨询结果',
+            render: (result) => ['有效咨询', '无效咨询', '客服无应答'][result],
+          },
+          {
+            dataIndex: 'evaluationInvitedAt',
+            title: '是否邀请评价',
+            render: (value) => (value ? '已邀请' : '未邀请'),
+          },
+          {
+            dataIndex: ['stats', 'receptionTime'],
             title: '会话总时长',
             render: renderDuration,
           },
@@ -377,16 +497,18 @@ export function ConversationRecord() {
             render: renderDuration,
           },
           {
-            key: 'firstMessageFrom',
+            key: 'firstMessageCreator',
             title: '第一次发言者',
-            render: ({ timestamps: { operatorFirstMessageAt, visitorFirstMessageAt } }) => {
-              if (operatorFirstMessageAt && visitorFirstMessageAt) {
-                return dayjs(operatorFirstMessageAt).isBefore(visitorFirstMessageAt)
+            render: ({
+              stats: { operatorFirstMessageCreatedAt, visitorFirstMessageCreatedAt },
+            }) => {
+              if (operatorFirstMessageCreatedAt && visitorFirstMessageCreatedAt) {
+                return dayjs(operatorFirstMessageCreatedAt).isBefore(visitorFirstMessageCreatedAt)
                   ? '客服'
                   : '用户';
-              } else if (operatorFirstMessageAt) {
+              } else if (operatorFirstMessageCreatedAt) {
                 return '客服';
-              } else if (visitorFirstMessageAt) {
+              } else if (visitorFirstMessageCreatedAt) {
                 return '用户';
               } else {
                 return '-';
@@ -394,14 +516,16 @@ export function ConversationRecord() {
             },
           },
           {
-            key: 'lastMessageFrom',
+            key: 'lastMessageCreator',
             title: '最后发言者',
-            render: ({ timestamps: { operatorLastMessageAt, visitorLastMessageAt } }) => {
-              if (operatorLastMessageAt && visitorLastMessageAt) {
-                return dayjs(operatorLastMessageAt).isAfter(visitorLastMessageAt) ? '客服' : '用户';
-              } else if (operatorLastMessageAt) {
+            render: ({ stats: { operatorLastMessageCreatedAt, visitorLastMessageCreatedAt } }) => {
+              if (operatorLastMessageCreatedAt && visitorLastMessageCreatedAt) {
+                return dayjs(operatorLastMessageCreatedAt).isAfter(visitorLastMessageCreatedAt)
+                  ? '客服'
+                  : '用户';
+              } else if (operatorLastMessageCreatedAt) {
                 return '客服';
-              } else if (visitorLastMessageAt) {
+              } else if (visitorLastMessageCreatedAt) {
                 return '用户';
               } else {
                 return '-';
@@ -409,13 +533,65 @@ export function ConversationRecord() {
             },
           },
           {
-            dataIndex: ['timestamps', 'visitorLastMessageAt'],
+            dataIndex: ['stats', 'visitorLastMessageCreatedAt'],
             title: '用户最后消息时间',
             render: renderDate,
           },
           {
-            dataIndex: ['timestamps', 'operatorLastMessageAt'],
+            dataIndex: ['stats', 'operatorLastMessageCreatedAt'],
             title: '客服最后消息时间',
+            render: renderDate,
+          },
+          {
+            key: 'firstMessageCreatedAt',
+            title: '第一条消息时间',
+            render: ({
+              stats: { operatorFirstMessageCreatedAt, visitorFirstMessageCreatedAt },
+            }) => {
+              if (operatorFirstMessageCreatedAt && visitorFirstMessageCreatedAt) {
+                const d1 = dayjs(operatorFirstMessageCreatedAt);
+                const d2 = dayjs(visitorFirstMessageCreatedAt);
+                if (d1.isBefore(d2)) {
+                  return renderDate(d1);
+                } else {
+                  return renderDate(d2);
+                }
+              }
+              if (operatorFirstMessageCreatedAt) {
+                return renderDate(operatorFirstMessageCreatedAt);
+              }
+              if (visitorFirstMessageCreatedAt) {
+                return renderDate(visitorFirstMessageCreatedAt);
+              }
+              return '-';
+            },
+          },
+          {
+            key: 'lastMessageCreatedAt',
+            title: '最后一条消息时间',
+            render: ({ stats }) => {
+              if (stats.operatorLastMessageCreatedAt && stats.visitorLastMessageCreatedAt) {
+                const d1 = dayjs(stats.operatorLastMessageCreatedAt);
+                const d2 = dayjs(stats.visitorLastMessageCreatedAt);
+                return d1.isAfter(d2) ? renderDate(d1) : renderDate(d2);
+              }
+              if (stats.operatorLastMessageCreatedAt) {
+                return renderDate(stats.operatorLastMessageCreatedAt);
+              }
+              if (stats.visitorLastMessageCreatedAt) {
+                return renderDate(stats.visitorLastMessageCreatedAt);
+              }
+              return '-';
+            },
+          },
+          {
+            dataIndex: ['stats', 'firstOperatorJoinedAt'],
+            title: '成功接入客服时间',
+            render: renderDate,
+          },
+          {
+            dataIndex: ['stats', 'operatorFirstMessageCreatedAt'],
+            title: '客服首次回复时间',
             render: renderDate,
           },
         ]}

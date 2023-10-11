@@ -4,7 +4,7 @@ export interface Message {
   conversationId: string;
   type: string;
   from: {
-    type: 'visitor' | 'operator' | 'system';
+    type: number;
     id: string;
   };
   data: any;
@@ -54,4 +54,16 @@ export interface Visitor {
   id: string;
   name?: string;
   comment?: string;
+}
+
+export enum UserType {
+  Visitor = 0,
+  Operator = 1,
+  System = 2,
+}
+
+export enum ConsultationResult {
+  Valid = 0,
+  Invalid = 1,
+  OperatorNoResponse = 2,
 }

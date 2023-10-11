@@ -20,7 +20,7 @@ import dayjs from 'dayjs';
 import cx from 'classnames';
 import _ from 'lodash';
 
-import { Message as IMessage, Operator } from '@/Panel/types';
+import { Message as IMessage, Operator, UserType } from '@/Panel/types';
 import { useNow } from '../contexts/NowContext';
 import { useConversationMessages, useVisitorMessages } from '../hooks/message';
 import { useConversationContext } from './ConversationContext';
@@ -106,15 +106,15 @@ function MessageGroup({ from, isLeft, messages, operatorMap }: MessageGroupProps
 
   const getSenderName = () => {
     switch (from.type) {
-      case 'visitor':
+      case UserType.Visitor:
         return conversation.visitor?.name || `用户${from.id.slice(-6)}`;
-      case 'operator':
+      case UserType.Operator:
         const operator = operatorMap[from.id];
         if (operator) {
           return `${operator.externalName} (${operator.internalName})`;
         }
         return `客服 ${from.id.slice(-6)}`;
-      case 'system':
+      case UserType.System:
         return '机器人客服';
     }
   };
@@ -134,7 +134,7 @@ function MessageGroup({ from, isLeft, messages, operatorMap }: MessageGroupProps
             'flex-row-reverse': !isLeft,
           })}
         >
-          <Bubble className="" isVisitor={isLeft}>
+          <Bubble isVisitor={isLeft}>
             {message.data.text}
             {message.data.file && <FileMessage file={message.data.file} />}
           </Bubble>
@@ -196,9 +196,9 @@ function CloseConversation({ message }: MessageComponentProps) {
       <div>
         {
           {
-            visitor: '用户',
-            operator: '客服',
-            system: '系统',
+            [UserType.Visitor]: '用户',
+            [UserType.Operator]: '客服',
+            [UserType.System]: '系统',
           }[message.from.type]
         }
         关闭了会话
@@ -415,7 +415,7 @@ export const MessageList = forwardRef<MessageListRef, MessageListProps>((props, 
                 return (
                   <MessageGroup
                     key={item.messages[0].id}
-                    isLeft={item.from.type === 'visitor'}
+                    isLeft={item.from.type === UserType.Visitor}
                     from={item.from}
                     messages={item.messages}
                     operatorMap={operatorMap}
