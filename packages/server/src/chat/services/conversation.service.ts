@@ -2,14 +2,15 @@ import { Injectable } from '@nestjs/common';
 import { EventEmitter2 } from '@nestjs/event-emitter';
 import { InjectModel } from '@m8a/nestjs-typegoose';
 import { ReturnModelType } from '@typegoose/typegoose';
-import { AnyKeys, FilterQuery, Types } from 'mongoose';
+import { AnyKeys, FilterQuery, PipelineStage, Types } from 'mongoose';
 import _ from 'lodash';
 
-import { Conversation } from '../models';
+import { Conversation, Message } from '../models';
 import {
   CreateConversationData,
   GetConversationMessageStatsOptions,
   GetConversationOptions,
+  GetConversationRecordOptions,
   GetConversationStatsOptions,
   GetInactiveConversationIdsOptions,
   UpdateConversationData,
@@ -17,6 +18,7 @@ import {
 import { ConversationCreatedEvent, ConversationUpdatedEvent } from '../events';
 import { OperatorService } from './operator.service';
 import { ChatError } from '../errors';
+import { ConsultationResult } from '../constants';
 
 @Injectable()
 export class ConversationService {
@@ -119,12 +121,12 @@ export class ConversationService {
       operatorId: data.operatorId,
       categoryId: data.categoryId,
       evaluation: data.evaluation,
+      evaluationInvitedAt: data.evaluationInvitedAt,
       closedAt: data.closedAt,
       closedBy: data.closedBy,
       queuedAt: data.queuedAt,
       visitorLastActivityAt: data.visitorLastActivityAt,
       operatorLastActivityAt: data.operatorLastActivityAt,
-      inviteEvaluationAt: data.inviteEvaluationAt,
       stats: data.stats,
     };
 
@@ -230,10 +232,7 @@ export class ConversationService {
             $sum: {
               $cond: [
                 {
-                  $and: [
-                    '$stats.operatorMessageCount',
-                    '$stats.visitorMessageCount',
-                  ],
+                  $eq: ['$stats.consultationResult', ConsultationResult.Valid],
                 },
                 1,
                 0,
@@ -244,9 +243,9 @@ export class ConversationService {
             $sum: {
               $cond: [
                 {
-                  $and: [
-                    { $gt: ['$stats.operatorMessageCount', 0] },
-                    { $eq: ['$stats.visitorMessageCount', 0] },
+                  $eq: [
+                    '$stats.consultationResult',
+                    ConsultationResult.Invalid,
                   ],
                 },
                 1,
@@ -256,7 +255,16 @@ export class ConversationService {
           },
           operatorNoResponse: {
             $sum: {
-              $cond: [{ $eq: ['$stats.operatorMessageCount', 0] }, 1, 0],
+              $cond: [
+                {
+                  $eq: [
+                    '$stats.consultationResult',
+                    ConsultationResult.OperatorNoResponse,
+                  ],
+                },
+                1,
+                0,
+              ],
             },
           },
           receptionTime: { $sum: '$stats.receptionTime' },
@@ -280,7 +288,7 @@ export class ConversationService {
                   $gt: [
                     {
                       $subtract: [
-                        '$stats.firstOperatorMessageCreatedAt',
+                        '$stats.operatorFirstMessageCreatedAt',
                         '$stats.firstOperatorJoinedAt',
                       ],
                     },
@@ -342,5 +350,166 @@ export class ConversationService {
     ]);
 
     return results[0] || {};
+  }
+
+  async getConversationRecord({
+    from,
+    to,
+    channel,
+    operatorId,
+    visitorId,
+    messageKeyword,
+    messageFrom,
+    duration,
+    averageResponseTime,
+    evaluationStar,
+    queued,
+    closedBy,
+    consultationResult,
+    categoryId,
+    skip = 0,
+    limit = 10,
+  }: GetConversationRecordOptions) {
+    const $match: FilterQuery<Conversation> = {
+      createdAt: {
+        $gte: from,
+        $lte: to,
+      },
+      stats: {
+        $exists: true,
+      },
+    };
+    if (channel) {
+      $match.channel = channel;
+    }
+    if (operatorId) {
+      $match.operatorId = new Types.ObjectId(operatorId);
+    }
+    if (visitorId) {
+      $match.visitorId = new Types.ObjectId(visitorId);
+    }
+    if (evaluationStar) {
+      $match['evaluation.star'] = evaluationStar;
+    }
+    if (queued !== undefined) {
+      $match.queuedAt = { $exists: queued };
+    }
+    if (closedBy !== undefined) {
+      $match['closedBy.type'] = closedBy;
+    }
+    if (consultationResult !== undefined) {
+      $match['stats.consultationResult'] = consultationResult;
+    }
+    if (categoryId) {
+      $match['categoryId'] = new Types.ObjectId(categoryId);
+    }
+
+    const exprs: any[] = [];
+    if (!_.isEmpty(duration)) {
+      if (duration.gt !== undefined) {
+        exprs.push({
+          $gt: [{ $subtract: ['$closedAt', '$createdAt'] }, duration.gt],
+        });
+      }
+      if (duration.lt !== undefined) {
+        exprs.push({
+          $lt: [{ $subtract: ['$closedAt', '$createdAt'] }, duration.lt],
+        });
+      }
+    }
+    if (averageResponseTime) {
+      if (averageResponseTime.gt) {
+        exprs.push({
+          $gt: ['$stats.averageResponseTime', averageResponseTime.gt],
+        });
+      }
+      if (averageResponseTime.lt) {
+        exprs.push({
+          $lt: ['$stats.averageResponseTime', averageResponseTime.lt],
+        });
+      }
+    }
+    if (exprs.length) {
+      if (exprs.length === 1) {
+        $match.$expr = exprs[0];
+      } else {
+        $match.$expr = { $and: exprs };
+      }
+    }
+
+    const pipeline: PipelineStage[] = [{ $match }, { $sort: { createdAt: 1 } }];
+
+    if (messageKeyword) {
+      const $match: FilterQuery<Message> = {
+        $expr: {
+          $eq: ['$conversationId', '$$cid'],
+        },
+        type: 'message',
+        'data.text': {
+          $regex: messageKeyword,
+        },
+      };
+      if (messageFrom !== undefined) {
+        $match['from.type'] = messageFrom;
+      }
+      pipeline.push({
+        $lookup: {
+          from: 'message',
+          let: {
+            cid: '$_id',
+          },
+          pipeline: [{ $match }, { $limit: 1 }],
+          as: 'messages',
+        },
+      });
+      pipeline.push({
+        $match: {
+          $expr: {
+            $gt: [{ $size: '$messages' }, 0],
+          },
+        },
+      });
+    }
+
+    pipeline.push({
+      $lookup: {
+        from: 'visitor',
+        localField: 'visitorId',
+        foreignField: '_id',
+        as: 'visitors',
+      },
+    });
+
+    pipeline.push({
+      $project: {
+        _id: 0,
+        id: '$_id',
+        createdAt: 1,
+        closedAt: 1,
+        visitorId: 1,
+        visitorName: {
+          $arrayElemAt: ['$visitors.name', 0],
+        },
+        categoryId: 1,
+        evaluation: 1,
+        evaluationInvitedAt: 1,
+        stats: 1,
+        operatorId: 1,
+      },
+    });
+
+    // pagination
+    pipeline.push({
+      $facet: {
+        items: [{ $skip: skip }, { $limit: limit }],
+        totalCount: [{ $count: 'count' }],
+      },
+    });
+
+    const [result] = await this.conversationModel.aggregate(pipeline);
+    return {
+      items: result.items,
+      totalCount: result.totalCount[0]?.count || 0,
+    };
   }
 }

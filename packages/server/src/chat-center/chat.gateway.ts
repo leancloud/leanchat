@@ -23,6 +23,7 @@ import {
   OperatorStatusChangedEvent,
   MessageCreatedEvent,
   MessageData,
+  UserType,
 } from 'src/chat';
 import { LeanCloudService } from 'src/leancloud';
 import { WsInterceptor } from 'src/common/interceptors';
@@ -106,7 +107,7 @@ export class ChatGateway
       await this.chatService.createMessage({
         conversationId: conversation.id,
         from: {
-          type: 'operator',
+          type: UserType.Operator,
           id: operatorId,
         },
         data: messageData,

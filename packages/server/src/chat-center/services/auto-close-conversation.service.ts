@@ -3,7 +3,7 @@ import { Cron } from '@nestjs/schedule';
 import { Redis } from 'ioredis';
 import { subSeconds } from 'date-fns';
 
-import { ChatService, ConversationService } from 'src/chat';
+import { ChatService, ConversationService, UserType } from 'src/chat';
 import { ConfigService } from 'src/config';
 import { REDIS } from 'src/redis';
 
@@ -52,7 +52,7 @@ export class AutoCloseConversationService {
         await this.chatService.createMessage({
           conversationId,
           from: {
-            type: 'system',
+            type: UserType.System,
           },
           data: {
             text: config.message.text,
@@ -63,7 +63,7 @@ export class AutoCloseConversationService {
       await this.chatService.closeConversation({
         conversationId,
         by: {
-          type: 'system',
+          type: UserType.System,
         },
       });
     }

@@ -4,7 +4,7 @@ import { ZodValidationPipe } from 'nestjs-zod';
 import { ConversationService } from 'src/chat/services';
 import {
   GetConversationStatsDto,
-  GetConversationRecordStatsDto,
+  GetConversationRecordDto,
 } from '../dtos/conversation';
 import { AuthGuard } from '../guards/auth.guard';
 
@@ -25,7 +25,12 @@ export class StatisticsController {
   }
 
   @Get('conversation-record')
-  queryConversations(@Query() query: GetConversationRecordStatsDto) {
-    // return this.conversationStatsService.getConversationRecordStats(query);
+  getConversationRecord(@Query() query: GetConversationRecordDto) {
+    const { page = 1, pageSize = 10, ...options } = query;
+    return this.conversationService.getConversationRecord({
+      ...options,
+      skip: (page - 1) * pageSize,
+      limit: pageSize,
+    });
   }
 }

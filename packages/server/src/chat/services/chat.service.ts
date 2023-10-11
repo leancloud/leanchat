@@ -24,6 +24,7 @@ import {
 } from '../events';
 import { OperatorService } from './operator.service';
 import { Conversation, Operator } from '../models';
+import { UserType } from '../constants';
 
 @Injectable()
 export class ChatService {
@@ -62,12 +63,13 @@ export class ChatService {
     });
 
     const convData: UpdateConversationData = {};
-    if (from.type === 'visitor') {
+    if (from.type === UserType.Visitor) {
       convData.visitorLastActivityAt = message.createdAt;
       if (!conversation.visitorWaitingSince) {
         convData.visitorWaitingSince = message.createdAt;
       }
-    } else if (from.type === 'operator') {
+    }
+    if (from.type === UserType.Operator) {
       convData.operatorLastActivityAt = message.createdAt;
       convData.visitorWaitingSince = null;
     }
@@ -101,7 +103,7 @@ export class ChatService {
     await this.createMessage({
       conversationId: conversation.id,
       from: {
-        type: 'system',
+        type: UserType.System,
       },
       data: { text },
     });
@@ -124,7 +126,7 @@ export class ChatService {
     await this.messageService.createMessage(conversation, {
       type: 'evaluate',
       from: {
-        type: 'visitor',
+        type: UserType.Visitor,
         id: conversation.visitorId,
       },
       data: { evaluation },
@@ -292,7 +294,7 @@ export class ChatService {
     await this.messageService.createMessage(conversation, {
       type: 'join',
       from: {
-        type: 'operator',
+        type: UserType.Operator,
         id: operator.id,
       },
     });
@@ -360,7 +362,7 @@ export class ChatService {
       await this.createMessage({
         conversationId,
         from: {
-          type: 'system',
+          type: UserType.System,
         },
         data: {
           text: template({

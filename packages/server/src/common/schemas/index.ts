@@ -3,7 +3,7 @@ import { z } from 'zod';
 export const ObjectIdSchema = z
   .string()
   .length(24)
-  .regex(/^[0-9A-Fa-f]+$/);
+  .regex(/^[a-f\d]+$/);
 
 export const BooleanStringSchema = z.string().transform((s) => {
   if (s === '0' || s === 'false') {

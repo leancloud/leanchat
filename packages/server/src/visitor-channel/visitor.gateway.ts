@@ -24,6 +24,7 @@ import {
   MessageCreatedEvent,
   MessageData,
   MessageService,
+  UserType,
   VisitorService,
 } from 'src/chat';
 import { LeanCloudService } from 'src/leancloud';
@@ -177,7 +178,7 @@ export class VisitorGateway implements OnModuleInit, OnGatewayConnection {
     await this.chatService.createMessage({
       conversationId: conversation.id,
       from: {
-        type: 'visitor',
+        type: UserType.Visitor,
         id: visitorId,
       },
       data: messageData,
@@ -216,7 +217,7 @@ export class VisitorGateway implements OnModuleInit, OnGatewayConnection {
     await this.chatService.closeConversation({
       conversationId: visitor.currentConversationId,
       by: {
-        type: 'visitor',
+        type: UserType.Visitor,
         id: visitorId,
       },
     });

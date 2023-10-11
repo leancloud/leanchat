@@ -1,12 +1,13 @@
 import { Process, Processor } from '@nestjs/bull';
 import { Job } from 'bull';
-import { differenceInMilliseconds, isBefore } from 'date-fns';
+import { differenceInMilliseconds, isAfter, isBefore } from 'date-fns';
 import _ from 'lodash';
 import { Types } from 'mongoose';
 
 import { ConversationStatsJobData } from '../interfaces';
 import { ConversationService, MessageService } from '../services';
 import { Conversation, Message } from '../models';
+import { ConsultationResult, UserType } from '../constants';
 
 @Processor('conversation_stats')
 export class ConversationStatsProcessor {
@@ -32,14 +33,14 @@ export class ConversationStatsProcessor {
     const chatMessages = messages.filter(
       (m) =>
         m.type === 'message' &&
-        (m.from.type === 'visitor' || m.from.type === 'operator'),
+        (m.from.type === UserType.Visitor || m.from.type === UserType.Operator),
     );
 
     const stats: Conversation['stats'] = {};
 
     const messageCount = _.countBy(chatMessages, (m) => m.from.type);
-    stats.visitorMessageCount = messageCount.visitor || 0;
-    stats.operatorMessageCount = messageCount.operator || 0;
+    stats.visitorMessageCount = messageCount[UserType.Visitor] || 0;
+    stats.operatorMessageCount = messageCount[UserType.Operator] || 0;
 
     const firstOperatorJoinMessage = messages.find((m) => m.type === 'join');
     if (firstOperatorJoinMessage) {
@@ -54,18 +55,49 @@ export class ConversationStatsProcessor {
         stats.responseCount = responseTimeList.length;
         stats.averageResponseTime = stats.responseTime / stats.responseCount;
       }
+
+      const communicateMessages = chatMessages.filter((message) =>
+        isAfter(message.createdAt, firstOperatorJoinMessage.createdAt),
+      );
+
+      const hasVisitorMessage = communicateMessages.some(
+        (message) => message.from.type === UserType.Visitor,
+      );
+      const hasOperatorMessage = communicateMessages.some(
+        (message) => message.from.type === UserType.Operator,
+      );
+      if (hasOperatorMessage) {
+        if (hasVisitorMessage) {
+          stats.consultationResult = ConsultationResult.Valid;
+        } else {
+          stats.consultationResult = ConsultationResult.Invalid;
+        }
+      } else {
+        stats.consultationResult = ConsultationResult.OperatorNoResponse;
+      }
+
+      if (communicateMessages.length > 1) {
+        stats.receptionTime = differenceInMilliseconds(
+          communicateMessages[communicateMessages.length - 1].createdAt,
+          communicateMessages[0].createdAt,
+        );
+      }
     }
 
-    if (messageCount.visitor && messageCount.operator) {
-      stats.receptionTime = this.getReceptionTime(chatMessages);
-    }
-
-    const firstOperatorMessage = chatMessages.find(
-      (m) => m.from.type === 'operator',
-    );
-    if (firstOperatorMessage) {
-      stats.firstOperatorMessageCreatedAt = firstOperatorMessage.createdAt;
-    }
+    stats.operatorFirstMessageCreatedAt = chatMessages.find(
+      (m) => m.from.type === UserType.Operator,
+    )?.createdAt;
+    stats.operatorLastMessageCreatedAt = _.findLast(
+      chatMessages,
+      (m) => m.from.type === UserType.Operator,
+    )?.createdAt;
+    stats.visitorFirstMessageCreatedAt = chatMessages.find(
+      (m) => m.from.type === UserType.Visitor,
+    )?.createdAt;
+    stats.visitorLastMessageCreatedAt = _.findLast(
+      chatMessages,
+      (m) => m.from.type === UserType.Visitor,
+    )?.createdAt;
 
     if (conversation.queuedAt) {
       if (
@@ -105,13 +137,13 @@ export class ConversationStatsProcessor {
   ) {
     const list: number[] = [];
 
-    let actType = 'start';
+    let actType = -1;
     let actTime = firstOperatorJoinedAt;
     for (const message of chatMessages) {
       if (actType === message.from.type) {
         continue;
       }
-      if (message.from.type === 'operator') {
+      if (message.from.type === UserType.Operator) {
         list.push(differenceInMilliseconds(message.createdAt, actTime));
       }
       actType = message.from.type;
@@ -119,15 +151,5 @@ export class ConversationStatsProcessor {
     }
 
     return list;
-  }
-
-  private getReceptionTime(chatMessages: Message[]) {
-    if (chatMessages.length < 1) {
-      return;
-    }
-    return differenceInMilliseconds(
-      chatMessages[chatMessages.length - 1].createdAt,
-      chatMessages[0].createdAt,
-    );
   }
 }

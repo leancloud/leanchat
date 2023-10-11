@@ -1,7 +1,8 @@
 import { Types } from 'mongoose';
 
 import type { Conversation } from '../models';
-import { UserInfo } from './common';
+import { NumberCondition, UserInfo } from './common';
+import { ConsultationResult, UserType } from '../constants';
 
 export interface CreateConversationData {
   channel: string;
@@ -24,13 +25,13 @@ export interface UpdateConversationData {
   operatorId?: string;
   categoryId?: string;
   evaluation?: ConversationEvaluation;
+  evaluationInvitedAt?: Date;
   closedAt?: Date;
   closedBy?: UserInfo;
   queuedAt?: Date;
   visitorLastActivityAt?: Date;
   operatorLastActivityAt?: Date;
   visitorWaitingSince?: Date | null;
-  inviteEvaluationAt?: Date;
   stats?: Conversation['stats'];
 }
 
@@ -60,4 +61,24 @@ export interface GetConversationMessageStatsOptions {
   to: Date;
   channel?: string;
   operatorId?: string[];
+}
+
+export interface GetConversationRecordOptions {
+  from: Date;
+  to: Date;
+  skip?: number;
+  limit?: number;
+
+  channel?: string;
+  operatorId?: string;
+  visitorId?: string;
+  messageKeyword?: string;
+  messageFrom?: UserType;
+  duration?: NumberCondition;
+  averageResponseTime?: NumberCondition;
+  evaluationStar?: number;
+  queued?: boolean;
+  closedBy?: number;
+  consultationResult?: ConsultationResult;
+  categoryId?: string;
 }

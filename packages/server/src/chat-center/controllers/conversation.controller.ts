@@ -21,6 +21,7 @@ import {
   MessageService,
   Operator,
   OperatorService,
+  UserType,
 } from 'src/chat';
 import { AuthGuard } from '../guards/auth.guard';
 import { GetConversationsDto } from '../dtos/conversation/get-conversations.dto';
@@ -87,7 +88,7 @@ export class ConversationController {
     await this.chatService.closeConversation({
       conversationId: id,
       by: {
-        type: 'operator',
+        type: UserType.Operator,
         id: operator.id,
       },
     });
@@ -101,7 +102,7 @@ export class ConversationController {
       return;
     }
     await this.conversationService.updateConversation(conversation.id, {
-      inviteEvaluationAt: new Date(),
+      evaluationInvitedAt: new Date(),
     });
     this.events.emit('inviteEvaluation', {
       conversation,

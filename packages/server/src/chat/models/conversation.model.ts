@@ -2,6 +2,7 @@ import { Index, ModelOptions, Prop } from '@typegoose/typegoose';
 import { Types } from 'mongoose';
 
 import { UserInfo } from './user-info.model';
+import { ConsultationResult } from '../constants';
 
 class Evaluation {
   @Prop()
@@ -34,22 +35,31 @@ class Stats {
   receptionTime?: number;
 
   @Prop()
-  openTime?: number;
-
-  @Prop()
   firstOperatorJoinedAt?: Date;
 
   @Prop()
   joinedOperatorIds?: Types.ObjectId[];
 
   @Prop()
-  firstOperatorMessageCreatedAt?: Date;
+  operatorFirstMessageCreatedAt?: Date;
+
+  @Prop()
+  operatorLastMessageCreatedAt?: Date;
+
+  @Prop()
+  visitorFirstMessageCreatedAt?: Date;
+
+  @Prop()
+  visitorLastMessageCreatedAt?: Date;
 
   @Prop()
   queueConnectionTime?: number;
 
   @Prop()
   queueTimeToLeave?: number;
+
+  @Prop()
+  consultationResult?: ConsultationResult;
 }
 
 @Index({ visitorId: 1 })
@@ -80,6 +90,9 @@ export class Conversation {
   @Prop({ _id: false })
   evaluation?: Evaluation;
 
+  @Prop()
+  evaluationInvitedAt?: Date;
+
   @Prop({ index: true })
   closedAt?: Date;
 
@@ -97,9 +110,6 @@ export class Conversation {
 
   @Prop()
   visitorWaitingSince?: Date;
-
-  @Prop()
-  inviteEvaluationAt?: Date;
 
   @Prop({ _id: false })
   stats?: Stats;
