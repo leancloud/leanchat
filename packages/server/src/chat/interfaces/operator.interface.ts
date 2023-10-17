@@ -20,4 +20,5 @@ export interface UpdateOperatorData {
   workload?: number;
 
   status?: OperatorStatus;
+  statusUpdatedAt?: Date;
 }

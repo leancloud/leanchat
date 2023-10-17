@@ -2,12 +2,20 @@ import { TypegooseModule } from '@m8a/nestjs-typegoose';
 import { Module } from '@nestjs/common';
 import { BullModule } from '@nestjs/bull';
 
-import { Conversation, Message, Operator, Visitor } from './models';
+import {
+  Conversation,
+  Message,
+  Operator,
+  PostprocessingLog,
+  Visitor,
+} from './models';
 import {
   ChatService,
   ConversationService,
   MessageService,
   OperatorService,
+  PostprocessingLogService,
+  StatsService,
   VisitorService,
 } from './services';
 import {
@@ -18,7 +26,13 @@ import {
 
 @Module({
   imports: [
-    TypegooseModule.forFeature([Conversation, Message, Visitor, Operator]),
+    TypegooseModule.forFeature([
+      Conversation,
+      Message,
+      Visitor,
+      Operator,
+      PostprocessingLog,
+    ]),
     BullModule.registerQueue(
       {
         name: 'auto_assign_conversation',
@@ -40,6 +54,8 @@ import {
     AutoAssignProcessor,
     AssignQueuedProcessor,
     ConversationStatsProcessor,
+    StatsService,
+    PostprocessingLogService,
   ],
   exports: [
     ChatService,
@@ -47,6 +63,7 @@ import {
     MessageService,
     VisitorService,
     OperatorService,
+    StatsService,
   ],
 })
 export class ChatModule {}

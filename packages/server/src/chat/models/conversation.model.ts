@@ -23,6 +23,9 @@ class Stats {
   firstResponseTime?: number;
 
   @Prop()
+  maxResponseTime?: number;
+
+  @Prop()
   responseTime?: number;
 
   @Prop()

@@ -113,11 +113,15 @@ export class ConversationController {
   async assignConversation(
     @Param('id', FindConversationPipe) conversation: Conversation,
     @Body() data: AssignConversationDto,
+    @CurrentOperator() currentOperator: Operator,
   ) {
     const operator = await this.operatorService.getOperator(data.operatorId);
     if (!operator) {
       throw new BadRequestException('Invalid operator id');
     }
-    await this.chatService.assignConversation(conversation, operator);
+    await this.chatService.assignConversation(conversation, operator, {
+      type: UserType.Operator,
+      id: currentOperator.id,
+    });
   }
 }

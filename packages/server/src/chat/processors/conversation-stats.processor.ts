@@ -2,7 +2,6 @@ import { Process, Processor } from '@nestjs/bull';
 import { Job } from 'bull';
 import { differenceInMilliseconds, isAfter, isBefore } from 'date-fns';
 import _ from 'lodash';
-import { Types } from 'mongoose';
 
 import { ConversationStatsJobData } from '../interfaces';
 import { ConversationService, MessageService } from '../services';
@@ -42,24 +41,25 @@ export class ConversationStatsProcessor {
     stats.visitorMessageCount = messageCount[UserType.Visitor] || 0;
     stats.operatorMessageCount = messageCount[UserType.Operator] || 0;
 
-    const firstOperatorJoinMessage = messages.find(
-      (m) => m.type === MessageType.OperatorJoin,
+    const firstAssignMessage = messages.find(
+      (m) => m.type === MessageType.Assign,
     );
-    if (firstOperatorJoinMessage) {
-      stats.firstOperatorJoinedAt = firstOperatorJoinMessage.createdAt;
+    if (firstAssignMessage) {
+      stats.firstOperatorJoinedAt = firstAssignMessage.createdAt;
       const responseTimeList = this.getResponseTimeList(
         chatMessages,
-        firstOperatorJoinMessage.createdAt,
+        firstAssignMessage.createdAt,
       );
       if (responseTimeList.length) {
         stats.firstResponseTime = responseTimeList[0];
+        stats.maxResponseTime = _.max(responseTimeList);
         stats.responseTime = _.sum(responseTimeList);
         stats.responseCount = responseTimeList.length;
         stats.averageResponseTime = stats.responseTime / stats.responseCount;
       }
 
       const communicateMessages = chatMessages.filter((message) =>
-        isAfter(message.createdAt, firstOperatorJoinMessage.createdAt),
+        isAfter(message.createdAt, firstAssignMessage.createdAt),
       );
 
       const hasVisitorMessage = communicateMessages.some(
@@ -103,11 +103,11 @@ export class ConversationStatsProcessor {
 
     if (conversation.queuedAt) {
       if (
-        firstOperatorJoinMessage &&
-        isBefore(firstOperatorJoinMessage.createdAt, conversation.closedAt)
+        firstAssignMessage &&
+        isBefore(firstAssignMessage.createdAt, conversation.closedAt)
       ) {
         stats.queueConnectionTime = differenceInMilliseconds(
-          firstOperatorJoinMessage.createdAt,
+          firstAssignMessage.createdAt,
           conversation.queuedAt,
         );
       } else {
@@ -119,13 +119,11 @@ export class ConversationStatsProcessor {
     }
 
     const joinedOperatorIds = messages
-      .filter((message) => message.type === MessageType.OperatorJoin)
+      .filter((message) => message.type === MessageType.Assign)
       .slice(0, 10)
-      .map((message) => message.from.id);
+      .map((message) => message.data.toOperatorId);
     if (joinedOperatorIds.length) {
-      stats.joinedOperatorIds = joinedOperatorIds.map(
-        (id) => new Types.ObjectId(id),
-      );
+      stats.joinedOperatorIds = joinedOperatorIds;
     }
 
     await this.conversationService.updateConversation(conversation.id, {

@@ -36,6 +36,9 @@ export class Operator {
   @Prop({ enum: OperatorStatus })
   status?: OperatorStatus;
 
+  @Prop()
+  statusUpdatedAt?: Date;
+
   createdAt: Date;
 
   updatedAt: Date;

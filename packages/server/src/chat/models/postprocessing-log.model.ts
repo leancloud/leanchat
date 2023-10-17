@@ -1,24 +1,24 @@
 import { Index, ModelOptions, Prop } from '@typegoose/typegoose';
 import { Types } from 'mongoose';
 
-@Index({ timestamp: 1, operatorId: 1 }, { unique: true })
+@Index({ startTime: 1, endTime: 1 })
 @ModelOptions({
   schemaOptions: {
-    collection: 'online_time',
+    collection: 'postprocessing_log',
     versionKey: false,
   },
 })
-export class OnlineTime {
+export class PostprocessingLog {
   _id: Types.ObjectId;
 
   id: string;
 
   @Prop()
-  timestamp: Date;
-
-  @Prop()
   operatorId: Types.ObjectId;
 
   @Prop()
-  status: number;
+  startTime: Date;
+
+  @Prop()
+  endTime: Date;
 }

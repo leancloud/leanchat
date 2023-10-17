@@ -21,7 +21,7 @@ export class OnlineTimeService {
     const docs = operators.map((operator) => ({
       timestamp: time,
       operatorId: operator.id,
-      status: operator.status || OperatorStatus.Leave,
+      status: operator.status ?? OperatorStatus.Leave,
     }));
     try {
       await this.onlineTimeModel.insertMany(docs, { ordered: false });
@@ -30,7 +30,7 @@ export class OnlineTimeService {
     }
   }
 
-  async getOnlineTime(from: Date, to: Date, operatorIds?: string[]) {
+  async getOnlineTimeStats(from: Date, to: Date, operatorIds?: string[]) {
     const $match: FilterQuery<OnlineTime> = {
       timestamp: {
         $gte: from,
@@ -44,21 +44,25 @@ export class OnlineTimeService {
       };
     }
 
-    const results = await this.onlineTimeModel
-      .aggregate([
-        { $match },
-        {
-          $group: {
-            _id: '$operatorId',
-            minutes: { $sum: 1 },
-          },
-        },
-      ])
-      .exec();
+    const count = (cond: any) => ({
+      $sum: {
+        $cond: [cond, 1, 0],
+      },
+    });
 
-    return results.map((result) => ({
-      operatorId: result._id.toString(),
-      minutes: result.minutes,
-    }));
+    const results = await this.onlineTimeModel.aggregate([
+      { $match },
+      {
+        $group: {
+          _id: '$operatorId',
+          totalTime: { $sum: 1 },
+          readyTime: count({ $eq: ['$status', OperatorStatus.Ready] }),
+          busyTime: count({ $eq: ['$status', OperatorStatus.Busy] }),
+          leaveTime: count({ $eq: ['$status', OperatorStatus.Leave] }),
+        },
+      },
+    ]);
+
+    return results;
   }
 }

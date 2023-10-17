@@ -3,6 +3,7 @@ import { Job } from 'bull';
 
 import { AutoAssignJobData } from '../interfaces';
 import { ChatService } from '../services';
+import { UserType } from '../constants';
 
 @Processor('auto_assign_conversation')
 export class AutoAssignProcessor {
@@ -13,7 +14,9 @@ export class AutoAssignProcessor {
     const { conversationId } = job.data;
     const operator = await this.chatService.getRandomReadyOperator();
     if (operator) {
-      await this.chatService.assignConversation(conversationId, operator);
+      await this.chatService.assignConversation(conversationId, operator, {
+        type: UserType.System,
+      });
     } else {
       await this.chatService.enqueueConversation(conversationId);
     }

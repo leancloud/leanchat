@@ -25,6 +25,8 @@ import {
 import { OperatorService } from './operator.service';
 import { Conversation, Operator } from '../models';
 import { MessageType, OperatorStatus, UserType } from '../constants';
+import { UserInfo } from '../interfaces/common';
+import { PostprocessingLogService } from './postprocessing-log.service';
 
 @Injectable()
 export class ChatService {
@@ -37,6 +39,7 @@ export class ChatService {
     private messageService: MessageService,
     private operatorService: OperatorService,
     private configService: ConfigService,
+    private ppLogService: PostprocessingLogService,
 
     @InjectQueue('auto_assign_conversation')
     private autoAssignQueue: Queue<AutoAssignJobData>,
@@ -176,20 +179,38 @@ export class ChatService {
       return;
     }
 
+    const statusUpdatedAt = new Date();
     if (status === OperatorStatus.Ready) {
       const workload = await this.conversationService.getOpenConversationCount(
         operatorId,
       );
       await this.operatorService.updateOperator(operatorId, {
-        status,
         workload,
+        status,
+        statusUpdatedAt,
       });
     } else {
-      await this.operatorService.updateOperator(operatorId, { status });
+      await this.operatorService.updateOperator(operatorId, {
+        status,
+        statusUpdatedAt,
+      });
     }
 
     if (status === OperatorStatus.Ready) {
       await this.assignQueuedConversationToOperator(operatorId);
+    }
+
+    if (
+      status === OperatorStatus.Leave &&
+      operator.status === OperatorStatus.Busy &&
+      operator.statusUpdatedAt
+    ) {
+      // 记录后处理日志
+      await this.ppLogService.create({
+        operatorId: operator.id,
+        startTime: operator.statusUpdatedAt,
+        endTime: statusUpdatedAt,
+      });
     }
 
     this.events.emit('operator.statusChanged', {
@@ -217,6 +238,7 @@ export class ChatService {
   async assignConversation(
     conversation: Conversation | string,
     operator: Operator | string,
+    by: UserInfo,
   ) {
     if (typeof conversation === 'string') {
       const conv = await this.conversationService.getConversation(conversation);
@@ -234,21 +256,25 @@ export class ChatService {
       return;
     }
 
-    const fromOperatorId = conversation.operatorId?.toString();
+    const fromOperatorId = conversation.operatorId;
 
     await this.conversationService.updateConversation(conversation.id, {
       operatorId: operator.id,
     });
     await this.messageService.createMessage(conversation, {
-      type: MessageType.OperatorJoin,
-      from: {
-        type: UserType.Operator,
-        id: operator.id,
+      type: MessageType.Assign,
+      from: by,
+      data: {
+        fromOperatorId,
+        toOperatorId: operator._id,
       },
     });
 
     if (fromOperatorId) {
-      await this.operatorService.increaseOperatorWorkload(fromOperatorId, -1);
+      await this.operatorService.increaseOperatorWorkload(
+        fromOperatorId.toString(),
+        -1,
+      );
     }
     await this.operatorService.increaseOperatorWorkload(operator.id, 1);
 
@@ -258,7 +284,7 @@ export class ChatService {
 
     if (fromOperatorId) {
       // 为原客服重新分配会话
-      await this.assignQueuedConversationToOperator(fromOperatorId);
+      await this.assignQueuedConversationToOperator(fromOperatorId.toString());
     }
   }
 
@@ -342,8 +368,8 @@ export class ChatService {
     }
 
     if (operator.status === OperatorStatus.Busy && operator.workload === 0) {
-      // 后处理阶段结束, 将客服状态改为 leave
-      this.setOperatorStatus(operatorId, OperatorStatus.Leave);
+      // 后处理阶段结束, 将客服状态改为 Leave
+      await this.setOperatorStatus(operatorId, OperatorStatus.Leave);
       return;
     }
 

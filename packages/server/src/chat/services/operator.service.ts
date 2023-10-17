@@ -2,6 +2,7 @@ import crypto from 'node:crypto';
 import { Injectable, OnApplicationBootstrap } from '@nestjs/common';
 import { InjectModel } from '@m8a/nestjs-typegoose';
 import { ReturnModelType } from '@typegoose/typegoose';
+import { AnyKeys } from 'mongoose';
 import { hash } from '@node-rs/argon2';
 
 import { Operator } from '../models';
@@ -104,23 +105,24 @@ export class OperatorService implements OnApplicationBootstrap {
   }
 
   async updateOperator(operatorId: string, data: UpdateOperatorData) {
+    const $set: AnyKeys<Operator> = {
+      externalName: data.externalName,
+      internalName: data.internalName,
+      concurrency: data.concurrency,
+      workload: data.workload,
+      status: data.status,
+      statusUpdatedAt: data.statusUpdatedAt,
+    };
+
+    if (data.password) {
+      $set.password = await hash(data.password);
+    }
+    if (data.status !== undefined && !data.statusUpdatedAt) {
+      $set.statusUpdatedAt = new Date();
+    }
+
     return this.operatorModel
-      .findOneAndUpdate(
-        { _id: operatorId },
-        {
-          $set: {
-            password: data.password && (await hash(data.password)),
-            externalName: data.externalName,
-            internalName: data.internalName,
-            concurrency: data.concurrency,
-            workload: data.workload,
-            status: data.status,
-          },
-        },
-        {
-          new: true,
-        },
-      )
+      .findOneAndUpdate({ _id: operatorId }, { $set }, { new: true })
       .exec();
   }
 

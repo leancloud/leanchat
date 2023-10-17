@@ -3,6 +3,7 @@ import { Job } from 'bull';
 
 import { AssignQueuedJobData } from '../interfaces';
 import { ChatService } from '../services';
+import { UserType } from '../constants';
 
 @Processor('assign_queued_conversation')
 export class AssignQueuedProcessor {
@@ -15,7 +16,9 @@ export class AssignQueuedProcessor {
     if (!conversationId) {
       return;
     }
-    await this.chatService.assignConversation(conversationId, operatorId);
+    await this.chatService.assignConversation(conversationId, operatorId, {
+      type: UserType.System,
+    });
 
     if (maxCount > 1) {
       await this.chatService.addAssignQueuedConversationJob(
