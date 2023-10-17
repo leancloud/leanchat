@@ -1,9 +1,7 @@
 import { useMemo, useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
-import { Button, DatePicker, Form } from 'antd';
 import dayjs from 'dayjs';
 
-import { OperatorSelect } from '../components/OperatorSelect';
 import {
   ConversationStatistics as ConversationStatisticsSchema,
   getConversationStatistics,
@@ -11,42 +9,7 @@ import {
 import { LoadingCover } from '../components/LoadingCover';
 import { StatsCard } from './components/StatsCard';
 import { StatsGroup } from './components/StatsGroup';
-import { ChannelSelect } from './components/ChannelSelect';
-
-export interface FiltersFormData {
-  dateRange: [dayjs.Dayjs, dayjs.Dayjs];
-  channel?: string;
-  operatorId?: string[];
-}
-
-interface FiltersFormProps {
-  initData?: Partial<FiltersFormData>;
-  onChange: (data: FiltersFormData) => void;
-}
-
-export function FiltersForm({ initData, onChange }: FiltersFormProps) {
-  return (
-    <Form layout="inline" initialValues={initData} onFinish={onChange}>
-      <Form.Item name="dateRange" rules={[{ required: true }]}>
-        <DatePicker.RangePicker />
-      </Form.Item>
-      <Form.Item name="channel">
-        <ChannelSelect allowClear />
-      </Form.Item>
-      <Form.Item name="operatorId">
-        <OperatorSelect mode="multiple" placeholder="人工客服" style={{ minWidth: 120 }} />
-      </Form.Item>
-      <Form.Item>
-        <Button type="primary" htmlType="submit">
-          查询
-        </Button>
-        <Button className="ml-2" htmlType="reset">
-          重置
-        </Button>
-      </Form.Item>
-    </Form>
-  );
-}
+import { BasicFilterForm, BasicFilterFormData } from './components/BasicFilterForm';
 
 const avg = (count: number, sum: number) => {
   if (count === 0) {
@@ -135,7 +98,7 @@ function StatsList({ data }: StatsListProps) {
 }
 
 export function ConversationStatistics() {
-  const [filtersFormData, setFilters] = useState<FiltersFormData>({
+  const [formData, setFormData] = useState<BasicFilterFormData>({
     dateRange: [dayjs(), dayjs()],
   });
 
@@ -144,14 +107,14 @@ export function ConversationStatistics() {
       dateRange: [from, to],
       channel,
       operatorId,
-    } = filtersFormData;
+    } = formData;
     return {
-      from: from.startOf('day').toDate(),
-      to: to.endOf('day').toDate(),
+      from: from.startOf('day').startOf('day').toDate(),
+      to: to.endOf('day').endOf('day').toDate(),
       channel,
       operatorId,
     };
-  }, [filtersFormData]);
+  }, [formData]);
 
   const { data, isFetching } = useQuery({
     queryKey: ['ConversationStatistics', filters],
@@ -161,7 +124,7 @@ export function ConversationStatistics() {
 
   return (
     <>
-      <FiltersForm initData={filtersFormData} onChange={setFilters} />
+      <BasicFilterForm initData={formData} onChange={setFormData} />
       <div className="mt-6">
         {isFetching && <LoadingCover minHeight={400} />}
         {data && <StatsList data={data} />}

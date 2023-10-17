@@ -7,9 +7,9 @@ import {
   getConversationMessageStatistics,
 } from '../api/statistics';
 import { LoadingCover } from '../components/LoadingCover';
-import { FiltersForm, FiltersFormData } from './ConversationStatistics';
 import { StatsGroup } from './components/StatsGroup';
 import { StatsCard } from './components/StatsCard';
+import { BasicFilterForm, BasicFilterFormData } from './components/BasicFilterForm';
 
 interface StatsListProps {
   data: StatsData;
@@ -30,7 +30,7 @@ function StatsList({ data }: StatsListProps) {
 }
 
 export function ConversationMessageStatistics() {
-  const [filtersFormData, setFilters] = useState<FiltersFormData>({
+  const [formData, setFormData] = useState<BasicFilterFormData>({
     dateRange: [dayjs(), dayjs()],
   });
 
@@ -39,14 +39,14 @@ export function ConversationMessageStatistics() {
       dateRange: [from, to],
       channel,
       operatorId,
-    } = filtersFormData;
+    } = formData;
     return {
-      from: from.startOf('day').toDate(),
-      to: to.endOf('day').toDate(),
+      from: from.startOf('day').startOf('day').toDate(),
+      to: to.endOf('day').endOf('day').toDate(),
       channel,
       operatorId,
     };
-  }, [filtersFormData]);
+  }, [formData]);
 
   const { data, isFetching } = useQuery({
     queryKey: ['ConversationMessageStatistics', filters],
@@ -55,7 +55,7 @@ export function ConversationMessageStatistics() {
 
   return (
     <>
-      <FiltersForm initData={filtersFormData} onChange={setFilters} />
+      <BasicFilterForm initData={formData} onChange={setFormData} />
       <div className="mt-6 relative">
         {isFetching && <LoadingCover minHeight={400} />}
         {data && <StatsList data={data} />}

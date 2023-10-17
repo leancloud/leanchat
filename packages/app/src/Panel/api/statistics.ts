@@ -100,3 +100,37 @@ export async function getConversationRecordStats(options: GetConversationRecordS
   });
   return res.data;
 }
+
+export interface OperatorStats {
+  id: string;
+  conversation?: {
+    totalCount: number;
+    validCount: number;
+    invalidCount: number;
+    operatorNoResponseCount: number;
+    averageFirstResponseTime: number | null;
+    responseTime: number;
+    responseCount: number;
+    validDuration: number;
+    messageCount: number;
+    validEvaluationCount: number;
+    validEvaluationInvitationCount: number;
+  };
+  online?: {
+    totalTime: number;
+    readyTime: number;
+    busyTime: number;
+    leaveTime: number;
+  };
+}
+
+interface GetOperatorStatsOptions {
+  from: string;
+  to: string;
+  operatorId?: string[];
+}
+
+export async function getOperatorStats(options: GetOperatorStatsOptions) {
+  const res = await client.get<OperatorStats[]>('/statistics/operator', { params: options });
+  return res.data;
+}

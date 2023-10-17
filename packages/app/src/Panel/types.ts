@@ -72,5 +72,5 @@ export enum MessageType {
   Message = 0,
   Evaluate = 1,
   Close = 2,
-  OperatorJoin = 3,
+  Assign = 3,
 }

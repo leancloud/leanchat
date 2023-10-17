@@ -317,8 +317,8 @@ function renderDate(date?: string | number | dayjs.Dayjs) {
 
 export function ConversationRecord() {
   const [formData, setFormData] = useState<FilterFormData>(() => ({
-    from: dayjs().startOf('day'),
-    to: dayjs().endOf('day'),
+    from: dayjs(),
+    to: dayjs(),
   }));
 
   const [page, setPage] = useState(1);
@@ -341,8 +341,8 @@ export function ConversationRecord() {
     } = formData;
 
     const options: GetConversationRecordStatsOptions = {
-      from: from.toISOString(),
-      to: to.toISOString(),
+      from: from.startOf('day').toISOString(),
+      to: to.endOf('day').toISOString(),
       channel,
       operatorId,
       page,

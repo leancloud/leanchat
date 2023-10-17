@@ -209,8 +209,8 @@ function CloseConversation({ message }: MessageComponentProps) {
 
 const MessageComponents: Record<number, JSXElementConstructor<MessageComponentProps>> = {
   [MessageType.Message]: EvaluateMessage,
-  [MessageType.OperatorJoin]: ({ message }) => {
-    return <LogMessage>客服 {message.from.id} 进入会话</LogMessage>;
+  [MessageType.Assign]: ({ message }) => {
+    return <LogMessage>客服 {message.data.toOperatorId} 进入会话</LogMessage>;
   },
   [MessageType.Close]: CloseConversation,
 };

@@ -3,6 +3,7 @@ import { Tabs } from 'antd';
 import { ConversationStatistics } from './ConversationStatistics';
 import { ConversationMessageStatistics } from './MessageStatistics';
 import { ConversationRecord } from './ConversationRecord';
+import { OperatorStats } from './OperatorStats';
 
 export default function Statistics() {
   return (
@@ -21,9 +22,14 @@ export default function Statistics() {
             children: <ConversationMessageStatistics />,
           },
           {
-            key: 'conversation-record',
+            key: 'conversationRecord',
             label: '会话记录',
             children: <ConversationRecord />,
+          },
+          {
+            key: 'operator',
+            label: '客服工作量统计',
+            children: <OperatorStats />,
           },
         ]}
       />
