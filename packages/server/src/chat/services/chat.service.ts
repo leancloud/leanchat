@@ -5,6 +5,7 @@ import { Queue } from 'bull';
 import { Redis } from 'ioredis';
 import _ from 'lodash';
 import Handlebars from 'handlebars';
+import { differenceInDays } from 'date-fns';
 
 import { REDIS } from 'src/redis';
 import { ConfigService } from 'src/config';
@@ -120,6 +121,13 @@ export class ChatService {
       conversationId,
     );
     if (!conversation || conversation.evaluation) {
+      return;
+    }
+    if (
+      conversation.closedAt &&
+      differenceInDays(new Date(), conversation.closedAt) >= 7
+    ) {
+      // 会话关闭超过 7 天后不允许评价
       return;
     }
 
