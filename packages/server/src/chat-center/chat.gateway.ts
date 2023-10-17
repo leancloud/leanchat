@@ -3,7 +3,6 @@ import {
   ConnectedSocket,
   MessageBody,
   OnGatewayConnection,
-  OnGatewayDisconnect,
   SubscribeMessage,
   WebSocketGateway,
   WebSocketServer,
@@ -34,9 +33,7 @@ import { ConversationTransformService, OnlineTimeService } from './services';
 @WebSocketGateway({ namespace: 'o' })
 @UsePipes(ZodValidationPipe)
 @UseInterceptors(WsInterceptor)
-export class ChatGateway
-  implements OnModuleInit, OnGatewayConnection, OnGatewayDisconnect
-{
+export class ChatGateway implements OnModuleInit, OnGatewayConnection {
   @WebSocketServer()
   private server: Namespace;
 
@@ -70,13 +67,8 @@ export class ChatGateway
     this.onlineTimeService.recordOnlineTime(_.uniq(operatorIds));
   }
 
-  async handleConnection(socket: Socket) {
+  handleConnection(socket: Socket) {
     socket.join(socket.data.id);
-    console.log('operator online', socket.data.id);
-  }
-
-  handleDisconnect(socket: Socket) {
-    console.log('operator offline', socket.data.id);
   }
 
   @SubscribeMessage('message')
