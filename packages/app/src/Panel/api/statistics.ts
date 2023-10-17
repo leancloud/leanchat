@@ -1,4 +1,4 @@
-import { Conversation } from '../types';
+import { Conversation, Evaluation } from '../types';
 import { client } from './client';
 
 export interface GetConversationStatisticsFilters {
@@ -132,5 +132,41 @@ interface GetOperatorStatsOptions {
 
 export async function getOperatorStats(options: GetOperatorStatsOptions) {
   const res = await client.get<OperatorStats[]>('/statistics/operator', { params: options });
+  return res.data;
+}
+
+export interface EvaluationStats {
+  id: string;
+  visitorId: string;
+  visitorName: string | null;
+  operatorId?: string;
+  evaluation: Evaluation;
+  evaluationInvitedAt?: string;
+  evaluationCreatedAt: string;
+}
+
+interface EvaluationStatsResult {
+  items: EvaluationStats[];
+  totalCount: number;
+}
+
+export interface GetEvaluationStatsOptions {
+  from: Date;
+  to: Date;
+  channel?: string;
+  operatorId?: string[];
+  page?: number;
+  pageSize?: number;
+}
+
+export async function getEvaluationStats(options: GetEvaluationStatsOptions) {
+  const res = await client.get<EvaluationStatsResult>('/statistics/evaluation', {
+    params: {
+      from: options.from.toISOString(),
+      to: options.to.toISOString(),
+      channel: options.channel,
+      operatorId: options.operatorId?.join(','),
+    },
+  });
   return res.data;
 }

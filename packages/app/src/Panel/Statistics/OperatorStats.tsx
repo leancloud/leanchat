@@ -1,4 +1,4 @@
-import { createContext, useContext, useMemo, useState } from 'react';
+import { useMemo, useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { Table } from 'antd';
 import { ColumnsType } from 'antd/es/table';
@@ -7,7 +7,6 @@ import _ from 'lodash';
 
 import { BasicFilterForm, BasicFilterFormData } from './components/BasicFilterForm';
 import { OperatorStats as OperatorStatsSchema, getOperatorStats } from '../api/statistics';
-import { useOperators } from '../hooks/operator';
 import {
   add,
   defaultValue,
@@ -21,19 +20,7 @@ import {
   subtract,
   timeDuration,
 } from './utils';
-import { Operator } from '../types';
-
-const OperatorMapContext = createContext<{ operatorMap: Record<string, Operator> }>({
-  operatorMap: {},
-});
-
-function OperatorName({ operatorId }: { operatorId: string }) {
-  const { operatorMap } = useContext(OperatorMapContext);
-  const operator = operatorMap[operatorId];
-  if (operator) {
-    return `${operator.externalName}(${operator.internalName})`;
-  }
-}
+import { OperatorName, OperatorNameProvider } from './components/OperatorName';
 
 const columns: ColumnsType<OperatorStatsSchema> = [
   {
@@ -248,11 +235,8 @@ export function OperatorStats() {
     queryFn: () => getOperatorStats(options),
   });
 
-  const { data: operators } = useOperators();
-  const operatorMap = useMemo(() => _.keyBy(operators, (o) => o.id), [operators]);
-
   return (
-    <OperatorMapContext.Provider value={{ operatorMap }}>
+    <OperatorNameProvider>
       <BasicFilterForm initData={formData} onChange={setFormData} />
 
       <Table
@@ -263,6 +247,6 @@ export function OperatorStats() {
         scroll={{ x: 'max-content' }}
         columns={columns}
       />
-    </OperatorMapContext.Provider>
+    </OperatorNameProvider>
   );
 }

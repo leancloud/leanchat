@@ -4,6 +4,7 @@ import { ConversationStatistics } from './ConversationStatistics';
 import { ConversationMessageStatistics } from './MessageStatistics';
 import { ConversationRecord } from './ConversationRecord';
 import { OperatorStats } from './OperatorStats';
+import { EvaluationStats } from './EvaluationStats';
 
 export default function Statistics() {
   return (
@@ -30,6 +31,11 @@ export default function Statistics() {
             key: 'operator',
             label: '客服工作量统计',
             children: <OperatorStats />,
+          },
+          {
+            key: 'evaluation',
+            label: '满意度评价统计',
+            children: <EvaluationStats />,
           },
         ]}
       />

@@ -11,6 +11,11 @@ export interface Message {
   createdAt: string;
 }
 
+export interface Evaluation {
+  star: number;
+  feedback: string;
+}
+
 export interface Conversation {
   id: string;
   visitorId: string;
@@ -21,10 +26,7 @@ export interface Conversation {
   operatorId?: string;
   lastMessage?: Message;
   categoryId?: string;
-  evaluation?: {
-    star: number;
-    feedback: string;
-  };
+  evaluation?: Evaluation;
   visitorWaitingSince?: string;
   closedAt?: string;
 }

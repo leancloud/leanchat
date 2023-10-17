@@ -12,6 +12,7 @@ import { GetConversationRecordStatsOptions, getConversationRecordStats } from '.
 import { useCategories } from '../hooks/category';
 import { UserType } from '../types';
 import { useOperators } from '../hooks/operator';
+import { getEvaluationStarText } from './utils';
 
 interface FilterGroupProps {
   label?: ReactNode;
@@ -440,16 +441,7 @@ export function ConversationRecord() {
           {
             dataIndex: ['evaluation', 'star'],
             title: '满意度',
-            render: (star: number = 0) => {
-              return {
-                0: '未评价',
-                1: '非常不满意',
-                2: '不满意',
-                3: '一般',
-                4: '满意',
-                5: '非常满意',
-              }[star];
-            },
+            render: getEvaluationStarText,
           },
           {
             key: 'messageCount',

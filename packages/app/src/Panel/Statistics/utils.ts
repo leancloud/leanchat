@@ -145,3 +145,20 @@ export function fixed(fraction?: number): FlowOperation {
     }
   };
 }
+
+export function getEvaluationStarText(star?: number) {
+  switch (star) {
+    case 5:
+      return '非常满意';
+    case 4:
+      return '满意';
+    case 3:
+      return '一般';
+    case 2:
+      return '不满意';
+    case 1:
+      return '非常不满意';
+    default:
+      return '未评价';
+  }
+}
