@@ -96,6 +96,9 @@ export class Conversation {
   @Prop()
   evaluationInvitedAt?: Date;
 
+  @Prop()
+  evaluationCreatedAt?: Date;
+
   @Prop({ index: true })
   closedAt?: Date;
 

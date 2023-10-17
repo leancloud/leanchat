@@ -8,7 +8,7 @@ import {
   GetConversationRecordDto,
 } from '../dtos/conversation';
 import { AuthGuard } from '../guards/auth.guard';
-import { GetOperatorStatsDto } from '../dtos/stats';
+import { GetEvaluationStatsDto, GetOperatorStatsDto } from '../dtos/stats';
 import { OnlineTimeService } from '../services';
 
 @Controller('statistics')
@@ -81,5 +81,15 @@ export class StatisticsController {
       .mapValues(mergeObjectArray)
       .values()
       .value();
+  }
+
+  @Get('evaluation')
+  getEvaluationStats(@Query() query: GetEvaluationStatsDto) {
+    const { page = 1, pageSize = 10, ...options } = query;
+    return this.statsService.getEvaluationStats({
+      ...options,
+      skip: (page - 1) * pageSize,
+      limit: pageSize,
+    });
   }
 }

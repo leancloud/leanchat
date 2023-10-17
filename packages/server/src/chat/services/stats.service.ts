@@ -3,7 +3,10 @@ import { ReturnModelType } from '@typegoose/typegoose';
 import { FilterQuery, Types } from 'mongoose';
 
 import { Conversation, Message, PostprocessingLog } from '../models';
-import { GetOperatorStatsOptions } from '../interfaces';
+import {
+  GetEvaluationStatsOptions,
+  GetOperatorStatsOptions,
+} from '../interfaces';
 import { ConsultationResult, MessageType, UserType } from '../constants';
 
 const count = (cond: any) => ({
@@ -228,5 +231,64 @@ export class StatsService {
     ]);
 
     return results;
+  }
+
+  async getEvaluationStats({
+    from,
+    to,
+    channel,
+    operatorId,
+    skip = 0,
+    limit = 10,
+  }: GetEvaluationStatsOptions) {
+    const $match: FilterQuery<Conversation> = {
+      createdAt: { $gte: from, $lte: to },
+      evaluation: { $exists: true },
+    };
+    if (channel) {
+      $match.channel = channel;
+    }
+    if (operatorId) {
+      $match.operatorId = {
+        $in: operatorId.map((id) => new Types.ObjectId(id)),
+      };
+    }
+
+    const [result] = await this.conversationModel.aggregate([
+      { $match },
+      {
+        $lookup: {
+          from: 'visitor',
+          localField: 'visitorId',
+          foreignField: '_id',
+          as: 'visitors',
+        },
+      },
+      {
+        $project: {
+          _id: 0,
+          id: '$_id',
+          visitorId: 1,
+          visitorName: {
+            $arrayElemAt: ['$visitors.name', 0],
+          },
+          operatorId: 1,
+          evaluation: 1,
+          evaluationInvitedAt: 1,
+          evaluationCreatedAt: 1,
+        },
+      },
+      {
+        $facet: {
+          items: [{ $skip: skip }, { $limit: limit }],
+          totalCount: [{ $count: 'v' }],
+        },
+      },
+    ]);
+
+    return {
+      items: result.items,
+      totalCount: result.totalCount[0]?.v || 0,
+    };
   }
 }
