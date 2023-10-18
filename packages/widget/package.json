@@ -5,6 +5,7 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
+    "genenv": "node scripts/generate-env.js",
     "build": "tsc && vite build",
     "preview": "vite preview"
   },
