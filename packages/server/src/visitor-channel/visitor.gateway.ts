@@ -138,6 +138,7 @@ export class VisitorGateway implements OnModuleInit, OnGatewayConnection {
     const visitorId = socket.data.id;
     const visitor = await this.visitorService.getVisitor(visitorId);
     if (!visitor) {
+      // TODO: throw an error
       return;
     }
 
