@@ -2,7 +2,7 @@ import { Index, ModelOptions, Prop } from '@typegoose/typegoose';
 import { Types } from 'mongoose';
 
 import { UserInfo } from './user-info.model';
-import { ConsultationResult } from '../constants';
+import { Channel, ConsultationResult } from '../constants';
 
 class Evaluation {
   @Prop()
@@ -78,8 +78,8 @@ export class Conversation {
 
   id: string;
 
-  @Prop()
-  channel: string;
+  @Prop({ enum: Channel })
+  channel: Channel;
 
   @Prop()
   visitorId: Types.ObjectId;

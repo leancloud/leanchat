@@ -2,11 +2,12 @@ import { z } from 'zod';
 import { createZodDto } from 'nestjs-zod';
 
 import { ObjectIdSchema } from 'src/common/schemas';
+import { Channel } from 'src/chat/constants';
 
 const GetEvaluationStatsSchema = z.object({
   from: z.coerce.date(),
   to: z.coerce.date(),
-  channel: z.enum(['widget']).optional(),
+  channel: z.nativeEnum(Channel).optional(),
   operatorId: z
     .preprocess((s) => {
       if (typeof s === 'string') {

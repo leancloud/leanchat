@@ -15,6 +15,7 @@ import _ from 'lodash';
 import { ConfigService } from 'src/config';
 import { InviteEvaluationEvent } from 'src/event';
 import {
+  Channel,
   ChatService,
   Conversation,
   ConversationCreatedEvent,
@@ -155,7 +156,7 @@ export class VisitorGateway implements OnModuleInit, OnGatewayConnection {
       }
 
       conversation = await this.conversationService.createConversation({
-        channel: 'widget',
+        channel: Channel.LiveChat,
         visitorId,
       });
       await this.visitorService.updateVisitor(visitorId, {

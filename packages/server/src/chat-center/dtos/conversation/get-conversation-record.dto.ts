@@ -2,7 +2,7 @@ import { z } from 'zod';
 import { createZodDto } from 'nestjs-zod';
 
 import { BooleanStringSchema, ObjectIdSchema } from 'src/common/schemas';
-import { ConsultationResult, UserType } from 'src/chat/constants';
+import { Channel, ConsultationResult, UserType } from 'src/chat/constants';
 
 const NumberConditionSchema = z
   .string()
@@ -16,7 +16,9 @@ const NumberConditionSchema = z
 const GetConversationRecordSchema = z.object({
   from: z.coerce.date(),
   to: z.coerce.date(),
-  channel: z.enum(['widget']).optional(),
+  channel: z
+    .preprocess((v: string) => parseInt(v), z.nativeEnum(Channel))
+    .optional(),
   visitorId: ObjectIdSchema.optional(),
   operatorId: ObjectIdSchema.optional(),
   messageKeyword: z.string().optional(),

@@ -2,10 +2,10 @@ import { Types } from 'mongoose';
 
 import type { Conversation } from '../models';
 import { NumberCondition, UserInfo } from './common';
-import { ConsultationResult, UserType } from '../constants';
+import { Channel, ConsultationResult, UserType } from '../constants';
 
 export interface CreateConversationData {
-  channel: string;
+  channel: Channel;
   visitorId: string;
 }
 

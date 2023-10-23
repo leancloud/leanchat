@@ -22,3 +22,7 @@ export enum OperatorStatus {
   Busy = 1,
   Leave = 2,
 }
+
+export enum Channel {
+  LiveChat = 0,
+}
