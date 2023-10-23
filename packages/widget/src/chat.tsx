@@ -7,10 +7,10 @@ import {
   useRef,
   useState,
 } from 'react';
-import { useLocalStorage } from 'react-use';
-import { Socket, io } from 'socket.io-client';
+import { Socket } from 'socket.io-client';
 
 import { Conversation, EvaluateData, Message } from './types';
+import { useAppContext } from './AppContext';
 
 interface ChatContextValue {
   socket: Socket;
@@ -42,24 +42,8 @@ interface ChatProps {
 }
 
 export function Chat({ children }: ChatProps) {
-  const [token, setToken] = useLocalStorage('LeanChat/token', undefined, { raw: true });
-
-  const [socket, setSocket] = useState<Socket>();
+  const { socket } = useAppContext();
   const [connected, setConnected] = useState(false);
-
-  const socketInited = useRef(false);
-
-  useEffect(() => {
-    if (socketInited.current) return;
-    socketInited.current = true;
-    const socket = io({
-      transports: ['websocket'],
-      auth: {
-        token,
-      },
-    });
-    setSocket(socket);
-  }, []);
 
   useEffect(() => {
     if (!socket) return;
@@ -76,7 +60,6 @@ export function Chat({ children }: ChatProps) {
   const [conversation, setConversation] = useState<Conversation>();
   const [messages, setMessages] = useState<Message[]>([]);
 
-  useEvent(socket, 'signedUp', ({ token }) => setToken(token));
   useEvent(socket, 'currentConversation', setConversation);
   useEvent(socket, 'initialized', (data) => {
     setStatus(data.status);

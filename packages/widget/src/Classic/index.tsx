@@ -13,11 +13,13 @@ import {
   FaRegFile,
 } from 'react-icons/fa6';
 import cx from 'classnames';
+
 import { useChat } from '../chat';
 import { EvaluateData, Message } from '../types';
 import { Modal } from './Modal';
 import { ProgressMessage, TextMessage } from './Message';
 import { UploadTask, useUpload } from './useUpload';
+import { useAppContext } from '../AppContext';
 
 interface LogMessageProps {
   content: string;
@@ -102,9 +104,10 @@ function BigControlButton({ children, title, ...props }: ComponentProps<'button'
 interface MessageListProps {
   messages: Message[];
   uploadTasks: UploadTask[];
+  isMobile?: boolean;
 }
 
-function MessageList({ messages, uploadTasks }: MessageListProps) {
+function MessageList({ messages, uploadTasks, isMobile }: MessageListProps) {
   const containerRef = useRef<HTMLDivElement>(null!);
 
   useEffect(() => {
@@ -115,7 +118,9 @@ function MessageList({ messages, uploadTasks }: MessageListProps) {
   return (
     <div
       ref={containerRef}
-      className="grow flex flex-col p-4 pt-16 sm:pt-4 space-y-2 overflow-y-auto"
+      className={cx('grow flex flex-col p-4 space-y-2 overflow-y-auto', {
+        'pt-16': isMobile,
+      })}
     >
       {messages.map((msg) => (
         <MessageItem key={msg.id} message={msg} />
@@ -180,6 +185,7 @@ export function Classic() {
   const [content, setContent] = useState('');
   const [showControl, setShowControl] = useState(false);
   const [showEvaluationModal, setShowEvaluationModal] = useState(false);
+  const [minimized, setMinimized] = useState(false);
 
   const handleShowEvaluation = () => {
     setShowEvaluationModal(true);
@@ -242,161 +248,240 @@ export function Classic() {
     upload(file);
   };
 
-  return (
-    <div className="h-full flex flex-col bg-[#f3f3f7] text-sm sm:text-xs sm:w-[415px] sm:max-h-[520px] sm:m-auto sm:border sm:border-[#5f6467] sm:rounded-[5px] sm:overflow-hidden">
-      <div className="hidden shrink-0 h-[43px] bg-gradient-to-b from-[#67b9f4] to-[#4697ef] relative sm:flex items-center">
-        <div className="ml-4 text-white font-bold">在线客服</div>
-        <div className="absolute text-white top-2 right-[5px] flex gap-[5px]">
-          <button className="w-5 h-5 flex hover:text-[rgb(232,162,65)]">
-            <FaMinus className="w-4 h-4 m-auto" />
-          </button>
-          <button className="w-5 h-5 flex hover:text-[rgb(232,162,65)]" onClick={handleClose}>
-            <FaXmark className="w-4 h-4 m-auto" />
-          </button>
-        </div>
-      </div>
-      <div className="relative grow flex flex-col overflow-hidden">
-        <button className="sm:hidden absolute top-4 left-4 w-8 h-8 bg-white flex rounded-full bg-opacity-70 text-[#999999] shadow-sm">
-          <FaArrowLeft className="m-auto" />
-        </button>
+  const { iframe } = useAppContext();
 
-        {conversation && !conversation.closedAt && (
-          <button
-            className="sm:hidden absolute top-4 right-4 w-8 h-8 bg-white flex rounded-full bg-opacity-70 text-[#999999] shadow-sm"
-            onClick={handleClose}
-          >
-            <FaXmark className="m-auto" />
-          </button>
+  const toggleMinmize = () => {
+    setMinimized(!minimized);
+    if (minimized) {
+      iframe.style.width = '415px';
+      iframe.style.height = '520px';
+    } else {
+      iframe.style.width = '100px';
+      iframe.style.height = '40px';
+    }
+  };
+
+  const [isMobile, setIsMobile] = useState(() => {
+    if (!window.top) {
+      return false;
+    }
+    return window.top.matchMedia('(max-width: 668px)').matches;
+  });
+
+  useEffect(() => {
+    const topWindow = window.top;
+    if (!topWindow) return;
+    const onResize = () => {
+      setIsMobile(topWindow.matchMedia('(max-width: 668px)').matches);
+    };
+    topWindow.addEventListener('resize', onResize);
+    return () => {
+      topWindow.removeEventListener('resize', onResize);
+    };
+  }, []);
+
+  useEffect(() => {
+    if (isMobile) {
+      iframe.style.width = '100vw';
+      iframe.style.height = '100vh';
+    } else {
+      iframe.style.width = '415px';
+      iframe.style.height = '520px';
+    }
+  }, [isMobile]);
+
+  if (minimized) {
+    return (
+      <button
+        className="w-screen h-screen bg-[#e5e5e4] border border-[#c8c7c6] text-sm"
+        onClick={toggleMinmize}
+      >
+        在线客服
+      </button>
+    );
+  }
+
+  return (
+    <div
+      className={cx('h-screen flex flex-col bg-[#f3f3f7] text-sm', {
+        'text-xs border border-[#5f6467] rounded-[5px] overflow-hidden': !isMobile,
+      })}
+    >
+      {!isMobile && (
+        <div className="flex shrink-0 h-[43px] bg-gradient-to-b from-[#67b9f4] to-[#4697ef] relative items-center">
+          <div className="ml-4 text-white font-bold">在线客服</div>
+          <div className="absolute text-white top-2 right-[5px] flex gap-[5px]">
+            <button className="w-5 h-5 flex hover:text-[rgb(232,162,65)]" onClick={toggleMinmize}>
+              <FaMinus className="w-4 h-4 m-auto" />
+            </button>
+            <button className="w-5 h-5 flex hover:text-[rgb(232,162,65)]" onClick={handleClose}>
+              <FaXmark className="w-4 h-4 m-auto" />
+            </button>
+          </div>
+        </div>
+      )}
+
+      <div className="relative grow flex flex-col overflow-hidden">
+        {isMobile && (
+          <>
+            <button className="absolute top-4 left-4 w-8 h-8 bg-white flex rounded-full bg-opacity-70 text-[#999999] shadow-sm">
+              <FaArrowLeft className="m-auto" />
+            </button>
+
+            <button
+              className="absolute top-4 right-4 w-8 h-8 bg-white flex rounded-full bg-opacity-70 text-[#999999] shadow-sm"
+              onClick={handleClose}
+            >
+              <FaXmark className="m-auto" />
+            </button>
+          </>
         )}
 
-        <MessageList messages={messages} uploadTasks={tasks} />
+        <MessageList messages={messages} uploadTasks={tasks} isMobile={isMobile} />
 
-        <div className="sm:hidden bg-[#f9f9f9]">
-          <input ref={fileInputRef} className="hidden" type="file" onChange={onFileInputChange} />
-          <input
-            ref={imageInputRef}
-            className="hidden"
-            type="file"
-            accept="image/jpg,image/png,image/gif,image/jpeg,image/bmp"
-            onChange={onFileInputChange}
-          />
-          <div className="p-[5px] flex">
-            <Textarea
-              className="grow resize-none outline-none border border-[#d4d4d4] rounded leading-4 px-[5px] py-3 focus:border-[#cef2ff]"
-              placeholder="我想问..."
-              maxRows={5}
-              value={content}
-              disabled={isBusy}
-              onChange={(e) => setContent(e.target.value)}
-              onKeyDown={handleTextareaKeyDown}
+        {isMobile ? (
+          <div className="bg-[#f9f9f9]">
+            <input ref={fileInputRef} className="hidden" type="file" onChange={onFileInputChange} />
+            <input
+              ref={imageInputRef}
+              className="hidden"
+              type="file"
+              accept="image/jpg,image/png,image/gif,image/jpeg,image/bmp"
+              onChange={onFileInputChange}
             />
-            {content ? (
-              <button
-                className="ml-2 mr-2 mt-auto h-[36px] mb-[3px] bg-[#cef2ff] px-2 rounded"
-                onClick={handleSendMessage}
-              >
-                发送
-              </button>
-            ) : (
-              <button
-                className="ml-2 mr-2 mt-auto h-[36px] w-[36px] mb-[3px] bg-[#cef2ff] px-2 rounded flex"
-                onClick={() => setShowControl(!showControl)}
-              >
-                <FaPlus className="m-auto" />
-              </button>
+            <div className="p-[5px] flex">
+              <Textarea
+                className="grow resize-none outline-none border border-[#d4d4d4] rounded leading-4 px-[5px] py-3 focus:border-[#cef2ff]"
+                placeholder="我想问..."
+                maxRows={5}
+                value={content}
+                disabled={isBusy}
+                onChange={(e) => setContent(e.target.value)}
+                onKeyDown={handleTextareaKeyDown}
+              />
+              {content ? (
+                <button
+                  className="ml-2 mr-2 mt-auto h-[36px] mb-[3px] bg-[#cef2ff] px-2 rounded"
+                  onClick={handleSendMessage}
+                >
+                  发送
+                </button>
+              ) : (
+                <button
+                  className="ml-2 mr-2 mt-auto h-[36px] w-[36px] mb-[3px] bg-[#cef2ff] px-2 rounded flex"
+                  onClick={() => setShowControl(!showControl)}
+                >
+                  <FaPlus className="m-auto" />
+                </button>
+              )}
+            </div>
+            {showControl && (
+              <div className="p-2 grid grid-cols-[repeat(auto-fill,minmax(80px,1fr))] justify-items-center gap-2">
+                <BigControlButton
+                  title="图片"
+                  disabled={isBusy}
+                  onClick={() => imageInputRef.current?.click()}
+                >
+                  <FaImage className="w-8 h-8" />
+                </BigControlButton>
+                <BigControlButton
+                  title="文件"
+                  disabled={isBusy}
+                  onClick={() => fileInputRef.current?.click()}
+                >
+                  <FaFolderOpen className="w-8 h-8" />
+                </BigControlButton>
+                <BigControlButton
+                  title="评价"
+                  disabled={!!(!conversation || conversation.evaluation)}
+                  onClick={handleShowEvaluation}
+                >
+                  <FaStar className="w-8 h-8" />
+                </BigControlButton>
+                <BigControlButton title="转人工" disabled>
+                  <FaHeadset className="w-8 h-8" />
+                </BigControlButton>
+              </div>
             )}
           </div>
-          {showControl && (
-            <div className="p-2 grid grid-cols-[repeat(auto-fill,minmax(80px,1fr))] justify-items-center gap-2">
-              <BigControlButton
+        ) : (
+          <>
+            <div className="flex h-[29px] shrink-0 items-center px-3 bg-[#f9f9f9] text-[rgb(102,102,102)] gap-4 border-t border-t-[#d5d5d5]">
+              <input
+                ref={fileInputRef}
+                className="hidden"
+                type="file"
+                onChange={onFileInputChange}
+              />
+              <input
+                ref={imageInputRef}
+                className="hidden"
+                type="file"
+                accept="image/jpg,image/png,image/gif,image/jpeg,image/bmp"
+                onChange={onFileInputChange}
+              />
+              <ControlButton title="表情" disabled={isBusy}>
+                <FaRegFaceSmile className="w-4 h-4" />
+              </ControlButton>
+              <ControlButton
                 title="图片"
                 disabled={isBusy}
                 onClick={() => imageInputRef.current?.click()}
               >
-                <FaImage className="w-8 h-8" />
-              </BigControlButton>
-              <BigControlButton
+                <FaImage className="w-4 h-4" />
+              </ControlButton>
+              <ControlButton
                 title="文件"
                 disabled={isBusy}
                 onClick={() => fileInputRef.current?.click()}
               >
-                <FaFolderOpen className="w-8 h-8" />
-              </BigControlButton>
-              <BigControlButton
+                <FaFolderOpen className="w-4 h-4" />
+              </ControlButton>
+              <ControlButton
                 title="评价"
                 disabled={!!(!conversation || conversation.evaluation)}
                 onClick={handleShowEvaluation}
               >
-                <FaStar className="w-8 h-8" />
-              </BigControlButton>
-              <BigControlButton title="转人工" disabled>
-                <FaHeadset className="w-8 h-8" />
-              </BigControlButton>
+                <FaStar className="w-4 h-4" />
+              </ControlButton>
+              <ControlButton title="转人工" disabled>
+                <FaHeadset className="w-4 h-4" />
+              </ControlButton>
             </div>
-          )}
-        </div>
 
-        <div className="hidden h-[29px] shrink-0 sm:flex items-center px-3 bg-[#f9f9f9] text-[rgb(102,102,102)] gap-4 border-t border-t-[#d5d5d5]">
-          <ControlButton title="表情" disabled={isBusy}>
-            <FaRegFaceSmile className="w-4 h-4" />
-          </ControlButton>
-          <ControlButton
-            title="图片"
-            disabled={isBusy}
-            onClick={() => imageInputRef.current?.click()}
-          >
-            <FaImage className="w-4 h-4" />
-          </ControlButton>
-          <ControlButton
-            title="文件"
-            disabled={isBusy}
-            onClick={() => fileInputRef.current?.click()}
-          >
-            <FaFolderOpen className="w-4 h-4" />
-          </ControlButton>
-          <ControlButton
-            title="评价"
-            disabled={!!(!conversation || conversation.evaluation)}
-            onClick={handleShowEvaluation}
-          >
-            <FaStar className="w-4 h-4" />
-          </ControlButton>
-          <ControlButton title="转人工" disabled>
-            <FaHeadset className="w-4 h-4" />
-          </ControlButton>
-        </div>
+            <div className="bg-[#f9f9f9] shrink-0">
+              <div className="h-[95px] p-[2px]">
+                <textarea
+                  className="resize-none w-full h-full outline-none p-[10px] leading-5 border border-[#d5d5d5] outline outline-0 outline-offset-0 outline-[#0088ff] focus:outline-1"
+                  placeholder="我想问..."
+                  value={content}
+                  disabled={isBusy}
+                  onChange={(e) => setContent(e.target.value)}
+                  onKeyDown={handleTextareaKeyDown}
+                />
+              </div>
 
-        <div className="bg-[#f9f9f9] hidden shrink-0 sm:block">
-          <div className="h-[95px] p-[2px]">
-            <textarea
-              className="resize-none w-full h-full outline-none p-[10px] leading-5 border border-[#d5d5d5] outline outline-0 outline-offset-0 outline-[#0088ff] focus:outline-1"
-              placeholder="我想问..."
-              value={content}
-              disabled={isBusy}
-              onChange={(e) => setContent(e.target.value)}
-              onKeyDown={handleTextareaKeyDown}
-            />
-          </div>
-
-          <div className="flex h-10 items-center px-[10px]">
-            <div className="ml-auto space-x-[10px]">
-              <button
-                className="h-6 px-[10px] enabled:hover:text-[rgb(0,95,234)] disabled:text-gray-400"
-                disabled={!!(!conversation || conversation.closedAt)}
-                onClick={handleClose}
-              >
-                结束会话
-              </button>
-              <button
-                className="px-6 border rounded border-[#cccccc] h-7 enabled:hover:bg-[#f1f1f1] disabled:text-gray-400"
-                disabled={isBusy}
-                onClick={handleSendMessage}
-              >
-                发送
-              </button>
+              <div className="flex h-10 items-center px-[10px]">
+                <div className="ml-auto space-x-[10px]">
+                  <button
+                    className="h-6 px-[10px] enabled:hover:text-[rgb(0,95,234)] disabled:text-gray-400"
+                    disabled={!!(!conversation || conversation.closedAt)}
+                    onClick={handleClose}
+                  >
+                    结束会话
+                  </button>
+                  <button
+                    className="px-6 border rounded border-[#cccccc] h-7 enabled:hover:bg-[#f1f1f1] disabled:text-gray-400"
+                    disabled={isBusy}
+                    onClick={handleSendMessage}
+                  >
+                    发送
+                  </button>
+                </div>
+              </div>
             </div>
-          </div>
-        </div>
+          </>
+        )}
 
         {showEvaluationModal && (
           <EvaluationModal
