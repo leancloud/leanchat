@@ -9,6 +9,7 @@ import {
 } from '@nestjs/config';
 import { ScheduleModule } from '@nestjs/schedule';
 import { TypegooseModule } from '@m8a/nestjs-typegoose';
+import { Response } from 'express';
 
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
@@ -24,6 +25,11 @@ import { ConfigModule, mongodbConfig, redisConfig } from './config';
     ServeStaticModule.forRoot({
       rootPath: path.join(__dirname, 'public'),
       exclude: ['/api/(.*)'],
+      serveStaticOptions: {
+        setHeaders: (res: Response) => {
+          res.setHeader('Access-Control-Allow-Origin', '*');
+        },
+      },
     }),
     NestConfigModule.forRoot({
       isGlobal: true,

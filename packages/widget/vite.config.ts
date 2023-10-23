@@ -28,5 +28,5 @@ export default defineConfig({
       },
     },
   },
-  base: process.env.LEANCHAT_HOST,
+  base: (process.env.LEANCHAT_HOST ?? '/') + 'chat',
 });
