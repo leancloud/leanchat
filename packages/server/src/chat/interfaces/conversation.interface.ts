@@ -70,7 +70,7 @@ export interface GetConversationRecordOptions {
   skip?: number;
   limit?: number;
 
-  channel?: string;
+  channel?: Channel;
   operatorId?: string;
   visitorId?: string;
   messageKeyword?: string;

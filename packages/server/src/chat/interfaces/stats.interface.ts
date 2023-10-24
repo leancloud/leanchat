@@ -1,3 +1,5 @@
+import { Channel } from '../constants';
+
 export interface GetOperatorStatsOptions {
   from: Date;
   to: Date;
@@ -7,7 +9,7 @@ export interface GetOperatorStatsOptions {
 export interface GetEvaluationStatsOptions {
   from: Date;
   to: Date;
-  channel?: string;
+  channel?: Channel;
   operatorId?: string[];
   skip?: number;
   limit?: number;
