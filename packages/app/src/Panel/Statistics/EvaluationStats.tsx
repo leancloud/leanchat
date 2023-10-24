@@ -19,7 +19,7 @@ const columns: ColumnsType<EvaluationStatsSchema> = [
     title: '会话ID',
   },
   {
-    dataIndex: 'evaluationCreatedAt',
+    dataIndex: ['evaluation', 'createdAt'],
     title: '评价时间',
     render: (dateString: string) => dayjs(dateString).format('YYYY-MM-DD HH:mm:ss'),
   },

@@ -142,7 +142,6 @@ export interface EvaluationStats {
   operatorId?: string;
   evaluation: Evaluation;
   evaluationInvitedAt?: string;
-  evaluationCreatedAt: string;
 }
 
 interface EvaluationStatsResult {

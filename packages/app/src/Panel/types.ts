@@ -14,6 +14,7 @@ export interface Message {
 export interface Evaluation {
   star: number;
   feedback: string;
+  createdAt: string;
 }
 
 export interface Conversation {
