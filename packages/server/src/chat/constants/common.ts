@@ -1,3 +1,8 @@
+export enum OperatorRole {
+  Operator = 0,
+  Admin = 1,
+}
+
 export enum UserType {
   Visitor = 0,
   Operator = 1,

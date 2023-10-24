@@ -2,7 +2,7 @@ import { ModelOptions, Prop } from '@typegoose/typegoose';
 import { Types } from 'mongoose';
 import { hash, verify } from '@node-rs/argon2';
 
-import { OperatorStatus } from '../constants';
+import { OperatorRole, OperatorStatus } from '../constants';
 
 @ModelOptions({
   schemaOptions: {
@@ -14,6 +14,9 @@ export class Operator {
   _id: Types.ObjectId;
 
   id: string;
+
+  @Prop({ enum: OperatorRole })
+  role: OperatorRole;
 
   @Prop()
   username: string;

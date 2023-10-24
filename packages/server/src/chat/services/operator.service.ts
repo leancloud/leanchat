@@ -7,7 +7,7 @@ import { hash } from '@node-rs/argon2';
 
 import { Operator } from '../models';
 import { CreateOperatorData, UpdateOperatorData } from '../interfaces';
-import { OperatorStatus } from '../constants';
+import { OperatorRole, OperatorStatus } from '../constants';
 
 @Injectable()
 export class OperatorService implements OnApplicationBootstrap {
@@ -40,19 +40,28 @@ export class OperatorService implements OnApplicationBootstrap {
     return password;
   }
 
-  onApplicationBootstrap() {
-    this.createDefaultOperator();
+  async onApplicationBootstrap() {
+    const result = await this.createDefaultOperator();
+    if (result) {
+      console.log('admin account created', {
+        username: result.admin.username,
+        password: result.password,
+      });
+    }
   }
 
   async createOperator(data: CreateOperatorData) {
     const operator = new this.operatorModel({
+      role: data.role,
       username: data.username,
       internalName: data.internalName,
       externalName: data.externalName,
       concurrency: data.concurrency,
     });
     await operator.setPassword(data.password);
-    return operator.save();
+    await operator.save();
+    delete operator.password;
+    return operator;
   }
 
   getOperator(id: string) {
@@ -86,21 +95,18 @@ export class OperatorService implements OnApplicationBootstrap {
       return;
     }
 
-    const admin = new this.operatorModel({
-      username: 'admin',
-      externalName: '管理员',
-      internalName: '管理员',
-      concurrency: 0,
-    });
     const password = this.generateRandomPassword(16);
-    await admin.setPassword(password);
 
     try {
-      await admin.save();
-      console.log('admin account created', {
-        username: admin.username,
+      const admin = await this.createOperator({
+        role: OperatorRole.Admin,
+        username: 'admin',
         password,
+        externalName: '管理员',
+        internalName: '管理员',
+        concurrency: 0,
       });
+      return { admin, password };
     } catch {}
   }
 

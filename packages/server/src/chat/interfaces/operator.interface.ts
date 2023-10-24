@@ -1,6 +1,7 @@
-import type { OperatorStatus } from '../constants';
+import type { OperatorRole, OperatorStatus } from '../constants';
 
 export interface CreateOperatorData {
+  role: OperatorRole;
   username: string;
   password: string;
   internalName: string;
