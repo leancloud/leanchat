@@ -7,11 +7,6 @@ export const GreetingConfigSchema = z.object({
   }),
 });
 
-export const OperatorWelcomeMessageConfigSchema = z.object({
-  enabled: z.boolean(),
-  text: z.string(),
-});
-
 export const AutoCloseConfigSchema = z.object({
   timeout: z.number().int().min(0),
   message: z.object({

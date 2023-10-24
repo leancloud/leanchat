@@ -86,33 +86,6 @@ export class ChatService {
     return message;
   }
 
-  private async createOperatorWelcomeMessage(
-    conversation: Conversation,
-    operator: Operator,
-  ) {
-    const welcomeMessage = await this.configService.get(
-      'operatorWelcomeMessage',
-    );
-    if (!welcomeMessage || !welcomeMessage.enabled) {
-      return;
-    }
-
-    const template = Handlebars.compile(welcomeMessage.text);
-    const text = template({
-      operator: {
-        name: operator.externalName,
-      },
-    });
-
-    await this.createMessage({
-      conversationId: conversation.id,
-      from: {
-        type: UserType.System,
-      },
-      data: { text },
-    });
-  }
-
   async evaluateConversation(
     conversationId: string,
     evaluation: ConversationEvaluation,
@@ -287,8 +260,6 @@ export class ChatService {
     await this.operatorService.increaseOperatorWorkload(operator.id, 1);
 
     await this.redis.zrem('conversation_queue', conversation.id);
-
-    await this.createOperatorWelcomeMessage(conversation, operator);
 
     if (fromOperatorId) {
       // 为原客服重新分配会话

@@ -5,11 +5,6 @@ export interface GreetingConfig {
   };
 }
 
-export interface OperatorWelcomeMessageConfig {
-  enabled: boolean;
-  text: string;
-}
-
 export interface AutoCloseConfig {
   timeout: number;
   message: {
@@ -32,7 +27,6 @@ export interface QueueConfig {
 
 export interface ConfigKeys {
   greeting: GreetingConfig;
-  operatorWelcomeMessage: OperatorWelcomeMessageConfig;
   autoClose: AutoCloseConfig;
   queue: QueueConfig;
 }
