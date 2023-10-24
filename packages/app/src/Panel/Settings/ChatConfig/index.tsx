@@ -60,52 +60,6 @@ function GreetingConfigForm() {
   );
 }
 
-function OperatorWelcomeMessageConfigForm() {
-  const { data, isLoading, update, isUpdating } = useConfig('operatorWelcomeMessage', {
-    onSuccess: () => {
-      message.success('已保存');
-    },
-  });
-
-  if (isLoading) {
-    return <Loading />;
-  }
-
-  return (
-    <Form
-      initialValues={
-        data || {
-          enabled: false,
-          text: '客服 {{ operator.name }} 为您服务',
-        }
-      }
-      onFinish={update}
-    >
-      <Form.Item
-        wrapperCol={{ offset: 4 }}
-        name="enabled"
-        valuePropName="checked"
-        style={{ marginBottom: 10 }}
-      >
-        <Checkbox>开启</Checkbox>
-      </Form.Item>
-      <Form.Item
-        wrapperCol={{ offset: 4 }}
-        name="text"
-        rules={[{ required: true }]}
-        extra="客服加入会话后，将自动发送该欢迎语。可使用占位符 {{ operator.name }}"
-      >
-        <Input.TextArea rows={3} />
-      </Form.Item>
-      <Form.Item wrapperCol={{ offset: 4 }}>
-        <Button type="primary" htmlType="submit" loading={isUpdating}>
-          保存
-        </Button>
-      </Form.Item>
-    </Form>
-  );
-}
-
 function AutoCloseConversationForm() {
   const { data, isLoading, update, isUpdating } = useConfig('autoClose', {
     onSuccess: () => {
@@ -271,9 +225,6 @@ export function ChatConfig() {
       <div className="max-w-[800px]">
         <h2 className="text-base font-medium">欢迎语</h2>
         <GreetingConfigForm />
-
-        <h2 className="text-base font-medium my-4">人工客服欢迎语</h2>
-        <OperatorWelcomeMessageConfigForm />
 
         <h2 className="text-base font-medium my-4">自动踢线</h2>
         <AutoCloseConversationForm />
