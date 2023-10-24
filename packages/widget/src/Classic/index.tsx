@@ -219,14 +219,6 @@ export function Classic() {
     }
   };
 
-  const handleClose = () => {
-    if (conversation && !conversation.evaluation) {
-      setShowEvaluationModal(true);
-      return;
-    }
-    close();
-  };
-
   const { tasks, upload } = useUpload({
     onUploaded: (fileId) => {
       sendMessage({ fileId });
@@ -289,6 +281,19 @@ export function Classic() {
       iframe.style.height = '520px';
     }
   }, [isMobile]);
+
+  const handleClose = () => {
+    if (conversation) {
+      if (!conversation.evaluation) {
+        setShowEvaluationModal(true);
+        return;
+      }
+      if (!conversation.closedAt) {
+        close();
+      }
+    }
+    iframe.style.display = 'none';
+  };
 
   if (minimized) {
     return (
