@@ -4,21 +4,16 @@ import { expand } from './utils';
 
 export const redisConfig = registerAs('redis', () => {
   const env = { ...process.env };
-  const { REDIS_URL_CACHE, REDIS_URL_QUEUE, REDIS_URL_MESSAGE } = env;
-
-  console.log(
-    'Redis config:',
-    { REDIS_URL_CACHE, REDIS_URL_QUEUE, REDIS_URL_MESSAGE },
-    {
-      cache: REDIS_URL_CACHE && expand(REDIS_URL_CACHE, env),
-      queue: REDIS_URL_QUEUE && expand(REDIS_URL_QUEUE, env),
-      message: REDIS_URL_MESSAGE && expand(REDIS_URL_MESSAGE, env),
-    },
-  );
+  const {
+    LEANCHAT_REDIS_URL_CACHE,
+    LEANCHAT_REDIS_URL_QUEUE,
+    LEANCHAT_REDIS_URL_MESSAGE,
+  } = env;
 
   return {
-    cache: REDIS_URL_CACHE && expand(REDIS_URL_CACHE, env),
-    queue: REDIS_URL_QUEUE && expand(REDIS_URL_QUEUE, env),
-    message: REDIS_URL_MESSAGE && expand(REDIS_URL_MESSAGE, env),
+    cache: LEANCHAT_REDIS_URL_CACHE && expand(LEANCHAT_REDIS_URL_CACHE, env),
+    queue: LEANCHAT_REDIS_URL_QUEUE && expand(LEANCHAT_REDIS_URL_QUEUE, env),
+    message:
+      LEANCHAT_REDIS_URL_MESSAGE && expand(LEANCHAT_REDIS_URL_MESSAGE, env),
   };
 });

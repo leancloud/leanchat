@@ -4,9 +4,9 @@ import { expand } from './utils';
 
 export const mongodbConfig = registerAs('mongodb', () => {
   const env = { ...process.env };
-  const { MONGODB_URL } = env;
+  const { LEANCHAT_MONGODB_URL } = env;
 
   return {
-    url: MONGODB_URL && expand(MONGODB_URL, env),
+    url: LEANCHAT_MONGODB_URL && expand(LEANCHAT_MONGODB_URL, env),
   };
 });
