@@ -122,7 +122,6 @@ export class ConversationService {
       categoryId: data.categoryId,
       evaluation: data.evaluation,
       evaluationInvitedAt: data.evaluationInvitedAt,
-      evaluationCreatedAt: data.evaluationCreatedAt,
       closedAt: data.closedAt,
       closedBy: data.closedBy,
       queuedAt: data.queuedAt,

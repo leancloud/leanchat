@@ -4,12 +4,23 @@ import { Types } from 'mongoose';
 import { UserInfo } from './user-info.model';
 import { Channel, ConsultationResult } from '../constants';
 
+@ModelOptions({
+  schemaOptions: {
+    _id: false,
+    timestamps: {
+      createdAt: true,
+      updatedAt: false,
+    },
+  },
+})
 class Evaluation {
   @Prop()
   star: number;
 
   @Prop()
   feedback: string;
+
+  createdAt: Date;
 }
 
 class Stats {
@@ -90,14 +101,11 @@ export class Conversation {
   @Prop()
   categoryId?: Types.ObjectId;
 
-  @Prop({ _id: false })
+  @Prop()
   evaluation?: Evaluation;
 
   @Prop()
   evaluationInvitedAt?: Date;
-
-  @Prop()
-  evaluationCreatedAt?: Date;
 
   @Prop({ index: true })
   closedAt?: Date;

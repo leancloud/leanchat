@@ -133,7 +133,6 @@ export class ChatService {
 
     await this.conversationService.updateConversation(conversationId, {
       evaluation,
-      evaluationCreatedAt: new Date(),
     });
     await this.messageService.createMessage(conversation, {
       type: MessageType.Evaluate,

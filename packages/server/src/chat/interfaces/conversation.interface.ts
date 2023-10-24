@@ -26,7 +26,6 @@ export interface UpdateConversationData {
   categoryId?: string;
   evaluation?: ConversationEvaluation;
   evaluationInvitedAt?: Date;
-  evaluationCreatedAt?: Date;
   closedAt?: Date;
   closedBy?: UserInfo;
   queuedAt?: Date;
