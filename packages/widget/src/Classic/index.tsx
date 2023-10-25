@@ -8,7 +8,6 @@ import {
   FaFolderOpen,
   FaStar,
   FaHeadset,
-  FaArrowLeft,
   FaPlus,
   FaRegFile,
 } from 'react-icons/fa6';
@@ -328,18 +327,12 @@ export function Classic() {
 
       <div className="relative grow flex flex-col overflow-hidden">
         {isMobile && (
-          <>
-            <button className="absolute top-4 left-4 w-8 h-8 bg-white flex rounded-full bg-opacity-70 text-[#999999] shadow-sm">
-              <FaArrowLeft className="m-auto" />
-            </button>
-
-            <button
-              className="absolute top-4 right-4 w-8 h-8 bg-white flex rounded-full bg-opacity-70 text-[#999999] shadow-sm"
-              onClick={handleClose}
-            >
-              <FaXmark className="m-auto" />
-            </button>
-          </>
+          <button
+            className="absolute top-4 right-4 w-8 h-8 bg-white flex rounded-full bg-opacity-70 text-[#999999] shadow-sm"
+            onClick={handleClose}
+          >
+            <FaXmark className="m-auto" />
+          </button>
         )}
 
         <MessageList messages={messages} uploadTasks={tasks} isMobile={isMobile} />
