@@ -34,6 +34,10 @@ export class ChatManager {
     console.log(loading);
   }
 
+  open() {
+    this.show();
+  }
+
   async show() {
     if (this.inited) {
       if (this.iframe) {
@@ -86,7 +90,6 @@ export class ChatManager {
       const rootElement = document.createElement('div');
       iframe.contentDocument?.body.appendChild(rootElement);
       render(rootElement, {
-        resize: () => {},
         iframe,
         socket,
       });
