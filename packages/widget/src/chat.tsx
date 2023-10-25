@@ -24,11 +24,10 @@ interface ChatContextValue {
 
 const ChatContext = createContext<ChatContextValue>(undefined as any);
 
-function useEvent(socket: Socket | undefined, event: string, callback: (...args: any[]) => void) {
+function useEvent(socket: Socket, event: string, callback: (...args: any[]) => void) {
   const callbackRef = useRef(callback);
   callbackRef.current = callback;
   useEffect(() => {
-    if (!socket) return;
     const callback = (...args: any[]) => callbackRef.current(...args);
     socket.on(event, callback);
     return () => {
@@ -43,16 +42,25 @@ interface ChatProps {
 
 export function Chat({ children }: ChatProps) {
   const { socket } = useAppContext();
-  const [connected, setConnected] = useState(false);
+  const [connected, setConnected] = useState(socket.connected);
 
   useEffect(() => {
-    if (!socket) return;
     const onConnect = () => {
       setConnected(true);
     };
+    const onDisconnect = (_reason: string) => {
+      setConnected(false);
+    };
+    const onMessage = (msg: Message) => {
+      setMessages((messages) => [...messages, msg]);
+    };
     socket.on('connect', onConnect);
+    socket.on('disconnect', onDisconnect);
+    socket.on('message', onMessage);
     return () => {
       socket.off('connect', onConnect);
+      socket.off('disconnect', onDisconnect);
+      socket.off('message', onMessage);
     };
   }, [socket]);
 
@@ -71,39 +79,28 @@ export function Chat({ children }: ChatProps) {
     }
   });
 
-  useEffect(() => {
-    if (!socket) return;
-    const onMessage = (msg: Message) => {
-      setMessages((messages) => [...messages, msg]);
-    };
-    socket.on('message', onMessage);
-    return () => {
-      socket.off('message', onMessage);
-    };
-  }, [socket]);
-
   const sendMessage = useCallback(
     (data: any) => {
       if (status !== 'inService') {
         return;
       }
-      socket?.emit('message', data);
+      socket.emit('message', data);
     },
     [status, socket],
   );
 
   const evaluate = useCallback(
     (evaluation: EvaluateData) => {
-      socket?.emit('evaluate', evaluation);
+      socket.emit('evaluate', evaluation);
     },
     [socket],
   );
 
   const close = useCallback(() => {
-    socket?.emit('close');
+    socket.emit('close');
   }, [socket]);
 
-  if (!socket || !connected) {
+  if (!connected) {
     return;
   }
 
