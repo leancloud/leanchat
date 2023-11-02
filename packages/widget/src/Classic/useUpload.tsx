@@ -39,6 +39,10 @@ export function useUpload({ onUploaded }: UseUploadOptions) {
 
   const upload = useCallback(
     (file: File) => {
+      // this file could be from another iframe
+      // modify it prototype so that the SDK can upload it
+      Object.setPrototypeOf(file, File.prototype);
+
       const task: UploadTask = {
         id: nextId.current++,
         progress: 0,
@@ -55,7 +59,8 @@ export function useUpload({ onUploaded }: UseUploadOptions) {
           removeTask(task.id);
           onUploaded(fileId);
         })
-        .catch(() => {
+        .catch((e) => {
+          console.error(e);
           removeTask(task.id);
         });
     },
