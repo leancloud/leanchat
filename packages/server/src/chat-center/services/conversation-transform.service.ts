@@ -27,7 +27,10 @@ export class ConversationTransformService {
     );
 
     const visitors = await this.visitorService.getVisitors(
-      conversations.map((c) => c.visitorId),
+      _.uniqWith(
+        conversations.map((c) => c.visitorId),
+        (a, b) => a.equals(b),
+      ),
     );
     const visitorById = _.keyBy(visitors, (v) => v.id as string);
 

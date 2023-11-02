@@ -49,14 +49,18 @@ export class ConversationController {
 
   @Get()
   async getConversations(@Query() query: GetConversationsDto) {
+    const { operatorId, closed, desc, page = 1, pageSize = 10 } = query;
     const conversations = await this.conversationService.getConversations({
-      operatorId: query.operatorId,
-      closed: query.closed,
-      desc: query.desc,
-      createdAt: query.createdAt,
-      limit: query.limit,
+      operatorId,
+      closed,
+      desc,
+      skip: (page - 1) * pageSize,
+      limit: pageSize,
     });
-    return this.convTransformService.composeConversations(conversations);
+    const data = await this.convTransformService.composeConversations(
+      conversations,
+    );
+    return data;
   }
 
   @Get(':id')

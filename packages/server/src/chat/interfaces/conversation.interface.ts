@@ -13,11 +13,8 @@ export interface GetConversationOptions {
   operatorId?: string | null;
   closed?: boolean;
   desc?: boolean;
+  skip?: number;
   limit?: number;
-  createdAt?: {
-    gt?: Date;
-    lt?: Date;
-  };
 }
 
 export interface ConversationEvaluation {

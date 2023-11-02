@@ -10,20 +10,8 @@ const GetConversationsSchema = z
       .transform((str) => (str === 'none' ? null : str)),
     closed: BooleanStringSchema,
     desc: BooleanStringSchema,
-    createdAt: z.preprocess(
-      (str: string) => {
-        try {
-          return JSON.parse(str);
-        } catch {}
-      },
-      z
-        .object({
-          gt: z.coerce.date(),
-          lt: z.coerce.date(),
-        })
-        .partial(),
-    ),
-    limit: z.coerce.number().int().positive(),
+    page: z.coerce.number().int().positive(),
+    pageSize: z.coerce.number().int().min(1).max(100),
   })
   .partial();
 
