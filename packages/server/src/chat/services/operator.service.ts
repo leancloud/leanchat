@@ -84,7 +84,7 @@ export class OperatorService implements OnApplicationBootstrap {
   getOperatorByUsername(username: string, selectPassword?: boolean) {
     const query = this.operatorModel.findOne({ username });
     if (selectPassword) {
-      query.select('password');
+      query.select('+password');
     }
     return query.exec();
   }
