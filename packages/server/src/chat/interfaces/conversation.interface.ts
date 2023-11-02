@@ -11,9 +11,13 @@ export interface CreateConversationData {
 
 export interface GetConversationOptions {
   operatorId?: string | null;
-  status?: 'open' | 'closed';
+  closed?: boolean;
   desc?: boolean;
   limit?: number;
+  createdAt?: {
+    gt?: Date;
+    lt?: Date;
+  };
 }
 
 export interface ConversationEvaluation {

@@ -50,9 +50,10 @@ export class ConversationService {
 
   getConversations({
     operatorId,
-    status,
+    closed,
     desc,
     limit = 10,
+    createdAt,
   }: GetConversationOptions) {
     const query = this.conversationModel.find();
     if (operatorId !== undefined) {
@@ -62,10 +63,18 @@ export class ConversationService {
         query.where({ operatorId });
       }
     }
-    if (status) {
-      query.where({ closedAt: { $exists: status === 'closed' } });
+    if (closed !== undefined) {
+      query.where({ closedAt: { $exists: closed } });
     }
-    query.sort({ createdAt: desc ? 1 : -1 });
+    if (createdAt) {
+      if (createdAt.gt) {
+        query.gt('createdAt', createdAt.gt);
+      }
+      if (createdAt.lt) {
+        query.lt('createdAt', createdAt.lt);
+      }
+    }
+    query.sort({ createdAt: desc ? -1 : 1 });
     query.limit(limit);
     return query.exec();
   }

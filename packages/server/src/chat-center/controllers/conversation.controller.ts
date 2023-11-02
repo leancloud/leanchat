@@ -49,9 +49,13 @@ export class ConversationController {
 
   @Get()
   async getConversations(@Query() query: GetConversationsDto) {
-    const conversations = await this.conversationService.getConversations(
-      query,
-    );
+    const conversations = await this.conversationService.getConversations({
+      operatorId: query.operatorId,
+      closed: query.closed,
+      desc: query.desc,
+      createdAt: query.createdAt,
+      limit: query.limit,
+    });
     return this.convTransformService.composeConversations(conversations);
   }
 
