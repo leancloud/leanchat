@@ -48,6 +48,10 @@ import { ConfigModule, mongodbConfig, redisConfig } from './config';
             removeOnComplete: true,
             removeOnFail: true,
           },
+          limiter: {
+            duration: 1000,
+            max: 10,
+          },
         };
       },
     }),
