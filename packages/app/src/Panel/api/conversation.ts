@@ -2,17 +2,50 @@ import { Conversation, Message } from '@/Panel/types';
 import { client } from './client';
 
 export interface GetConversationsOptions {
-  status?: string;
+  closed?: boolean;
   operatorId?: string;
-  sort?: string;
+  createdAt?: {
+    gt?: string;
+    lt?: string;
+  };
   desc?: boolean;
+  limit?: number;
 }
 
 export async function getConversations(options?: GetConversationsOptions) {
   const res = await client.get<Conversation[]>('/conversations', {
-    params: options,
+    params: {
+      ...options,
+      createdAt: options?.createdAt && JSON.stringify(options.createdAt),
+    },
   });
   return res.data;
+}
+
+export function conversationMatchFilters(conv: Conversation, filters: GetConversationsOptions) {
+  if (filters.closed !== undefined) {
+    if (filters.closed) {
+      if (!conv.closedAt) {
+        return false;
+      }
+    } else {
+      if (conv.closedAt) {
+        return false;
+      }
+    }
+  }
+  if (filters.operatorId) {
+    if (filters.operatorId === 'none') {
+      if (conv.operatorId) {
+        return false;
+      }
+    } else {
+      if (filters.operatorId !== conv.operatorId) {
+        return false;
+      }
+    }
+  }
+  return true;
 }
 
 export async function getConversation(id: string) {

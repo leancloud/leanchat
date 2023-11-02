@@ -30,6 +30,7 @@ export interface Conversation {
   evaluation?: Evaluation;
   visitorWaitingSince?: string;
   closedAt?: string;
+  createdAt: string;
 }
 
 export interface Operator {

@@ -5,7 +5,7 @@ import { ConversationItem } from './ConversationItem';
 import { NowProvider } from '../contexts/NowContext';
 
 interface ConversationListProps {
-  conversations?: Conversation[];
+  conversations: Conversation[];
   onClick: (conv: Conversation) => void;
   activeConversation?: string;
   unreadAlert?: boolean;
@@ -17,7 +17,7 @@ export function ConversationList({
   activeConversation,
   unreadAlert,
 }: ConversationListProps) {
-  const list = conversations?.map((conv) => {
+  const list = conversations.map((conv) => {
     const avatarColor = '#' + conv.visitorId.slice(-6);
 
     return (

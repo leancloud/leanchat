@@ -1,56 +1,37 @@
 import { useCallback, useEffect } from 'react';
-import { InfiniteData, useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import {
+  InfiniteData,
+  useInfiniteQuery,
+  useMutation,
+  useQuery,
+  useQueryClient,
+} from '@tanstack/react-query';
 import { Socket } from 'socket.io-client';
 import { produce } from 'immer';
+import _ from 'lodash';
 
 import { Conversation, Message, MessageType } from '@/Panel/types';
-import { getConversation, getConversations, updateConversation } from '@/Panel/api/conversation';
+import {
+  GetConversationsOptions,
+  conversationMatchFilters,
+  getConversation,
+  getConversations,
+  updateConversation,
+} from '@/Panel/api/conversation';
 
-export type ConversationsQueryVariables =
-  | {
-      type: 'unassigned';
-    }
-  | {
-      type: 'solved';
-    }
-  | {
-      type: 'allOperators';
-    }
-  | {
-      type: 'operator';
-      operatorId: string;
-    };
-
-export type ConversationQueryKey = ['Conversations', ConversationsQueryVariables];
-
-export function useConversations(variables: ConversationsQueryVariables) {
-  return useQuery({
-    queryKey: ['Conversations', variables] as const,
-    queryFn: ({ queryKey }) => {
-      const [, variables] = queryKey;
-      switch (variables.type) {
-        case 'unassigned':
-          return getConversations({
-            status: 'open',
-            operatorId: 'none',
-            desc: true,
-          });
-        case 'solved':
-          return getConversations({
-            status: 'solved',
-            desc: true,
-          });
-        case 'allOperators':
-          return getConversations({
-            status: 'open',
-            desc: true,
-          });
-        case 'operator':
-          return getConversations({
-            status: 'open',
-            operatorId: variables.operatorId,
-            desc: true,
-          });
+export function useConversations(options: GetConversationsOptions) {
+  const pageSize = 10;
+  return useInfiniteQuery({
+    queryKey: ['Conversations', options] as const,
+    queryFn: ({ queryKey: [, options], pageParam }) =>
+      getConversations({
+        ...options,
+        createdAt: { [options.desc ? 'lt' : 'gt']: pageParam },
+        limit: pageSize,
+      }),
+    getNextPageParam: (lastPage) => {
+      if (lastPage.length === pageSize) {
+        return lastPage[lastPage.length - 1].createdAt;
       }
     },
     staleTime: 1000 * 60,
@@ -61,7 +42,7 @@ export function useConversation(id: string) {
   return useQuery({
     queryKey: ['Conversation', id],
     queryFn: () => getConversation(id),
-    staleTime: 1000 * 5,
+    staleTime: 1000 * 60,
   });
 }
 
@@ -102,15 +83,17 @@ export function useAutoPushNewMessage(socket: Socket) {
         },
       );
       if (message.type === MessageType.Message) {
-        queryClient.setQueriesData<Conversation[] | undefined>(
+        queryClient.setQueriesData<InfiniteData<Conversation[]> | undefined>(
           ['Conversations'],
-          (conversations) => {
-            if (conversations) {
-              return produce(conversations, (conversations) => {
-                for (const conversation of conversations) {
-                  if (conversation.id === message.conversationId) {
-                    conversation.lastMessage = message;
-                    break;
+          (data) => {
+            if (data) {
+              return produce(data, (data) => {
+                for (const page of data.pages) {
+                  for (const conversation of page) {
+                    if (conversation.id === message.conversationId) {
+                      conversation.lastMessage = message;
+                      break;
+                    }
                   }
                 }
               });
@@ -131,64 +114,65 @@ interface ConversationUpdatedEvent {
   fields: string[];
 }
 
+function findConversation(pages: Conversation[][], id: string) {
+  for (let pagesIndex = 0; pagesIndex < pages.length; ++pagesIndex) {
+    const page = pages[pagesIndex];
+    for (let pageIndex = 0; pageIndex < page.length; ++pageIndex) {
+      if (page[pageIndex].id === id) {
+        return { pagesIndex, pageIndex };
+      }
+    }
+  }
+}
+
 export function useSubscribeConversations(socket: Socket) {
   const queryClient = useQueryClient();
 
   useEffect(() => {
-    const unshiftConversation = (key: ConversationsQueryVariables, conv: Conversation) => {
-      queryClient.setQueryData<Conversation[] | undefined>(
-        ['Conversations', key],
-        (data) => data && [conv, ...data],
-      );
-    };
-
-    const removeConversation = (id: string) => {
-      queryClient.setQueriesData<Conversation[] | undefined>(
-        ['Conversations'],
-        (data) => data && data.filter((conv) => conv.id !== id),
-      );
-    };
-
-    const setConversation = (conv: Conversation) => {
-      queryClient.setQueryData<Conversation | undefined>(
-        ['Conversation', conv.id],
-        (data) => data && conv,
-      );
-    };
-
-    const onConversationCreated = (conv: Conversation) => {
-      unshiftConversation({ type: 'unassigned' }, conv);
-      unshiftConversation({ type: 'allOperators' }, conv);
-    };
-
-    const onConversationUpdated = (e: ConversationUpdatedEvent) => {
-      if (e.fields.includes('operatorId')) {
-        removeConversation(e.conversation.id);
-        unshiftConversation({ type: 'allOperators' }, e.conversation);
-        unshiftConversation(
-          { type: 'operator', operatorId: e.conversation.operatorId! },
-          e.conversation,
-        );
-      }
-      if (e.fields.includes('closedAt')) {
-        removeConversation(e.conversation.id);
-      }
-      setConversation(e.conversation);
-      queryClient.setQueriesData<Conversation[] | undefined>(['Conversations'], (conversations) => {
-        if (conversations) {
-          const index = conversations.findIndex((c) => c.id === e.conversation.id);
-          if (index >= 0) {
-            return [
-              ...conversations.slice(0, index),
-              e.conversation,
-              ...conversations.slice(index + 1),
-            ];
+    const applyConversation = (conv: Conversation) => {
+      const cache = queryClient.getQueryCache();
+      const queries = cache.findAll({
+        queryKey: ['Conversations'],
+      });
+      for (const query of queries) {
+        const filters = query.queryKey[1] as GetConversationsOptions;
+        const stayInData = conversationMatchFilters(conv, filters);
+        const data = query.state.data as InfiniteData<Conversation[]> | undefined;
+        if (data) {
+          const position = findConversation(data.pages, conv.id);
+          if (position) {
+            if (stayInData) {
+              query.setData(
+                produce(data, (data) => {
+                  data.pages[position.pagesIndex][position.pageIndex] = conv;
+                }),
+              );
+            } else {
+              query.setData(
+                produce(data, (data) => {
+                  data.pages[position.pagesIndex].splice(position.pageIndex, 1);
+                }),
+              );
+            }
+          } else {
+            if (stayInData) {
+              if (query.isActive()) {
+                query.fetch();
+              } else {
+                query.invalidate();
+              }
+            }
           }
         }
-      });
+      }
     };
 
-    socket.on('conversationCreated', onConversationCreated);
+    const onConversationCreated = applyConversation;
+    const onConversationUpdated = (e: ConversationUpdatedEvent) => {
+      applyConversation(e.conversation);
+    };
+
+    socket.on('conversationCreated', applyConversation);
     socket.on('conversationUpdated', onConversationUpdated);
     return () => {
       socket.off('conversationCreated', onConversationCreated);

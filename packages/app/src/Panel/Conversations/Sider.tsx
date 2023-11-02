@@ -67,7 +67,7 @@ export function Sider({ stream, onChangeStream, show = true }: SiderProps) {
                   ),
                 },
                 {
-                  key: 'allOperators',
+                  key: 'allOpen',
                   label: (
                     <div className="flex items-center">
                       <FaUserGroup className="w-4 h-4 mr-3" />

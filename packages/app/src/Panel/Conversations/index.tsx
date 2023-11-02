@@ -6,16 +6,13 @@ import _ from 'lodash';
 import { useToggle } from 'react-use';
 
 import { Sider } from './Sider';
-import {
-  ConversationsQueryVariables,
-  useConversations,
-  useSetConversationQueryData,
-} from '@/Panel/hooks/conversation';
+import { useConversations, useSetConversationQueryData } from '@/Panel/hooks/conversation';
 import { useCurrentUser } from '@/Panel/auth';
 import { Conversation } from './Conversation';
 import { ConversationList } from './ConversationList';
 import { useOperators } from '../hooks/operator';
 import { Avatar } from '../components/Avatar';
+import { GetConversationsOptions } from '../api/conversation';
 
 const STREAM_LABELS: Record<string, ReactNode> = {
   unassigned: (
@@ -28,30 +25,31 @@ const STREAM_LABELS: Record<string, ReactNode> = {
       <span>我的</span>
     </>
   ),
-  solved: (
-    <>
-      <span>已解决</span>
-    </>
-  ),
-  allOperators: <span>全部</span>,
+  allOpen: <span>全部</span>,
 };
 
 export default function Conversations() {
   const user = useCurrentUser();
   const [stream, setStream] = useState('myOpen');
 
-  const convQueryVars = useMemo<ConversationsQueryVariables>(() => {
+  const getConvOptions = useMemo<GetConversationsOptions>(() => {
     if (stream === 'unassigned') {
-      return { type: 'unassigned' };
+      return {
+        closed: false,
+        operatorId: 'none',
+      };
     } else if (stream === 'myOpen') {
-      return { type: 'operator', operatorId: user!.id };
-    } else if (stream === 'solved') {
-      return { type: 'solved' };
-    } else if (stream === 'allOperators') {
-      return { type: 'allOperators' };
+      return {
+        closed: false,
+        operatorId: user.id,
+      };
+    } else if (stream === 'allOpen') {
+      return {
+        closed: false,
+      };
     } else if (stream.startsWith('operator/')) {
       return {
-        type: 'operator',
+        closed: false,
         operatorId: stream.slice('operator/'.length),
       };
     }
@@ -60,7 +58,14 @@ export default function Conversations() {
 
   const [conversationId, setConversationId] = useState<string>();
 
-  const { data: conversations, isLoading } = useConversations(convQueryVars);
+  const {
+    data: conversationsData,
+    isLoading,
+    hasNextPage,
+    fetchNextPage,
+  } = useConversations(getConvOptions);
+
+  const conversations = useMemo(() => conversationsData?.pages.flat(), [conversationsData]);
 
   const setConvQueryData = useSetConversationQueryData();
 
@@ -117,20 +122,30 @@ export default function Conversations() {
               <Spin />
             </div>
           )}
-          {conversations?.length === 0 && (
+          {conversations && conversations.length === 0 && (
             <div className="py-20">
               <Empty description="暂无会话" />
             </div>
           )}
-          <ConversationList
-            conversations={conversations}
-            onClick={(conv) => {
-              setConversationId(conv.id);
-              setConvQueryData(conv);
-            }}
-            activeConversation={conversationId}
-            unreadAlert={stream === 'myOpen'}
-          />
+          {conversations && (
+            <ConversationList
+              conversations={conversations}
+              onClick={(conv) => {
+                setConversationId(conv.id);
+                setConvQueryData(conv);
+              }}
+              activeConversation={conversationId}
+              unreadAlert={stream === 'myOpen'}
+            />
+          )}
+          {conversations && hasNextPage && (
+            <button className="h-12 text-sm" onClick={() => fetchNextPage()}>
+              加载更多
+            </button>
+          )}
+          {conversations && conversations.length > 0 && !hasNextPage && (
+            <div className="text-center leading-[48px] text-sm text-[#a8a8a8]">没有更多</div>
+          )}
         </div>
       </div>
 
