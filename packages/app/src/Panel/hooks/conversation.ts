@@ -1,6 +1,7 @@
 import { useCallback, useEffect } from 'react';
 import {
   InfiniteData,
+  Query,
   useInfiniteQuery,
   useMutation,
   useQuery,
@@ -26,8 +27,8 @@ export function useConversations(options: GetConversationsOptions) {
     queryFn: ({ queryKey: [, options], pageParam }) =>
       getConversations({
         ...options,
-        createdAt: { [options.desc ? 'lt' : 'gt']: pageParam },
-        limit: pageSize,
+        pageSize,
+        [options.desc ? 'before' : 'after']: pageParam,
       }),
     getNextPageParam: (lastPage) => {
       if (lastPage.length === pageSize) {
@@ -58,6 +59,7 @@ export function useSetConversationQueryData() {
 
 export function useAutoPushNewMessage(socket: Socket) {
   const queryClient = useQueryClient();
+
   useEffect(() => {
     const onMessage = (message: Message) => {
       queryClient.setQueryData<InfiniteData<Message[]> | undefined>(
@@ -129,6 +131,27 @@ export function useSubscribeConversations(socket: Socket) {
   const queryClient = useQueryClient();
 
   useEffect(() => {
+    let timeoutId: number | undefined;
+    let lastInvalidateTime = 0;
+    const invalidQueries = new Set<Query>();
+
+    const invalidateQuery = (query: Query) => {
+      clearTimeout(timeoutId);
+      invalidQueries.add(query);
+      const timeout = Date.now() - lastInvalidateTime > 1000 ? 200 : 1000;
+      setTimeout(() => {
+        invalidQueries.forEach((query) => {
+          if (query.isActive()) {
+            query.fetch();
+          } else {
+            query.invalidate();
+          }
+        });
+        invalidQueries.clear();
+        lastInvalidateTime = Date.now();
+      }, timeout);
+    };
+
     const applyConversation = (conv: Conversation) => {
       const cache = queryClient.getQueryCache();
       const queries = cache.findAll({
@@ -148,19 +171,11 @@ export function useSubscribeConversations(socket: Socket) {
                 }),
               );
             } else {
-              query.setData(
-                produce(data, (data) => {
-                  data.pages[position.pagesIndex].splice(position.pageIndex, 1);
-                }),
-              );
+              invalidateQuery(query);
             }
           } else {
             if (stayInData) {
-              if (query.isActive()) {
-                query.fetch();
-              } else {
-                query.invalidate();
-              }
+              invalidateQuery(query);
             }
           }
         }

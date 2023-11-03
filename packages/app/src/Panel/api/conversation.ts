@@ -4,20 +4,15 @@ import { client } from './client';
 export interface GetConversationsOptions {
   closed?: boolean;
   operatorId?: string;
-  createdAt?: {
-    gt?: string;
-    lt?: string;
-  };
   desc?: boolean;
-  limit?: number;
+  after?: string;
+  page?: number;
+  pageSize?: number;
 }
 
 export async function getConversations(options?: GetConversationsOptions) {
   const res = await client.get<Conversation[]>('/conversations', {
-    params: {
-      ...options,
-      createdAt: options?.createdAt && JSON.stringify(options.createdAt),
-    },
+    params: options,
   });
   return res.data;
 }

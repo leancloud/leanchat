@@ -37,20 +37,24 @@ export default function Conversations() {
       return {
         closed: false,
         operatorId: 'none',
+        desc: true,
       };
     } else if (stream === 'myOpen') {
       return {
         closed: false,
         operatorId: user.id,
+        desc: true,
       };
     } else if (stream === 'allOpen') {
       return {
         closed: false,
+        desc: true,
       };
     } else if (stream.startsWith('operator/')) {
       return {
         closed: false,
         operatorId: stream.slice('operator/'.length),
+        desc: true,
       };
     }
     throw 'unreachable';
@@ -139,7 +143,7 @@ export default function Conversations() {
             />
           )}
           {conversations && hasNextPage && (
-            <button className="h-12 text-sm" onClick={() => fetchNextPage()}>
+            <button className="h-12 text-sm shrink-0" onClick={() => fetchNextPage()}>
               加载更多
             </button>
           )}
