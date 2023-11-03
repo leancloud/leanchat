@@ -13,6 +13,8 @@ export interface GetConversationOptions {
   operatorId?: string | null;
   closed?: boolean;
   desc?: boolean;
+  before?: Date;
+  after?: Date;
   skip?: number;
   limit?: number;
 }

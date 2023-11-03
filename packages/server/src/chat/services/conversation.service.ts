@@ -52,6 +52,8 @@ export class ConversationService {
     operatorId,
     closed,
     desc,
+    before,
+    after,
     skip,
     limit = 10,
   }: GetConversationOptions) {
@@ -67,6 +69,12 @@ export class ConversationService {
       query.where({ closedAt: { $exists: closed } });
     }
     query.sort({ createdAt: desc ? -1 : 1 });
+    if (before) {
+      query.lt('createdAt', before);
+    }
+    if (after) {
+      query.gt('createdAt', after);
+    }
     if (skip) {
       query.skip(skip);
     }
