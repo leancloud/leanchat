@@ -1,6 +1,5 @@
 import { ReactNode, useMemo, useState } from 'react';
 import { MdMenuOpen } from 'react-icons/md';
-import { Empty, Spin } from 'antd';
 import cx from 'classnames';
 import _ from 'lodash';
 import { useToggle } from 'react-use';
@@ -121,19 +120,12 @@ export default function Conversations() {
           </div>
         </div>
         <div className="overflow-y-auto grow flex flex-col">
-          {isLoading && (
-            <div className="h-full flex justify-center items-center">
-              <Spin />
-            </div>
-          )}
-          {conversations && conversations.length === 0 && (
-            <div className="py-20">
-              <Empty description="暂无会话" />
-            </div>
-          )}
           {conversations && (
             <ConversationList
+              loading={isLoading}
               conversations={conversations}
+              hasNextPage={hasNextPage}
+              onFetchNextPage={fetchNextPage}
               onClick={(conv) => {
                 setConversationId(conv.id);
                 setConvQueryData(conv);
@@ -141,14 +133,6 @@ export default function Conversations() {
               activeConversation={conversationId}
               unreadAlert={stream === 'myOpen'}
             />
-          )}
-          {conversations && hasNextPage && (
-            <button className="h-12 text-sm shrink-0" onClick={() => fetchNextPage()}>
-              加载更多
-            </button>
-          )}
-          {conversations && conversations.length > 0 && !hasNextPage && (
-            <div className="text-center leading-[48px] text-sm text-[#a8a8a8]">没有更多</div>
           )}
         </div>
       </div>
