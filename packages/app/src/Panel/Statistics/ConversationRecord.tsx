@@ -10,7 +10,7 @@ import { OperatorSelect } from '../components/OperatorSelect';
 import { CategoryCascader } from '../components/CategoryCascader';
 import { GetConversationRecordStatsOptions, getConversationRecordStats } from '../api/statistics';
 import { useCategories } from '../hooks/category';
-import { UserType } from '../types';
+import { ConsultationResult, UserType } from '../types';
 import { useOperators } from '../hooks/operator';
 import { getEvaluationStarText } from './utils';
 
@@ -158,9 +158,9 @@ function ConsultationResultField() {
           allowClear
           placeholder="咨询结果"
           options={[
-            { label: '有效咨询', value: 0 },
-            { label: '无效咨询', value: 1 },
-            { label: '客服无应答', value: 2 },
+            { label: '有效咨询', value: ConsultationResult.Valid },
+            { label: '无效咨询', value: ConsultationResult.Invalid },
+            { label: '客服无应答', value: ConsultationResult.OperatorNoResponse },
           ]}
           style={{ width: 150 }}
         />
@@ -471,7 +471,12 @@ export function ConversationRecord() {
           {
             dataIndex: ['stats', 'consultationResult'],
             title: '咨询结果',
-            render: (result) => ['有效咨询', '无效咨询', '客服无应答'][result],
+            render: (result: number) =>
+              ({
+                [ConsultationResult.Valid]: '有效咨询',
+                [ConsultationResult.Invalid]: '无效咨询',
+                [ConsultationResult.OperatorNoResponse]: '客服无应答',
+              })[result],
           },
           {
             dataIndex: 'evaluationInvitedAt',

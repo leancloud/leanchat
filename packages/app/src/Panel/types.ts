@@ -61,26 +61,26 @@ export interface Visitor {
 }
 
 export enum UserType {
-  Visitor = 0,
-  Operator = 1,
-  System = 2,
+  Visitor = 1,
+  Operator = 2,
+  System = 3,
 }
 
 export enum ConsultationResult {
-  Valid = 0,
-  Invalid = 1,
-  OperatorNoResponse = 2,
+  Valid = 1,
+  Invalid = 2,
+  OperatorNoResponse = 3,
 }
 
 export enum MessageType {
-  Message = 0,
-  Evaluate = 1,
-  Close = 2,
-  Assign = 3,
-  Reopen = 4,
+  Message = 1,
+  Evaluate = 2,
+  Close = 3,
+  Assign = 4,
+  Reopen = 5,
 }
 
 export enum ConversationStatus {
-  Open = 0,
-  Closed = 1,
+  Open = 1,
+  Closed = 2,
 }
