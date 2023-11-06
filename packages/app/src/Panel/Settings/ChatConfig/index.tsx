@@ -47,7 +47,53 @@ function GreetingConfigForm() {
         wrapperCol={{ offset: 4 }}
         name={['message', 'text']}
         rules={[{ required: true }]}
-        extra="开启后，用户打开聊天组件，系统将使用此说辞作为欢迎语"
+        extra="用户打开聊天组件，系统将使用此说辞作为欢迎语"
+      >
+        <Input.TextArea rows={3} />
+      </Form.Item>
+      <Form.Item wrapperCol={{ offset: 4 }}>
+        <Button type="primary" htmlType="submit" loading={isUpdating}>
+          保存
+        </Button>
+      </Form.Item>
+    </Form>
+  );
+}
+
+function NoReadyOperatorMessageConfigForm() {
+  const { data, isLoading, update, isUpdating } = useConfig('noReadyOperatorMessage', {
+    onSuccess: () => {
+      message.success('已保存');
+    },
+  });
+
+  if (isLoading) {
+    return <Loading />;
+  }
+
+  return (
+    <Form
+      initialValues={
+        data || {
+          enabled: false,
+          text: '抱歉，目前没有客服在线 😓',
+        }
+      }
+      onFinish={update}
+    >
+      <Form.Item
+        wrapperCol={{ offset: 4 }}
+        name="enabled"
+        valuePropName="checked"
+        style={{ marginBottom: 10 }}
+      >
+        <Checkbox>开启</Checkbox>
+      </Form.Item>
+      <Form.Item
+        wrapperCol={{ offset: 4 }}
+        name="text"
+        rules={[{ required: true }]}
+        extra="用户打开聊天界面时，如果没有处于「在线」状态的客服，将显示此提示语"
       >
         <Input.TextArea rows={3} />
       </Form.Item>
@@ -118,7 +164,7 @@ function AutoCloseConversationForm() {
         wrapperCol={{ offset: 4 }}
         name={['message', 'text']}
         rules={[{ required: true }]}
-        extra="开启后，系统关闭会话时将向用户发送此消息"
+        extra="系统关闭会话时将向用户发送此消息"
       >
         <Input.TextArea rows={3} />
       </Form.Item>
@@ -225,6 +271,9 @@ export function ChatConfig() {
       <div className="max-w-[800px]">
         <h2 className="text-base font-medium">欢迎语</h2>
         <GreetingConfigForm />
+
+        <h2 className="text-base font-medium">无客服在线提示语</h2>
+        <NoReadyOperatorMessageConfigForm />
 
         <h2 className="text-base font-medium my-4">自动踢线</h2>
         <AutoCloseConversationForm />
