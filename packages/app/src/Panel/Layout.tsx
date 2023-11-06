@@ -72,17 +72,17 @@ function User() {
         onClick: (e) => setStatus(parseInt(e.key)),
         items: [
           {
-            key: 0,
+            key: 1,
             name: '在线',
             color: '#34b857',
           },
           {
-            key: 1,
+            key: 2,
             name: '忙碌',
             color: '#ffaf3d',
           },
           {
-            key: 2,
+            key: 3,
             name: '离开',
             color: '#e81332',
             disabled: true,

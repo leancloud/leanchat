@@ -24,9 +24,9 @@ export function Avatar({ size = 32, type, status }: AvatarProps) {
           className={cx(
             'w-[25%] h-[25%] rounded-full absolute right-0 bottom-0 outline outline-offset-0 outline-[10%] outline-white',
             {
-              'bg-[#34b857]': status === 0,
-              'bg-[#ffaf3d]': status === 1,
-              'bg-[#e81332]': status === 2,
+              'bg-[#34b857]': status === 1,
+              'bg-[#ffaf3d]': status === 2,
+              'bg-[#e81332]': status === 3,
             },
           )}
         />
