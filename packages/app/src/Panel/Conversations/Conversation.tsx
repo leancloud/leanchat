@@ -21,6 +21,7 @@ import { ReassignModal } from './ReassignModal';
 import { QuickReply, QuickReplyRef } from './QuickReply';
 import { closeConversation, inviteEvaluation, assignconversation } from '../api/conversation';
 import { uploadFile } from '../leancloud';
+import { ConversationStatus } from '../types';
 
 interface OperatorLabelProps {
   operatorId: string;
@@ -142,7 +143,7 @@ export function Conversation({ conversationId }: ConversationProps) {
     return;
   }
 
-  const closed = !!conversation.closedAt;
+  const closed = conversation.status === ConversationStatus.Closed;
 
   return (
     <ConversationContext.Provider value={{ conversation }}>
@@ -165,14 +166,16 @@ export function Conversation({ conversationId }: ConversationProps) {
                   <AiOutlineClockCircle className="w-5 h-5" />
                 </button>
               </Tooltip>
-              <Tooltip title="结束会话" placement="bottom" mouseEnterDelay={0.5}>
-                <button
-                  className="text-[#969696] p-1 rounded transition-colors hover:bg-[#f7f7f7]"
-                  onClick={() => close()}
-                >
-                  <FiCheck className="w-5 h-5" />
-                </button>
-              </Tooltip>
+              {!closed && (
+                <Tooltip title="结束会话" placement="bottom" mouseEnterDelay={0.5}>
+                  <button
+                    className="text-[#969696] p-1 rounded transition-colors hover:bg-[#f7f7f7]"
+                    onClick={() => close()}
+                  >
+                    <FiCheck className="w-5 h-5" />
+                  </button>
+                </Tooltip>
+              )}
 
               <Dropdown
                 trigger={['click']}
@@ -278,7 +281,7 @@ export function Conversation({ conversationId }: ConversationProps) {
                 <Button
                   icon={<AiOutlinePaperClip className="w-[18px] h-[18px] mt-0.5" />}
                   onClick={() => fileInputRef.current.click()}
-                  disabled={uploading}
+                  disabled={uploading || closed}
                 />
               </div>
               <Button

@@ -1,7 +1,7 @@
 import { Avatar, Empty, Spin } from 'antd';
 
 import { Conversation } from '@/Panel/types';
-import { ConversationItem } from './ConversationItem';
+import { ConversationItem, ConversationItemProps } from './ConversationItem';
 import { NowProvider } from '../contexts/NowContext';
 
 interface ConversationListProps {
@@ -12,6 +12,7 @@ interface ConversationListProps {
   onClick: (conv: Conversation) => void;
   activeConversation?: string;
   unreadAlert?: boolean;
+  menu?: ConversationItemProps['menu'];
 }
 
 export function ConversationList({
@@ -22,6 +23,7 @@ export function ConversationList({
   onClick,
   activeConversation,
   unreadAlert,
+  menu,
 }: ConversationListProps) {
   if (loading) {
     return (
@@ -60,6 +62,7 @@ export function ConversationList({
                 (conv.lastMessage.data.file ? '[文件]' : conv.lastMessage.data.text)
               }
               unreadAlert={unreadAlert}
+              menu={menu}
             />
           </button>
         );

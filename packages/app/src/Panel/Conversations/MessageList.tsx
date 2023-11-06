@@ -207,12 +207,30 @@ function CloseConversation({ message }: MessageComponentProps) {
   );
 }
 
+function ReopenConversation({ message }: MessageComponentProps) {
+  return (
+    <LogMessage>
+      <div>
+        {
+          {
+            [UserType.Visitor]: '用户',
+            [UserType.Operator]: '客服',
+            [UserType.System]: '系统',
+          }[message.from.type]
+        }
+        重新打开了会话
+      </div>
+    </LogMessage>
+  );
+}
+
 const MessageComponents: Record<number, JSXElementConstructor<MessageComponentProps>> = {
   [MessageType.Message]: EvaluateMessage,
   [MessageType.Assign]: ({ message }) => {
-    return <LogMessage>客服 {message.data.toOperatorId} 进入会话</LogMessage>;
+    return <LogMessage>客服 {message.data.operatorId} 进入会话</LogMessage>;
   },
   [MessageType.Close]: CloseConversation,
+  [MessageType.Reopen]: ReopenConversation,
 };
 
 function useAtBottom(ref: RefObject<HTMLElement>) {

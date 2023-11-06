@@ -19,6 +19,7 @@ export interface Evaluation {
 
 export interface Conversation {
   id: string;
+  status: ConversationStatus;
   visitorId: string;
   visitor?: {
     id: string;
@@ -29,7 +30,6 @@ export interface Conversation {
   categoryId?: string;
   evaluation?: Evaluation;
   visitorWaitingSince?: string;
-  closedAt?: string;
   createdAt: string;
 }
 
@@ -77,4 +77,10 @@ export enum MessageType {
   Evaluate = 1,
   Close = 2,
   Assign = 3,
+  Reopen = 4,
+}
+
+export enum ConversationStatus {
+  Open = 0,
+  Closed = 1,
 }

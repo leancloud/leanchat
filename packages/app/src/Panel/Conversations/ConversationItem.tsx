@@ -1,6 +1,8 @@
 import { ReactNode, useMemo } from 'react';
 import cx from 'classnames';
 import dayjs from 'dayjs';
+import { BsThreeDotsVertical } from 'react-icons/bs';
+import { Dropdown } from 'antd';
 
 import { Conversation } from '../types';
 import { useNow } from '../contexts/NowContext';
@@ -29,13 +31,20 @@ function UnreadAlert({ waitedAt }: UnreadAlertProps) {
   );
 }
 
-interface ConversationItemProps {
+export interface ConversationItemProps {
   conversation: Conversation;
   active?: boolean;
   avatar: ReactNode;
   title: string;
   message?: string;
   unreadAlert?: boolean;
+  menu?: {
+    items: {
+      key: string;
+      label: string;
+    }[];
+    onClick: (e: { conversation: Conversation; key: string }) => void;
+  };
 }
 
 export function ConversationItem({
@@ -45,13 +54,14 @@ export function ConversationItem({
   title,
   message,
   unreadAlert,
+  menu,
 }: ConversationItemProps) {
   const now = useNow();
 
   return (
     <div
       className={cx(
-        'px-5 py-4 border-b cursor-pointer box-content text-left transition-colors hover:bg-[#f7f7f7] border-l-2',
+        'px-5 py-4 border-b cursor-pointer box-content text-left transition-colors hover:bg-[#f7f7f7] border-l-2 group',
         {
           'border-l-transparent': !active,
           'bg-[#f7f7f7] border-l-[#3884f7]': active,
@@ -66,9 +76,30 @@ export function ConversationItem({
           </div>
         </div>
         {conversation.lastMessage && (
-          <div className="text-xs text-[#a8a8a8] shrink-0 ml-2">
+          <div className={cx('text-xs text-[#a8a8a8] shrink-0 ml-2', menu && 'group-hover:hidden')}>
             {diffTime(now, conversation.lastMessage.createdAt)}
           </div>
+        )}
+        {menu && (
+          <Dropdown
+            menu={{
+              items: menu.items,
+              onClick: ({ domEvent, key }) => {
+                domEvent.stopPropagation();
+                menu.onClick({ conversation, key });
+              },
+            }}
+            trigger={['click']}
+          >
+            <button
+              className="hidden group-hover:flex text-[#969696] w-6 h-6 rounded hover:bg-[#e7e7e7]"
+              onClick={(e) => {
+                e.stopPropagation();
+              }}
+            >
+              <BsThreeDotsVertical className="m-auto" />
+            </button>
+          </Dropdown>
         )}
       </div>
       <div className="mt-4 flex items-center">

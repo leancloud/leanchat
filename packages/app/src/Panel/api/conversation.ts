@@ -1,9 +1,9 @@
-import { Conversation, Message } from '@/Panel/types';
+import { Conversation, ConversationStatus, Message } from '@/Panel/types';
 import { client } from './client';
 
 export interface GetConversationsOptions {
-  closed?: boolean;
-  operatorId?: string;
+  status?: ConversationStatus;
+  operatorId?: string | null;
   desc?: boolean;
   after?: string;
   page?: number;
@@ -11,34 +11,19 @@ export interface GetConversationsOptions {
 }
 
 export async function getConversations(options?: GetConversationsOptions) {
-  const res = await client.get<Conversation[]>('/conversations', {
-    params: options,
-  });
+  const res = await client.post<Conversation[]>('/conversation.list', options);
   return res.data;
 }
 
 export function conversationMatchFilters(conv: Conversation, filters: GetConversationsOptions) {
-  if (filters.closed !== undefined) {
-    if (filters.closed) {
-      if (!conv.closedAt) {
-        return false;
-      }
-    } else {
-      if (conv.closedAt) {
-        return false;
-      }
-    }
+  if (filters.status !== undefined && conv.status !== filters.status) {
+    return false;
   }
-  if (filters.operatorId) {
-    if (filters.operatorId === 'none') {
-      if (conv.operatorId) {
-        return false;
-      }
-    } else {
-      if (filters.operatorId !== conv.operatorId) {
-        return false;
-      }
-    }
+  if (filters.operatorId && conv.operatorId !== filters.operatorId) {
+    return false;
+  }
+  if (filters.operatorId === null && conv.operatorId) {
+    return false;
   }
   return true;
 }
@@ -76,6 +61,10 @@ export async function updateConversation(id: string, data: UpdateConversationDat
 
 export async function closeConversation(id: string) {
   await client.post(`/conversations/${id}/close`);
+}
+
+export async function reopenConversation(conversationId: string) {
+  await client.post('/conversation.reopen', { conversationId });
 }
 
 export async function inviteEvaluation(id: string) {

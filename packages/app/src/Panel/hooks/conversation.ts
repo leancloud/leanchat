@@ -180,6 +180,11 @@ export function useSubscribeConversations(socket: Socket) {
           }
         }
       }
+
+      queryClient.setQueryData<Conversation | undefined>(
+        ['Conversation', conv.id],
+        (data) => data && conv,
+      );
     };
 
     const onConversationCreated = applyConversation;

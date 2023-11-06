@@ -3,6 +3,7 @@ import { MdMenuOpen } from 'react-icons/md';
 import cx from 'classnames';
 import _ from 'lodash';
 import { useToggle } from 'react-use';
+import { useMutation } from '@tanstack/react-query';
 
 import { Sider } from './Sider';
 import { useConversations, useSetConversationQueryData } from '@/Panel/hooks/conversation';
@@ -11,7 +12,8 @@ import { Conversation } from './Conversation';
 import { ConversationList } from './ConversationList';
 import { useOperators } from '../hooks/operator';
 import { Avatar } from '../components/Avatar';
-import { GetConversationsOptions } from '../api/conversation';
+import { GetConversationsOptions, reopenConversation } from '../api/conversation';
+import { ConversationStatus } from '../types';
 
 const STREAM_LABELS: Record<string, ReactNode> = {
   unassigned: (
@@ -30,34 +32,35 @@ const STREAM_LABELS: Record<string, ReactNode> = {
 export default function Conversations() {
   const user = useCurrentUser();
   const [stream, setStream] = useState('myOpen');
+  const [status, setStatus] = useState(ConversationStatus.Open);
 
   const getConvOptions = useMemo<GetConversationsOptions>(() => {
     if (stream === 'unassigned') {
       return {
-        closed: false,
-        operatorId: 'none',
+        status,
+        operatorId: null,
         desc: true,
       };
     } else if (stream === 'myOpen') {
       return {
-        closed: false,
+        status,
         operatorId: user.id,
         desc: true,
       };
     } else if (stream === 'allOpen') {
       return {
-        closed: false,
+        status,
         desc: true,
       };
     } else if (stream.startsWith('operator/')) {
       return {
-        closed: false,
+        status,
         operatorId: stream.slice('operator/'.length),
         desc: true,
       };
     }
     throw 'unreachable';
-  }, [stream, user]);
+  }, [stream, user, status]);
 
   const [conversationId, setConversationId] = useState<string>();
 
@@ -94,6 +97,10 @@ export default function Conversations() {
     }
   }, [stream, operators]);
 
+  const { mutate: reopen } = useMutation({
+    mutationFn: reopenConversation,
+  });
+
   return (
     <div className="h-full flex">
       <Sider show={showSider} stream={stream} onChangeStream={setStream} />
@@ -119,21 +126,54 @@ export default function Conversations() {
             {streamLabel}
           </div>
         </div>
-        <div className="overflow-y-auto grow flex flex-col">
-          {conversations && (
-            <ConversationList
-              loading={isLoading}
-              conversations={conversations}
-              hasNextPage={hasNextPage}
-              onFetchNextPage={fetchNextPage}
-              onClick={(conv) => {
-                setConversationId(conv.id);
-                setConvQueryData(conv);
-              }}
-              activeConversation={conversationId}
-              unreadAlert={stream === 'myOpen'}
-            />
-          )}
+        <div className="grow flex flex-col overflow-hidden">
+          <div className="h-10 flex items-center border-b divide-x text-sm shrink-0">
+            <button
+              className={cx('flex-1 h-full', {
+                'text-primary-600': status === ConversationStatus.Open,
+              })}
+              onClick={() => setStatus(ConversationStatus.Open)}
+            >
+              进行中
+            </button>
+            <button
+              className={cx('flex-1 h-full', {
+                'text-primary-600': status === ConversationStatus.Closed,
+              })}
+              onClick={() => setStatus(ConversationStatus.Closed)}
+            >
+              已完成
+            </button>
+          </div>
+          <div className="grow flex flex-col overflow-y-auto">
+            {conversations && (
+              <ConversationList
+                loading={isLoading}
+                conversations={conversations}
+                hasNextPage={hasNextPage}
+                onFetchNextPage={fetchNextPage}
+                onClick={(conv) => {
+                  setConversationId(conv.id);
+                  setConvQueryData(conv);
+                }}
+                activeConversation={conversationId}
+                unreadAlert={stream === 'myOpen' && status === ConversationStatus.Open}
+                menu={
+                  stream === 'myOpen' && status === ConversationStatus.Closed
+                    ? {
+                        items: [
+                          {
+                            key: 'reopen',
+                            label: '重新打开',
+                          },
+                        ],
+                        onClick: ({ conversation }) => reopen(conversation.id),
+                      }
+                    : undefined
+                }
+              />
+            )}
+          </div>
         </div>
       </div>
 
