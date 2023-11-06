@@ -1,6 +1,6 @@
 export enum ConversationStatus {
-  Open = 0,
-  Closed = 1,
+  Open = 1,
+  Closed = 2,
 }
 
 export interface Conversation {
@@ -13,10 +13,10 @@ export interface Conversation {
 }
 
 export enum MessageType {
-  Message = 0,
-  Evaluation = 1,
-  Close = 2,
-  Reopen = 4,
+  Message = 1,
+  Evaluation = 2,
+  Close = 3,
+  Reopen = 5,
 }
 
 export interface Message {
