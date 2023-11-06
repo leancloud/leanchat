@@ -6,6 +6,8 @@ import { Redis } from 'ioredis';
 import _ from 'lodash';
 import Handlebars from 'handlebars';
 import { differenceInDays } from 'date-fns';
+import { InjectModel } from '@m8a/nestjs-typegoose';
+import { ReturnModelType } from '@typegoose/typegoose';
 
 import { REDIS } from 'src/redis';
 import { ConfigService } from 'src/config';
@@ -33,6 +35,9 @@ import { PostprocessingLogService } from './postprocessing-log.service';
 export class ChatService {
   @Inject(REDIS)
   private redis: Redis;
+
+  @InjectModel(Operator)
+  private operatorModel: ReturnModelType<typeof Operator>;
 
   constructor(
     private events: EventEmitter2,
@@ -198,6 +203,13 @@ export class ChatService {
       operatorId,
       status,
     } satisfies OperatorStatusChangedEvent);
+  }
+
+  async hasReadyOperator() {
+    const operator = await this.operatorModel
+      .findOne({ status: OperatorStatus.Ready })
+      .select('_id');
+    return !!operator;
   }
 
   async getRandomReadyOperator() {

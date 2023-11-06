@@ -17,10 +17,12 @@ import {
   GreetingConfigSchema,
   AutoCloseConfigSchema,
   QueueConfigSchema,
+  NoReadyOperatorMessageConfigSchema,
 } from '../dtos/config';
 
 const schemas: Record<string, ZodSchema> = {
   greeting: GreetingConfigSchema,
+  noReadyOperatorMessage: NoReadyOperatorMessageConfigSchema,
   autoClose: AutoCloseConfigSchema,
   queue: QueueConfigSchema,
 };

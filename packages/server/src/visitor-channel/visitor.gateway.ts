@@ -83,6 +83,7 @@ export class VisitorGateway implements OnModuleInit, OnGatewayConnection {
 
     const initData: WidgetInitialized = {
       status: 'inService',
+      messages: [],
     };
 
     const queueConfig = await this.configService.get('queue');
@@ -91,13 +92,29 @@ export class VisitorGateway implements OnModuleInit, OnGatewayConnection {
       if (queueLength > queueConfig.capacity) {
         initData.status = 'busy';
         if (queueConfig.fullMessage.enabled) {
-          initData.messages = [
+          initData.messages.push(
             MessageDto.fromText('busy', queueConfig.fullMessage.text),
-          ];
+          );
         }
         socket.emit('initialized', initData);
         return;
       }
+    }
+
+    if (!(await this.chatService.hasReadyOperator())) {
+      const noReadyOperatorMessageConfig = await this.configService.get(
+        'noReadyOperatorMessage',
+      );
+      if (noReadyOperatorMessageConfig?.enabled) {
+        initData.messages.push(
+          MessageDto.fromText(
+            'noReadyOperator',
+            noReadyOperatorMessageConfig.text,
+          ),
+        );
+      }
+      socket.emit('initialized', initData);
+      return;
     }
 
     const visitor = await this.visitorService.getVisitor(visitorId);

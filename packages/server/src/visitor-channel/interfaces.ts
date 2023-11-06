@@ -4,5 +4,5 @@ import { MessageDto } from './dtos/message.dto';
 export interface WidgetInitialized {
   status: 'inService' | 'busy';
   conversation?: ConversationDto;
-  messages?: MessageDto[];
+  messages: MessageDto[];
 }
