@@ -18,7 +18,7 @@ import {
 import { ConversationCreatedEvent, ConversationUpdatedEvent } from '../events';
 import { OperatorService } from './operator.service';
 import { ChatError } from '../errors';
-import { ConsultationResult } from '../constants';
+import { ConsultationResult, ConversationStatus } from '../constants';
 
 @Injectable()
 export class ConversationService {
@@ -32,6 +32,7 @@ export class ConversationService {
 
   async createConversation(data: CreateConversationData) {
     const conversation = new this.conversationModel({
+      status: ConversationStatus.Open,
       channel: data.channel,
       visitorId: data.visitorId,
     });
@@ -49,8 +50,8 @@ export class ConversationService {
   }
 
   getConversations({
+    status,
     operatorId,
-    closed,
     desc,
     before,
     after,
@@ -65,8 +66,8 @@ export class ConversationService {
         query.where({ operatorId });
       }
     }
-    if (closed !== undefined) {
-      query.where({ closedAt: { $exists: closed } });
+    if (status !== undefined) {
+      query.where({ status });
     }
     query.sort({ createdAt: desc ? -1 : 1 });
     if (before) {
@@ -130,6 +131,7 @@ export class ConversationService {
     }
 
     const $set: AnyKeys<Conversation> = {
+      status: data.status,
       operatorId: data.operatorId,
       categoryId: data.categoryId,
       evaluation: data.evaluation,

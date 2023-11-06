@@ -2,7 +2,12 @@ import { Types } from 'mongoose';
 
 import type { Conversation } from '../models';
 import { NumberCondition, UserInfo } from './common';
-import { Channel, ConsultationResult, UserType } from '../constants';
+import {
+  Channel,
+  ConsultationResult,
+  ConversationStatus,
+  UserType,
+} from '../constants';
 
 export interface CreateConversationData {
   channel: Channel;
@@ -10,8 +15,8 @@ export interface CreateConversationData {
 }
 
 export interface GetConversationOptions {
+  status?: ConversationStatus;
   operatorId?: string | null;
-  closed?: boolean;
   desc?: boolean;
   before?: Date;
   after?: Date;
@@ -25,6 +30,7 @@ export interface ConversationEvaluation {
 }
 
 export interface UpdateConversationData {
+  status?: ConversationStatus;
   operatorId?: string;
   categoryId?: string;
   evaluation?: ConversationEvaluation;
@@ -44,6 +50,11 @@ export interface GetInactiveConversationIdsOptions {
 }
 
 export interface CloseConversationOptions {
+  conversationId: string | Types.ObjectId;
+  by: UserInfo;
+}
+
+export interface ReopenConversationOptions {
   conversationId: string | Types.ObjectId;
   by: UserInfo;
 }

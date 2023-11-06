@@ -1,4 +1,4 @@
-import { Inject, Injectable } from '@nestjs/common';
+import { BadRequestException, Inject, Injectable } from '@nestjs/common';
 import { EventEmitter2, OnEvent } from '@nestjs/event-emitter';
 import { InjectQueue } from '@nestjs/bull';
 import { Queue } from 'bull';
@@ -15,6 +15,7 @@ import {
   CloseConversationOptions,
   ConversationEvaluation,
   ConversationStatsJobData,
+  ReopenConversationOptions,
   UpdateConversationData,
 } from '../interfaces/conversation.interface';
 import { CreateMessageData } from '../interfaces/chat.interface';
@@ -27,9 +28,15 @@ import {
 } from '../events';
 import { OperatorService } from './operator.service';
 import { Conversation, Operator } from '../models';
-import { MessageType, OperatorStatus, UserType } from '../constants';
+import {
+  ConversationStatus,
+  MessageType,
+  OperatorStatus,
+  UserType,
+} from '../constants';
 import { UserInfo } from '../interfaces/common';
 import { PostprocessingLogService } from './postprocessing-log.service';
+import { VisitorService } from './visitor.service';
 
 @Injectable()
 export class ChatService {
@@ -44,6 +51,7 @@ export class ChatService {
     private conversationService: ConversationService,
     private messageService: MessageService,
     private operatorService: OperatorService,
+    private visitorService: VisitorService,
     private configService: ConfigService,
     private ppLogService: PostprocessingLogService,
 
@@ -61,7 +69,7 @@ export class ChatService {
     const conversation = await this.conversationService.getConversation(
       conversationId,
     );
-    if (!conversation || conversation.closedAt) {
+    if (!conversation || conversation.status === ConversationStatus.Closed) {
       return;
     }
 
@@ -126,13 +134,14 @@ export class ChatService {
     const conversation = await this.conversationService.getConversation(
       conversationId,
     );
-    if (!conversation || conversation.closedAt) {
+    if (!conversation || conversation.status === ConversationStatus.Closed) {
       return;
     }
 
     await this.redis.zrem('conversation_queue', conversation.id);
 
     await this.conversationService.updateConversation(conversationId, {
+      status: ConversationStatus.Closed,
       closedAt: new Date(),
       closedBy: by,
     });
@@ -148,6 +157,35 @@ export class ChatService {
       const operatorId = conversation.operatorId.toString();
       await this.operatorService.increaseOperatorWorkload(operatorId, -1);
       await this.assignQueuedConversationToOperator(operatorId);
+    }
+  }
+
+  async reopenConversation({ conversationId, by }: ReopenConversationOptions) {
+    const conversation = await this.conversationService.getConversation(
+      conversationId,
+    );
+    if (!conversation || conversation.status !== ConversationStatus.Closed) {
+      return;
+    }
+
+    const visitor = await this.visitorService.getVisitor(
+      conversation.visitorId,
+    );
+    if (!visitor?.currentConversationId?.equals(conversation._id)) {
+      throw new BadRequestException('Visitor started a new conversation');
+    }
+
+    await this.conversationService.updateConversation(conversationId, {
+      status: ConversationStatus.Open,
+    });
+    await this.messageService.createMessage(conversation, {
+      type: MessageType.Reopen,
+      from: by,
+    });
+
+    if (conversation.operatorId) {
+      const operatorId = conversation.operatorId.toString();
+      await this.operatorService.increaseOperatorWorkload(operatorId, 1);
     }
   }
 
@@ -249,7 +287,7 @@ export class ChatService {
       return;
     }
 
-    const fromOperatorId = conversation.operatorId;
+    const previousOperatorId = conversation.operatorId;
 
     await this.conversationService.updateConversation(conversation.id, {
       operatorId: operator.id,
@@ -258,14 +296,14 @@ export class ChatService {
       type: MessageType.Assign,
       from: by,
       data: {
-        fromOperatorId,
-        toOperatorId: operator._id,
+        previousOperatorId,
+        operatorId: operator._id,
       },
     });
 
-    if (fromOperatorId) {
+    if (previousOperatorId) {
       await this.operatorService.increaseOperatorWorkload(
-        fromOperatorId.toString(),
+        previousOperatorId.toString(),
         -1,
       );
     }
@@ -273,9 +311,11 @@ export class ChatService {
 
     await this.redis.zrem('conversation_queue', conversation.id);
 
-    if (fromOperatorId) {
+    if (previousOperatorId) {
       // 为原客服重新分配会话
-      await this.assignQueuedConversationToOperator(fromOperatorId.toString());
+      await this.assignQueuedConversationToOperator(
+        previousOperatorId.toString(),
+      );
     }
   }
 

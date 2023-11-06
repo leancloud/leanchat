@@ -4,6 +4,8 @@ import type { VisitorDto } from '../visitor';
 export class ConversationDto {
   id: string;
 
+  status: number;
+
   visitorId: string;
 
   operatorId?: string;
@@ -14,8 +16,6 @@ export class ConversationDto {
     star: number;
     feedback: string;
   };
-
-  closedAt?: string;
 
   visitorWaitingSince?: string;
 
@@ -30,11 +30,11 @@ export class ConversationDto {
   static fromDocument(conv: Conversation) {
     const dto = new ConversationDto();
     dto.id = conv.id;
+    dto.status = conv.status;
     dto.visitorId = conv.visitorId.toString();
     dto.operatorId = conv.operatorId?.toString();
     dto.categoryId = conv.categoryId?.toString();
     dto.evaluation = conv.evaluation;
-    dto.closedAt = conv.closedAt?.toISOString();
     dto.visitorWaitingSince = conv.visitorWaitingSince?.toISOString();
     dto.createdAt = conv.createdAt.toISOString();
     dto.updatedAt = conv.updatedAt.toISOString();

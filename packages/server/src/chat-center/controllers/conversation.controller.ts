@@ -24,7 +24,6 @@ import {
   UserType,
 } from 'src/chat';
 import { AuthGuard } from '../guards/auth.guard';
-import { GetConversationsDto } from '../dtos/conversation/get-conversations.dto';
 import { GetMessagesDto, MessageDto } from '../dtos/message';
 import {
   AssignConversationDto,
@@ -46,32 +45,6 @@ export class ConversationController {
     private operatorService: OperatorService,
     private convTransformService: ConversationTransformService,
   ) {}
-
-  @Get()
-  async getConversations(@Query() query: GetConversationsDto) {
-    const {
-      operatorId,
-      closed,
-      desc,
-      before,
-      after,
-      page = 1,
-      pageSize = 10,
-    } = query;
-    const conversations = await this.conversationService.getConversations({
-      operatorId,
-      closed,
-      desc,
-      before,
-      after,
-      skip: before || after ? undefined : (page - 1) * pageSize,
-      limit: pageSize,
-    });
-    const data = await this.convTransformService.composeConversations(
-      conversations,
-    );
-    return data;
-  }
 
   @Get(':id')
   getConversation(@Param('id', FindConversationPipe) conv: Conversation) {

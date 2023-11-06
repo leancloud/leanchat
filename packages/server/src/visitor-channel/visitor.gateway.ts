@@ -20,6 +20,7 @@ import {
   Conversation,
   ConversationCreatedEvent,
   ConversationService,
+  ConversationStatus,
   ConversationUpdatedEvent,
   Message,
   MessageCreatedEvent,
@@ -166,7 +167,7 @@ export class VisitorGateway implements OnModuleInit, OnGatewayConnection {
         visitor.currentConversationId.toString(),
       );
     }
-    if (!conversation || conversation.closedAt) {
+    if (!conversation || conversation.status === ConversationStatus.Closed) {
       const isBusy = await this.widgetService.isBusy();
       if (isBusy) {
         return;
@@ -263,7 +264,7 @@ export class VisitorGateway implements OnModuleInit, OnGatewayConnection {
 
   @OnEvent('conversation.updated', { async: true })
   dispatchConversationUpdated(payload: ConversationUpdatedEvent) {
-    if (payload.data.evaluation || payload.data.closedAt) {
+    if (payload.data.evaluation || payload.data.status) {
       this.server
         .to(payload.conversation.visitorId.toString())
         .emit(

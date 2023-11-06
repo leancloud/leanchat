@@ -2,7 +2,7 @@ import { Index, ModelOptions, Prop } from '@typegoose/typegoose';
 import { Types } from 'mongoose';
 
 import { UserInfo } from './user-info.model';
-import { Channel, ConsultationResult } from '../constants';
+import { Channel, ConsultationResult, ConversationStatus } from '../constants';
 
 @ModelOptions({
   schemaOptions: {
@@ -91,6 +91,9 @@ export class Conversation {
 
   @Prop({ enum: Channel })
   channel: Channel;
+
+  @Prop({ enum: ConversationStatus })
+  status: ConversationStatus;
 
   @Prop()
   visitorId: Types.ObjectId;

@@ -20,6 +20,7 @@ export enum MessageType {
   Evaluate = 1,
   Close = 2,
   Assign = 3,
+  Reopen = 4,
 }
 
 export enum OperatorStatus {
@@ -30,4 +31,9 @@ export enum OperatorStatus {
 
 export enum Channel {
   LiveChat = 0,
+}
+
+export enum ConversationStatus {
+  Open = 0,
+  Closed = 1,
 }

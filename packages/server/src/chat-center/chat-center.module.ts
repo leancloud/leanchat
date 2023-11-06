@@ -12,6 +12,7 @@ import {
   OnlineTimeService,
 } from './services';
 import {
+  APIController,
   CategoryController,
   ConfigController,
   ConversationController,
@@ -36,6 +37,7 @@ import {
     ConversationTransformService,
   ],
   controllers: [
+    APIController,
     OperatorController,
     SessionController,
     ConversationController,

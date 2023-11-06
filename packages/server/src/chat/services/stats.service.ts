@@ -137,7 +137,7 @@ export class StatsService {
       type: MessageType.Assign,
       'from.type': UserType.Operator,
       $expr: {
-        $ne: ['$from.id', '$data.toOperatorId'],
+        $ne: ['$from.id', '$data.operatorId'],
       },
     };
 
@@ -146,16 +146,16 @@ export class StatsService {
       type: MessageType.Assign,
       'from.type': UserType.Operator,
       $expr: {
-        $eq: ['$from.id', '$data.fromOperatorId'],
+        $eq: ['$from.id', '$data.previousOperatorId'],
       },
     };
 
     if (operatorId?.length) {
       const operatorObjectIds = operatorId.map((id) => new Types.ObjectId(id));
-      inMatch['data.toOperatorId'] = {
+      inMatch['data.operatorId'] = {
         $in: operatorObjectIds,
       };
-      outMatch['data.fromOperatorId'] = {
+      outMatch['data.previousOperatorId'] = {
         $in: operatorObjectIds,
       };
     }
@@ -167,7 +167,7 @@ export class StatsService {
             { $match: inMatch },
             {
               $group: {
-                _id: '$data.toOperatorId',
+                _id: '$data.operatorId',
                 count: { $sum: 1 },
               },
             },
@@ -176,7 +176,7 @@ export class StatsService {
             { $match: outMatch },
             {
               $group: {
-                _id: '$data.fromOperatorId',
+                _id: '$data.previousOperatorId',
                 count: { $sum: 1 },
               },
             },

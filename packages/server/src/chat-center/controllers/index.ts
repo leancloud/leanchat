@@ -1,3 +1,4 @@
+export * from './api.controller';
 export * from './category.controller';
 export * from './config.controller';
 export * from './conversation.controller';

@@ -81,7 +81,7 @@ export class ChatGateway implements OnModuleInit, OnGatewayConnection {
     const conversation = await this.conversationService.getConversation(
       data.conversationId,
     );
-    if (!conversation || conversation.closedAt) {
+    if (!conversation) {
       return;
     }
 
@@ -118,10 +118,10 @@ export class ChatGateway implements OnModuleInit, OnGatewayConnection {
   @OnEvent('conversation.updated', { async: true })
   async handleConversationUpdated(payload: ConversationUpdatedEvent) {
     const subscribedFields: (keyof ConversationUpdatedEvent['data'])[] = [
+      'status',
       'operatorId',
       'categoryId',
       'evaluation',
-      'closedAt',
       'visitorWaitingSince',
     ];
     if (!subscribedFields.some((field) => field in payload.data)) {
