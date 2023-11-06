@@ -17,6 +17,12 @@ export class MessageDto {
 
   updatedAt: string;
 
+  static fileDomain = '';
+
+  static getFileURL(key: string) {
+    return `${MessageDto.fileDomain}/${key}`;
+  }
+
   static fromDocument(message: Message) {
     const dto = new MessageDto();
     dto.id = message.id;
@@ -25,6 +31,9 @@ export class MessageDto {
     dto.type = message.type;
     dto.from = message.from;
     dto.data = message.data;
+    if (dto.data?.file) {
+      dto.data.file.url = MessageDto.getFileURL(dto.data.file.key);
+    }
     dto.createdAt = message.createdAt.toISOString();
     dto.updatedAt = message.updatedAt.toISOString();
     return dto;

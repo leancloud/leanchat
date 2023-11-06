@@ -1,6 +1,6 @@
 export interface LeanCloudFile {
   id: string;
-  url: string;
+  key: string;
   name: string;
   mime?: string;
   size?: number;

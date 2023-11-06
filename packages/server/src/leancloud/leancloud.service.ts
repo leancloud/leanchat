@@ -11,7 +11,7 @@ export class LeanCloudService {
     if (fileObj) {
       return {
         id: fileObj.id!,
-        url: fileObj.get('url'),
+        key: fileObj.get('key'),
         name: fileObj.get('name'),
         mime: fileObj.get('mime_type'),
         size: fileObj.get('metaData')?.size,

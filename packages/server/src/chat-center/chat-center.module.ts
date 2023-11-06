@@ -1,4 +1,5 @@
-import { Module } from '@nestjs/common';
+import { Module, OnModuleInit } from '@nestjs/common';
+import { ConfigService } from '@nestjs/config';
 import { TypegooseModule } from '@m8a/nestjs-typegoose';
 
 import { ChatModule } from 'src/chat';
@@ -22,6 +23,7 @@ import {
   StatisticsController,
   VisitorController,
 } from './controllers';
+import { MessageDto } from './dtos/message';
 
 @Module({
   imports: [
@@ -48,4 +50,12 @@ import {
     StatisticsController,
   ],
 })
-export class ChatCenterModule {}
+export class ChatCenterModule implements OnModuleInit {
+  constructor(private configService: ConfigService) {}
+
+  onModuleInit() {
+    MessageDto.fileDomain = this.configService.getOrThrow(
+      'LEANCHAT_FILE_DOMAIN',
+    );
+  }
+}

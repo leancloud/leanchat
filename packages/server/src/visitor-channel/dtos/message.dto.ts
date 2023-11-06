@@ -9,12 +9,21 @@ export class MessageDto {
 
   data: any;
 
+  static fileDomain = '';
+
+  static getFileURL(key: string) {
+    return `${MessageDto.fileDomain}/${key}`;
+  }
+
   static fromDocument(message: Message) {
     const dto = new MessageDto();
     dto.id = message.id;
     dto.type = message.type;
     dto.from = message.from;
     dto.data = message.data;
+    if (dto.data?.file) {
+      dto.data.file.url = MessageDto.getFileURL(dto.data.file.key);
+    }
     return dto;
   }
 
