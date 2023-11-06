@@ -14,7 +14,7 @@ import {
 import cx from 'classnames';
 
 import { useChat } from '../chat';
-import { EvaluateData, Message } from '../types';
+import { ConversationStatus, EvaluateData, Message, MessageType } from '../types';
 import { Modal } from './Modal';
 import { ProgressMessage, TextMessage } from './Message';
 import { UploadTask, useUpload } from './useUpload';
@@ -65,17 +65,19 @@ interface MessageItemProps {
 
 function MessageItem({ message }: MessageItemProps) {
   switch (message.type) {
-    case 0:
+    case MessageType.Message:
       return (
         <TextMessage position={message.from.type === 0 ? 'right' : 'left'}>
           {message.data.file && <FileMessage file={message.data.file} />}
           {message.data.text}
         </TextMessage>
       );
-    case 1:
+    case MessageType.Evaluation:
       return <LogMessage content="消息提示：感谢您的评价" />;
-    case 2:
+    case MessageType.Close:
       return <LogMessage content="会话已结束" />;
+    case MessageType.Reopen:
+      return <LogMessage content="会话已开启" />;
   }
 }
 
@@ -287,7 +289,7 @@ export function Classic() {
         setShowEvaluationModal(true);
         return;
       }
-      if (!conversation.closedAt) {
+      if (conversation.status !== ConversationStatus.Closed) {
         close();
       }
     }
@@ -463,7 +465,9 @@ export function Classic() {
                 <div className="ml-auto space-x-[10px]">
                   <button
                     className="h-6 px-[10px] enabled:hover:text-[rgb(0,95,234)] disabled:text-gray-400"
-                    disabled={!!(!conversation || conversation.closedAt)}
+                    disabled={
+                      !!(!conversation || conversation.status === ConversationStatus.Closed)
+                    }
                     onClick={handleClose}
                   >
                     结束会话

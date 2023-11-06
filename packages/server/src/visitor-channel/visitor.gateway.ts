@@ -38,6 +38,13 @@ import { MessageDto } from './dtos/message.dto';
 import { ConversationDto } from './dtos/conversation.dto';
 import { WidgetInitialized } from './interfaces';
 
+const visitorMessageTypes = [
+  MessageType.Message,
+  MessageType.Evaluate,
+  MessageType.Close,
+  MessageType.Reopen,
+];
+
 @WebSocketGateway()
 @UsePipes(ZodValidationPipe)
 export class VisitorGateway implements OnModuleInit, OnGatewayConnection {
@@ -131,7 +138,7 @@ export class VisitorGateway implements OnModuleInit, OnGatewayConnection {
     const messageCount = 25;
     const messages = await this.messageService.getMessages({
       visitorId,
-      type: [MessageType.Message, MessageType.Evaluate, MessageType.Close],
+      type: visitorMessageTypes,
       desc: true,
       limit: messageCount,
     });
@@ -244,16 +251,12 @@ export class VisitorGateway implements OnModuleInit, OnGatewayConnection {
     });
   }
 
-  shouldDispatchMessage(message: Message) {
-    return (
-      message.type === MessageType.Message ||
-      message.type === MessageType.Evaluate ||
-      message.type === MessageType.Close
-    );
+  shouldPublishMessage(message: Message) {
+    return visitorMessageTypes.some((type) => message.type === type);
   }
 
   @OnEvent('conversation.created', { async: true })
-  dispatchConversationCreated(payload: ConversationCreatedEvent) {
+  publishConversationCreated(payload: ConversationCreatedEvent) {
     this.server
       .to(payload.conversation.visitorId.toString())
       .emit(
@@ -263,7 +266,7 @@ export class VisitorGateway implements OnModuleInit, OnGatewayConnection {
   }
 
   @OnEvent('conversation.updated', { async: true })
-  dispatchConversationUpdated(payload: ConversationUpdatedEvent) {
+  publishConversationUpdated(payload: ConversationUpdatedEvent) {
     if (payload.data.evaluation || payload.data.status) {
       this.server
         .to(payload.conversation.visitorId.toString())
@@ -275,9 +278,9 @@ export class VisitorGateway implements OnModuleInit, OnGatewayConnection {
   }
 
   @OnEvent('message.created', { async: true })
-  dispatchMessage(payload: MessageCreatedEvent) {
+  publishMessage(payload: MessageCreatedEvent) {
     const { message } = payload;
-    if (this.shouldDispatchMessage(message)) {
+    if (this.shouldPublishMessage(message)) {
       this.server
         .to(message.visitorId.toString())
         .emit('message', MessageDto.fromDocument(message));
@@ -285,7 +288,7 @@ export class VisitorGateway implements OnModuleInit, OnGatewayConnection {
   }
 
   @OnEvent('inviteEvaluation', { async: true })
-  dispatchEvaluationInvitation(payload: InviteEvaluationEvent) {
+  publishEvaluationInvitation(payload: InviteEvaluationEvent) {
     const { conversation } = payload;
     const visitorId = conversation.visitorId.toString();
     this.server.to(visitorId).emit('inviteEvaluation', {
