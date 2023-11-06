@@ -1,7 +1,7 @@
 import { PropsWithChildren, Suspense, lazy, useState } from 'react';
 import { BrowserRouter, Navigate, Outlet, Route, Routes, useNavigate } from 'react-router-dom';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
-import { ConfigProvider, Spin } from 'antd';
+import { ConfigProvider, Spin, message } from 'antd';
 import zhCN from 'antd/locale/zh_CN';
 import { StyleProvider } from '@ant-design/cssinjs';
 import { MdSettings } from 'react-icons/md';
@@ -87,6 +87,7 @@ function PanelQueryClientProvider({ children }: PropsWithChildren) {
       if (error.response?.status === 401) {
         navigate('/login');
       }
+      message.error(error.response?.data.message);
     }
   };
 
