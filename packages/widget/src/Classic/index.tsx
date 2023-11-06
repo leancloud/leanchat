@@ -67,7 +67,7 @@ function MessageItem({ message }: MessageItemProps) {
   switch (message.type) {
     case MessageType.Message:
       return (
-        <TextMessage position={message.from.type === 0 ? 'right' : 'left'}>
+        <TextMessage position={message.from.type === 1 ? 'right' : 'left'}>
           {message.data.file && <FileMessage file={message.data.file} />}
           {message.data.text}
         </TextMessage>
