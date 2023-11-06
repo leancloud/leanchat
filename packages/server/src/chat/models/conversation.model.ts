@@ -52,7 +52,7 @@ class Stats {
   firstOperatorJoinedAt?: Date;
 
   @Prop()
-  joinedOperatorIds?: Types.ObjectId[];
+  transfered?: boolean;
 
   @Prop()
   operatorFirstMessageCreatedAt?: Date;

@@ -118,13 +118,9 @@ export class ConversationStatsProcessor {
       }
     }
 
-    const joinedOperatorIds = messages
-      .filter((message) => message.type === MessageType.Assign)
-      .slice(0, 10)
-      .map((message) => message.data.operatorId);
-    if (joinedOperatorIds.length) {
-      stats.joinedOperatorIds = joinedOperatorIds;
-    }
+    stats.transfered = messages.some(
+      (message) => message.type === MessageType.Assign,
+    );
 
     await this.conversationService.updateConversation(conversation.id, {
       stats,

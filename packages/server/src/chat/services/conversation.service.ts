@@ -234,7 +234,7 @@ export class ConversationService {
                 {
                   $and: [
                     '$stats.operatorMessageCount',
-                    { $eq: [{ $size: '$stats.joinedOperatorIds' }, 1] },
+                    { $not: ['$stats.transfered'] },
                   ],
                 },
                 1,
