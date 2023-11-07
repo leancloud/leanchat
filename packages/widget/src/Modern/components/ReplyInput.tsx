@@ -67,7 +67,6 @@ export const ReplyInput = forwardRef<HTMLTextAreaElement, ReplyInputProps>(
           ref={ref}
           className="grow resize-none outline-none border rounded-xl leading-4 pl-[10px] pr-8 py-2 text-sm focus:border-primary"
           placeholder="我想问..."
-          rows={1}
           maxRows={5}
           value={content}
           disabled={disabled}
