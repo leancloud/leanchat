@@ -87,13 +87,13 @@ export default function Modern() {
 
   return (
     <div
-      className={cx('h-screen flex flex-col items-stretch bg-white', {
+      className={cx('h-screen flex flex-col items-stretch', {
         'p-4': !isMobile,
       })}
     >
       {show && (
         <div
-          className={cx('grow overflow-hidden flex flex-col', {
+          className={cx('grow overflow-hidden flex flex-col bg-white', {
             'rounded-xl shadow-lg mb-4': !isMobile,
           })}
         >
