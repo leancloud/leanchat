@@ -1,16 +1,16 @@
 import { StrictMode } from 'react';
 import { createRoot } from 'react-dom/client';
 
-import { Classic } from './Classic';
-import { Chat } from './chat';
 import { AppContext, AppContextValue } from './AppContext';
+import { Chat } from './chat';
+import Modern from './Modern';
 
 function App(ctx: AppContextValue) {
   return (
     <StrictMode>
       <AppContext.Provider value={ctx}>
         <Chat>
-          <Classic />
+          <Modern />
         </Chat>
       </AppContext.Provider>
     </StrictMode>

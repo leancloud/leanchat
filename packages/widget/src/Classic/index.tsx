@@ -192,7 +192,7 @@ export function Classic() {
     setShowEvaluationModal(true);
   };
 
-  const { status, conversation, messages, sendMessage, evaluate, close } = useChat({
+  const { status, conversation, messages, send, evaluate, close } = useChat({
     onInviteEvaluation: () => {
       setShowEvaluationModal(true);
     },
@@ -203,7 +203,7 @@ export function Classic() {
   const handleSendMessage = () => {
     const trimedContent = content.trim();
     if (trimedContent) {
-      sendMessage({ text: content });
+      send({ text: content });
       setContent('');
     }
   };
@@ -222,7 +222,7 @@ export function Classic() {
 
   const { tasks, upload } = useUpload({
     onUploaded: (fileId) => {
-      sendMessage({ fileId });
+      send({ fileId });
     },
   });
 

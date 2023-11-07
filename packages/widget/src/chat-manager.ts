@@ -1,3 +1,5 @@
+import mitt from 'mitt';
+
 import css from './index.css?inline';
 import loading from './assets/loading.svg?raw';
 
@@ -30,15 +32,7 @@ export class ChatManager {
     localStorage.setItem('LeanChat/token', token);
   }
 
-  _showLoading() {
-    console.log(loading);
-  }
-
-  open() {
-    this.show();
-  }
-
-  async show() {
+  async open() {
     if (this.inited) {
       if (this.iframe) {
         this.iframe.style.display = 'block';
@@ -59,10 +53,7 @@ export class ChatManager {
 
     const iframe = document.createElement('iframe');
     resetElementStyle(iframe);
-    iframe.style.position = 'fixed';
-    iframe.style.inset = 'auto 0px 0px auto';
-    iframe.style.width = '415px';
-    iframe.style.height = '520px';
+    iframe.style.display = 'none';
     this.iframe = iframe;
 
     const { io } = await import('socket.io-client');
@@ -76,11 +67,10 @@ export class ChatManager {
     socket.on('signedUp', ({ token }) => {
       ChatManager.setToken(token);
     });
-    socket.once('connect', () => {
-      iframeContainer.removeChild(loadingElement);
-    });
 
     const { render } = await import('./App');
+
+    const emitter = mitt();
 
     iframe.onload = () => {
       const style = document.createElement('style');
@@ -92,10 +82,20 @@ export class ChatManager {
       render(rootElement, {
         iframe,
         socket,
+        emitter,
       });
 
       socket.connect();
     };
+
+    emitter.on('initialized', () => {
+      iframeContainer.removeChild(loadingElement);
+      iframe.style.display = 'block';
+    });
+
+    emitter.on('close', () => {
+      iframe.style.display = 'none';
+    });
 
     iframeContainer.appendChild(iframe);
   }

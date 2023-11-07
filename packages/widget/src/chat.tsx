@@ -14,10 +14,11 @@ import { useAppContext } from './AppContext';
 
 interface ChatContextValue {
   socket: Socket;
+  connected: boolean;
   status?: string;
   conversation?: Conversation;
   messages: Message[];
-  sendMessage: (data: any) => void;
+  send: (data: any) => void;
   evaluate: (data: EvaluateData) => void;
   close: () => void;
 }
@@ -41,7 +42,7 @@ interface ChatProps {
 }
 
 export function Chat({ children }: ChatProps) {
-  const { socket } = useAppContext();
+  const { socket, iframe, emitter } = useAppContext();
   const [connected, setConnected] = useState(socket.connected);
 
   useEffect(() => {
@@ -77,9 +78,15 @@ export function Chat({ children }: ChatProps) {
     if (data.messages) {
       setMessages(data.messages);
     }
+    if (iframe.contentDocument) {
+      const { style } = iframe.contentDocument.documentElement;
+      style.setProperty('--color-primary', '#f60');
+      style.setProperty('--color-text', '#fff');
+    }
+    emitter.emit('initialized');
   });
 
-  const sendMessage = useCallback(
+  const send = useCallback(
     (data: any) => {
       if (status !== 'inService') {
         return;
@@ -100,13 +107,9 @@ export function Chat({ children }: ChatProps) {
     socket.emit('close');
   }, [socket]);
 
-  if (!connected) {
-    return;
-  }
-
   return (
     <ChatContext.Provider
-      value={{ socket, status, conversation, messages, sendMessage, evaluate, close }}
+      value={{ socket, connected, status, conversation, messages, send, evaluate, close }}
     >
       {children}
     </ChatContext.Provider>

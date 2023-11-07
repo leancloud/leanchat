@@ -23,7 +23,7 @@ export interface Message {
   id: string;
   type: MessageType;
   from: {
-    type: number;
+    type: UserType;
     id: string;
   };
   data: any;
@@ -32,4 +32,8 @@ export interface Message {
 export interface EvaluateData {
   star: number;
   feedback: string;
+}
+
+export enum UserType {
+  Visitor = 1,
 }
