@@ -54,6 +54,7 @@ export class ChatManager {
     const iframe = document.createElement('iframe');
     resetElementStyle(iframe);
     iframe.style.display = 'none';
+    iframe.style.zIndex = '2147483000';
     this.iframe = iframe;
 
     const { io } = await import('socket.io-client');
