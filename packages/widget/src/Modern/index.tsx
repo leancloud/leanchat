@@ -87,7 +87,7 @@ export default function Modern() {
 
   return (
     <div
-      className={cx('h-screen flex flex-col items-stretch', {
+      className={cx('h-screen flex flex-col items-stretch bg-white', {
         'p-4': !isMobile,
       })}
     >
