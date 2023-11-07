@@ -1,5 +1,4 @@
 import { ChangeEvent, KeyboardEvent, forwardRef, useRef, useState } from 'react';
-import Textarea from 'react-textarea-autosize';
 import { PiPaperPlaneRightFill, PiPaperclipHorizontal } from 'react-icons/pi';
 
 import { useUpload } from '../hooks/useUpload';
@@ -63,14 +62,22 @@ export const ReplyInput = forwardRef<HTMLTextAreaElement, ReplyInputProps>(
 
     return (
       <div className="flex p-[10px] pr-0 relative">
-        <Textarea
+        <textarea
           ref={ref}
           className="grow resize-none outline-none border rounded-xl leading-4 pl-[10px] pr-8 py-2 text-sm focus:border-primary"
           placeholder="我想问..."
-          maxRows={5}
+          rows={1}
           value={content}
           disabled={disabled}
-          onChange={(e) => setContent(e.target.value)}
+          onChange={(e) => {
+            e.target.style.height = '0';
+            const maxHeight = Math.min(
+              e.target.scrollHeight + 2, // 2 for border
+              5 * 16 + 16, // 5 lines, 16 for leading, 16 for padding
+            );
+            e.target.style.height = maxHeight + 'px';
+            setContent(e.target.value);
+          }}
           onKeyDown={handleTextareaKeyDown}
         />
         <button
