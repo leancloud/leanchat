@@ -41,7 +41,7 @@ export function EvaluationDialog({ onEvaluate, onCancel }: EvaluationDialogProps
           rows={3}
           placeholder="感谢您的反馈，我们会更加努力。"
           value={feedback}
-          onChange={(e) => setFeedback(e.target.value)}
+          onChange={(e) => setFeedback(e.target.value.slice(0, 200))}
         />
       </div>
       <div className="divide-x flex border-t text-primary">
