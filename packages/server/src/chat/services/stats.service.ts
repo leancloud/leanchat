@@ -203,7 +203,10 @@ export class StatsService {
     operatorId,
   }: GetOperatorStatsOptions) {
     const $match: FilterQuery<PostprocessingLog> = {
-      $or: [{ startTime: { $gte: from } }, { endTime: { $lte: to } }],
+      $or: [
+        { startTime: { $gte: from, $lte: to } },
+        { endTime: { $gte: from, $lte: to } },
+      ],
     };
 
     if (operatorId?.length) {
