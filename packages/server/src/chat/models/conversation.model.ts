@@ -52,7 +52,7 @@ class Stats {
   firstOperatorJoinedAt?: Date;
 
   @Prop()
-  transfered?: boolean;
+  reassigned?: boolean;
 
   @Prop()
   operatorFirstMessageCreatedAt?: Date;
@@ -74,6 +74,9 @@ class Stats {
 
   @Prop()
   consultationResult?: ConsultationResult;
+
+  @Prop()
+  duration?: number;
 }
 
 @Index({ visitorId: 1 })

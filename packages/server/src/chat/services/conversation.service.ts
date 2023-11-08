@@ -234,7 +234,7 @@ export class ConversationService {
                 {
                   $and: [
                     '$stats.operatorMessageCount',
-                    { $not: ['$stats.transfered'] },
+                    { $not: '$stats.reassigned' },
                   ],
                 },
                 1,
@@ -458,7 +458,7 @@ export class ConversationService {
         $expr: {
           $eq: ['$conversationId', '$$cid'],
         },
-        type: 'message',
+        type: MessageType.Message,
         'data.text': {
           $regex: messageKeyword,
         },

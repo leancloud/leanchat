@@ -118,8 +118,14 @@ export class ConversationStatsProcessor {
       }
     }
 
-    stats.transfered = messages.some(
+    const assignMessages = messages.filter(
       (message) => message.type === MessageType.Assign,
+    );
+    stats.reassigned = assignMessages.length > 1;
+
+    stats.duration = differenceInMilliseconds(
+      conversation.closedAt,
+      conversation.createdAt,
     );
 
     await this.conversationService.updateConversation(conversation.id, {
