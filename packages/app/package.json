@@ -22,6 +22,7 @@
     "leancloud-storage": "^4.15.1",
     "lodash": "^4.17.21",
     "nanoid": "^4.0.2",
+    "papaparse": "^5.4.1",
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
     "react-hook-form": "^7.45.2",
@@ -33,6 +34,7 @@
   },
   "devDependencies": {
     "@types/lodash": "^4.14.196",
+    "@types/papaparse": "^5.3.11",
     "@types/react": "^18.2.18",
     "@types/react-dom": "^18.2.7",
     "@vitejs/plugin-react": "^4.0.4",
