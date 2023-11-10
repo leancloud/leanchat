@@ -2,9 +2,16 @@ import { Injectable } from '@nestjs/common';
 import { EventEmitter2 } from '@nestjs/event-emitter';
 import { InjectModel } from '@m8a/nestjs-typegoose';
 import { ReturnModelType } from '@typegoose/typegoose';
-import { AnyKeys, FilterQuery, PipelineStage, Types } from 'mongoose';
+import {
+  AnyKeys,
+  FilterQuery,
+  PipelineStage,
+  QuerySelector,
+  Types,
+} from 'mongoose';
 import _ from 'lodash';
 
+import { objectId } from 'src/helpers';
 import { Conversation, Message } from '../models';
 import {
   CreateConversationData,
@@ -13,12 +20,18 @@ import {
   GetConversationRecordOptions,
   GetConversationStatsOptions,
   GetInactiveConversationIdsOptions,
+  SearchConversationOptions,
   UpdateConversationData,
 } from '../interfaces';
 import { ConversationCreatedEvent, ConversationUpdatedEvent } from '../events';
 import { OperatorService } from './operator.service';
 import { ChatError } from '../errors';
-import { ConsultationResult, ConversationStatus } from '../constants';
+import {
+  ConsultationResult,
+  ConversationStatus,
+  MessageType,
+} from '../constants';
+import { NumberCondition } from '../interfaces/common';
 
 @Injectable()
 export class ConversationService {
@@ -524,6 +537,178 @@ export class ConversationService {
     return {
       items: result.items,
       totalCount: result.totalCount[0]?.count || 0,
+    };
+  }
+
+  async searchConversations({
+    from,
+    to,
+    channel,
+    categoryId,
+    visitorId,
+    operatorId,
+    closedBy,
+    evaluation,
+    message,
+    duration,
+    averageResponseTime,
+    queued,
+    consultationResult,
+    skip = 0,
+    limit = 10,
+  }: SearchConversationOptions) {
+    const $match: FilterQuery<Conversation> = {
+      createdAt: { $gte: from, $lte: to },
+    };
+    if (channel) {
+      $match.channel = channel;
+    }
+    if (categoryId?.length) {
+      $match.categoryId = { $in: objectId(categoryId) };
+    }
+    if (visitorId?.length) {
+      $match.visitorId = { $in: objectId(visitorId) };
+    }
+    if (operatorId?.length) {
+      $match.operatorId = { $in: objectId(operatorId) };
+    }
+    if (closedBy) {
+      $match['closedBy.type'] = closedBy;
+    }
+    if (evaluation) {
+      if (evaluation.invited !== undefined) {
+        $match['evaluationInvitedAt'] = {
+          $exists: evaluation.invited,
+        };
+      }
+      if (evaluation.star) {
+        $match['evaluation.star'] = evaluation.star;
+      }
+    }
+    if (queued !== undefined) {
+      $match['queuedAt'] = { $exists: queued };
+    }
+    if (consultationResult) {
+      $match['stats.consultationResult'] = consultationResult;
+    }
+
+    const getQuerySelector = (c: NumberCondition) => {
+      const q: QuerySelector<number> = {
+        $eq: c.eq,
+        $gt: c.gt,
+        $lt: c.lt,
+      };
+      return _.omitBy(q, _.isUndefined) as QuerySelector<number>;
+    };
+    const addNumberQuery = (field: string, c: NumberCondition) => {
+      const q = getQuerySelector(c);
+      if (!_.isEmpty(q)) {
+        $match[field] = q;
+      }
+    };
+    if (duration) {
+      addNumberQuery('stats.duration', duration);
+    }
+    if (averageResponseTime) {
+      addNumberQuery('stats.averageResponseTime', averageResponseTime);
+    }
+
+    const pipeline: PipelineStage[] = [{ $match }, { $sort: { createdAt: 1 } }];
+
+    if (message?.text) {
+      const $match: FilterQuery<Message> = {
+        $expr: {
+          $eq: ['$conversationId', '$$cid'],
+        },
+        type: MessageType.Message,
+        'data.text': {
+          $regex: message.text,
+        },
+      };
+      if (message.from) {
+        $match['from.type'] = message.from;
+      }
+      pipeline.push(
+        {
+          $lookup: {
+            from: 'message',
+            let: { cid: '$_id' },
+            pipeline: [{ $match }, { $limit: 1 }],
+            as: 'messages',
+          },
+        },
+        {
+          $match: {
+            $expr: { $ne: ['$messages', []] },
+          },
+        },
+      );
+    }
+
+    pipeline.push({
+      $lookup: {
+        from: 'visitor',
+        localField: 'visitorId',
+        foreignField: '_id',
+        as: 'visitors',
+      },
+    });
+
+    pipeline.push({
+      $lookup: {
+        from: 'message',
+        let: { cid: '$_id' },
+        pipeline: [
+          {
+            $match: {
+              $expr: { $eq: ['$conversationId', '$$cid'] },
+              type: MessageType.Assign,
+            },
+          },
+          { $limit: 100 },
+        ],
+        as: 'transferMessages',
+      },
+    });
+
+    pipeline.push({
+      $project: {
+        _id: 0,
+        id: '$_id',
+        createdAt: 1,
+        queuedAt: 1,
+        closedAt: 1,
+        closedBy: 1,
+        categoryId: 1,
+        visitorId: 1,
+        visitorName: { $arrayElemAt: ['$visitors.name', 0] },
+        operatorId: 1,
+        evaluation: 1,
+        evaluationInvitedAt: 1,
+        joinedOperatorIds: '$transferMessages.data.operatorId',
+        stats: 1,
+      },
+    });
+
+    pipeline.push(
+      {
+        $facet: {
+          data: [{ $skip: skip }, { $limit: limit }],
+          totalCount: [{ $count: 'value' }],
+        },
+      },
+      {
+        $project: {
+          data: 1,
+          totalCount: { $arrayElemAt: ['$totalCount.value', 0] },
+        },
+      },
+    );
+
+    const [result] = await this.conversationModel.aggregate(pipeline);
+    return {
+      data: result.data,
+      totalCount: result.totalCount || 0,
     };
   }
 }

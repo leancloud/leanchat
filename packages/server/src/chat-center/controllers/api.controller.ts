@@ -7,7 +7,10 @@ import { UserType } from 'src/chat/constants';
 import { AuthGuard } from '../guards';
 import { ListConversationDto } from '../dtos/conversation';
 import { ConversationTransformService } from '../services';
-import { ReopenConversationDto } from '../dtos/conversation';
+import {
+  ReopenConversationDto,
+  SearchConversationDto,
+} from '../dtos/conversation';
 import { CurrentOperator } from '../decorators';
 
 @Controller()
@@ -54,6 +57,16 @@ export class APIController {
         type: UserType.Operator,
         id: operator.id,
       },
+    });
+  }
+
+  @Post('conversation.search')
+  conversation_search(@Body() body: SearchConversationDto) {
+    const { page = 1, pageSize = 10, ...options } = body;
+    return this.conversationService.searchConversations({
+      ...options,
+      skip: (page - 1) * pageSize,
+      limit: pageSize,
     });
   }
 }

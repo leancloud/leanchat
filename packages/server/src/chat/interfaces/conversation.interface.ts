@@ -96,3 +96,29 @@ export interface GetConversationRecordOptions {
   consultationResult?: ConsultationResult;
   categoryId?: string;
 }
+
+export interface SearchConversationOptions {
+  from: Date;
+  to: Date;
+
+  channel?: Channel;
+  categoryId?: string[];
+  visitorId?: string[];
+  operatorId?: string[];
+  closedBy?: UserType;
+  evaluation?: {
+    invited?: boolean;
+    star?: number;
+  };
+  message?: {
+    text?: string;
+    from?: UserType;
+  };
+  duration?: NumberCondition;
+  averageResponseTime?: NumberCondition;
+  queued?: boolean;
+  consultationResult?: ConsultationResult;
+
+  skip?: number;
+  limit?: number;
+}
