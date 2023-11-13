@@ -5,7 +5,7 @@ import { FiCheck } from 'react-icons/fi';
 import { HiDotsHorizontal } from 'react-icons/hi';
 import { FaUserEdit } from 'react-icons/fa';
 import { useToggle } from 'react-use';
-import { Button, Dropdown, Input, Progress, Tooltip, message } from 'antd';
+import { Button, Dropdown, Progress, Tooltip, message } from 'antd';
 import cx from 'classnames';
 import _ from 'lodash';
 
@@ -22,6 +22,7 @@ import { QuickReply, QuickReplyRef } from './QuickReply';
 import { closeConversation, inviteEvaluation, assignconversation } from '../api/conversation';
 import { uploadFile } from '../leancloud';
 import { ConversationStatus } from '../types';
+import { useAutoSize } from '../hooks/useAutoSize';
 
 interface OperatorLabelProps {
   operatorId: string;
@@ -68,6 +69,8 @@ export function Conversation({ conversationId }: ConversationProps) {
 
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null!);
+
+  useAutoSize(textareaRef, 15);
 
   const handleCreateMessage = async () => {
     const trimedContent = content.trim();
@@ -225,12 +228,19 @@ export function Conversation({ conversationId }: ConversationProps) {
               >
                 邀请评价
               </Button>
+              <Button
+                size="small"
+                disabled={closed}
+                onClick={() => setShowQuickReply((show) => !show)}
+              >
+                快捷回复
+              </Button>
             </div>
             <div className="relative">
-              <Input.TextArea
+              <textarea
                 ref={textareaRef}
-                className="placeholder:!text-[#a8a8a8]"
-                autoSize={{ maxRows: 25 }}
+                className="outline-none resize-none w-full placeholder:!text-[#a8a8a8] leading-5 bg-white"
+                disabled={closed}
                 placeholder={closed ? '会话已结束' : '输入 / 选择快捷回复'}
                 value={closed ? '' : content}
                 onChange={(e) => {
@@ -251,9 +261,6 @@ export function Conversation({ conversationId }: ConversationProps) {
                   }
                 }}
                 style={{
-                  fontSize: 16,
-                  border: 0,
-                  borderRadius: 0,
                   boxShadow: 'unset',
                   padding: '16px 14px',
                 }}
