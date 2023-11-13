@@ -3,19 +3,6 @@ import { Socket, io } from 'socket.io-client';
 
 const SocketContext = createContext<Socket | undefined>(undefined);
 
-export function useEvent(socket: Socket, event: string, listener: (...args: any) => void) {
-  const listenerRef = useRef(listener);
-  listenerRef.current = listener;
-
-  useEffect(() => {
-    const listener = (...args: any[]) => listenerRef.current(...args);
-    socket.on(event, listener);
-    return () => {
-      socket.off(event, listener);
-    };
-  }, [socket, event]);
-}
-
 interface SocketProviderProps {
   children?: ReactNode;
   fallback?: ReactNode;
@@ -52,37 +39,4 @@ export function useSocket() {
     throw new Error('useSocket: socket is undefined');
   }
   return socket;
-}
-
-export type RpcResponse =
-  | {
-      success: true;
-      result: any;
-    }
-  | {
-      success: false;
-      error: string;
-    };
-
-export function callRpc(socket: Socket, name: string, param?: any) {
-  return new Promise<any>((resolve, reject) => {
-    const callback = (err: Error, res: RpcResponse) => {
-      if (err) {
-        return reject(err);
-      }
-      if (res.success) {
-        resolve(res.result);
-      } else {
-        reject(new Error(res.error));
-      }
-    };
-
-    const args: [string, ...any[]] = [name];
-    if (param !== undefined) {
-      args.push(param);
-    }
-    args.push(callback);
-
-    socket.timeout(5000).emit(...args);
-  });
 }
