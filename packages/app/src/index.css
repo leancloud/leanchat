@@ -11,9 +11,3 @@
 body {
   color: #1e1e1e;
 }
-
-/* twemoji */
-img.emoji {
-  display: inline;
-  vertical-align: baseline;
-}

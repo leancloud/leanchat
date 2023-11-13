@@ -13,9 +13,3 @@ body {
   font-family: sans-serif;
   letter-spacing: -0.24px;
 }
-
-/* twemoji */
-img.emoji {
-  display: inline;
-  vertical-align: baseline;
-}
