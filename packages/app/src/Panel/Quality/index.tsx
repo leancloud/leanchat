@@ -16,6 +16,7 @@ import { useCategories } from '../hooks/category';
 import { Category, Operator, UserType } from '../types';
 import { useOperators } from '../hooks/operator';
 import { downloadCSV, flow, formatDate, percent, renderTime } from './helpers';
+import { ConversationInfo } from './components/ConversationInfo';
 
 function useGetCategoryName(categories?: Category[]) {
   const categoryMap = useMemo(() => _.keyBy(categories, (c) => c.id), [categories]);
@@ -269,6 +270,8 @@ export default function Quality() {
     toggleExportModal();
   };
 
+  const [selectedConvId, setSelectedConvId] = useState<string>();
+
   const columns: (ColumnType<ConversationData> & ExportDataColumn)[] = [
     {
       key: 'id',
@@ -451,7 +454,14 @@ export default function Quality() {
                 setOptions((prev) => ({ ...prev, page, pageSize }));
               },
             }}
-            columns={columns}
+            columns={[
+              ...columns,
+              {
+                key: 'detail',
+                title: '操作',
+                render: (conv) => <a onClick={() => setSelectedConvId(conv.id)}>详情</a>,
+              },
+            ]}
           />
         </div>
 
@@ -460,6 +470,11 @@ export default function Quality() {
           onClose={toggleExportModal}
           searchOptions={options}
           columns={columns}
+        />
+
+        <ConversationInfo
+          conversationId={selectedConvId}
+          onClose={() => setSelectedConvId(undefined)}
         />
       </div>
     </div>

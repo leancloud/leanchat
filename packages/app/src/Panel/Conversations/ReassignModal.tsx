@@ -5,7 +5,7 @@ import { Modal, Select, SelectProps } from 'antd';
 import { useOperators } from '../hooks/operator';
 import { Avatar } from '../components/Avatar';
 import { assignconversation } from '../api/conversation';
-import { useConversationContext } from './ConversationContext';
+import { useConversationContext } from './contexts/ConversationContext';
 
 interface ReassignModalProps {
   open: boolean;

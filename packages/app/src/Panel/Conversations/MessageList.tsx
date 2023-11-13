@@ -23,7 +23,7 @@ import _ from 'lodash';
 import { Message as IMessage, MessageType, Operator, UserType } from '@/Panel/types';
 import { useNow } from '../contexts/NowContext';
 import { useConversationMessages, useVisitorMessages } from '../hooks/message';
-import { useConversationContext } from './ConversationContext';
+import { useConversationContext } from './contexts/ConversationContext';
 import style from './MessageList.module.css';
 import { bytesToSize } from './utils';
 import { useOperators } from '../hooks/operator';

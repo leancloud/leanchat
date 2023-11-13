@@ -1,9 +1,10 @@
 import { Button, Form, Input, Tabs, TabsProps } from 'antd';
+import cx from 'classnames';
 
 import { CategoryCascader } from '../components/CategoryCascader';
 import { useUpdateConversation } from '../hooks/conversation';
-import { useConversationContext } from './ConversationContext';
 import { useVisitor } from '../hooks/visitor';
+import { useConversationContext } from './contexts/ConversationContext';
 
 const tabsItems: TabsProps['items'] = [
   {
@@ -67,11 +68,13 @@ function VisitorInfo() {
   );
 }
 
-interface ConversationDetailProps {}
+interface ConversationDetailProps {
+  className?: string;
+}
 
-export function ConversationDetail({}: ConversationDetailProps) {
+export function ConversationDetail({ className }: ConversationDetailProps) {
   return (
-    <div className="w-[320px] border-l shrink-0 p-4 pt-2">
+    <div className={cx('p-4 pt-2', className)}>
       <Tabs size="small" items={tabsItems} />
     </div>
   );

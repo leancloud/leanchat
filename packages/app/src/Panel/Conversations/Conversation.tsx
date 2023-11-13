@@ -13,7 +13,7 @@ import { useSocket } from '@/socket';
 import { useCurrentUser } from '@/Panel/auth';
 import { useConversation } from '@/Panel/hooks/conversation';
 import { ConversationDetail } from './ConversationDetail';
-import { ConversationContext } from './ConversationContext';
+import { ConversationContext } from './contexts/ConversationContext';
 import { MessageList, MessageListRef } from './MessageList';
 import { Avatar } from '../components/Avatar';
 import { useOperators } from '../hooks/operator';
@@ -311,7 +311,7 @@ export function Conversation({ conversationId }: ConversationProps) {
 
         <ReassignModal open={showReassignModal} onClose={toggleReassignModal} />
 
-        <ConversationDetail />
+        <ConversationDetail className="w-[320px] border-l shrink-0" />
       </div>
     </ConversationContext.Provider>
   );
