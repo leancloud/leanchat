@@ -240,6 +240,7 @@ export function Conversation({ conversationId }: ConversationProps) {
               <textarea
                 ref={textareaRef}
                 className="outline-none resize-none w-full placeholder:!text-[#a8a8a8] leading-5 bg-white"
+                rows={1}
                 disabled={closed}
                 placeholder={closed ? '会话已结束' : '输入 / 选择快捷回复'}
                 value={closed ? '' : content}
