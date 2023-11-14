@@ -20,7 +20,7 @@ export default function Modern() {
   const [show, setShow] = useState(true);
   const [showEvaluationModal, setShowEvaluationModal] = useState(false);
 
-  const { connected, conversation, messages, send, evaluate, close } = useChat({
+  const { connected, reconnecting, conversation, messages, send, evaluate, close } = useChat({
     onInviteEvaluation: () => {
       setShowEvaluationModal(true);
     },
@@ -123,7 +123,7 @@ export default function Modern() {
             >
               <MessageList messages={messages} />
             </div>
-            {!connected && (
+            {reconnecting && (
               <div className="text-sm text-center text-[rgb(187,192,199)] bg-white leading-8">
                 连接断开，正在重连……
               </div>

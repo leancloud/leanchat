@@ -15,6 +15,7 @@ import { useAppContext } from './AppContext';
 interface ChatContextValue {
   socket: Socket;
   connected: boolean;
+  reconnecting: boolean;
   status?: string;
   conversation?: Conversation;
   messages: Message[];
@@ -44,23 +45,26 @@ interface ChatProps {
 export function Chat({ children }: ChatProps) {
   const { socket, iframe, emitter } = useAppContext();
   const [connected, setConnected] = useState(socket.connected);
+  const [reconnecting, setReconnecting] = useState(false);
 
   useEffect(() => {
-    const onConnect = () => {
-      setConnected(true);
-    };
-    const onDisconnect = (_reason: string) => {
-      setConnected(false);
-    };
+    const onConnect = () => setConnected(true);
+    const onDisconnect = () => setConnected(false);
+    const onReconnectAppempt = () => setReconnecting(true);
+    const onReconnect = () => setReconnecting(false);
     const onMessage = (msg: Message) => {
       setMessages((messages) => [...messages, msg]);
     };
     socket.on('connect', onConnect);
     socket.on('disconnect', onDisconnect);
+    socket.io.on('reconnect_attempt', onReconnectAppempt);
+    socket.io.on('reconnect', onReconnect);
     socket.on('message', onMessage);
     return () => {
       socket.off('connect', onConnect);
       socket.off('disconnect', onDisconnect);
+      socket.io.off('reconnect_attempt', onReconnectAppempt);
+      socket.io.off('reconnect', onReconnect);
       socket.off('message', onMessage);
     };
   }, [socket]);
@@ -72,12 +76,8 @@ export function Chat({ children }: ChatProps) {
   useEvent(socket, 'currentConversation', setConversation);
   useEvent(socket, 'initialized', (data) => {
     setStatus(data.status);
-    if (data.conversation) {
-      setConversation(data.conversation);
-    }
-    if (data.messages) {
-      setMessages(data.messages);
-    }
+    setMessages(data.messages);
+    setConversation(data.conversation);
     if (iframe.contentDocument) {
       const { style } = iframe.contentDocument.documentElement;
       style.setProperty('--color-primary', '#f60');
@@ -88,12 +88,9 @@ export function Chat({ children }: ChatProps) {
 
   const send = useCallback(
     (data: any) => {
-      if (status !== 'inService') {
-        return;
-      }
       socket.emit('message', data);
     },
-    [status, socket],
+    [socket],
   );
 
   const evaluate = useCallback(
@@ -109,7 +106,17 @@ export function Chat({ children }: ChatProps) {
 
   return (
     <ChatContext.Provider
-      value={{ socket, connected, status, conversation, messages, send, evaluate, close }}
+      value={{
+        socket,
+        connected,
+        reconnecting,
+        status,
+        conversation,
+        messages,
+        send,
+        evaluate,
+        close,
+      }}
     >
       {children}
     </ChatContext.Provider>
