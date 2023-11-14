@@ -77,26 +77,6 @@ export interface GetConversationMessageStatsOptions {
   operatorId?: string[];
 }
 
-export interface GetConversationRecordOptions {
-  from: Date;
-  to: Date;
-  skip?: number;
-  limit?: number;
-
-  channel?: Channel;
-  operatorId?: string;
-  visitorId?: string;
-  messageKeyword?: string;
-  messageFrom?: UserType;
-  duration?: NumberCondition;
-  averageResponseTime?: NumberCondition;
-  evaluationStar?: number;
-  queued?: boolean;
-  closedBy?: number;
-  consultationResult?: ConsultationResult;
-  categoryId?: string;
-}
-
 export interface SearchConversationOptions {
   from: Date;
   to: Date;

@@ -3,10 +3,7 @@ import { ZodValidationPipe } from 'nestjs-zod';
 import _ from 'lodash';
 
 import { ConversationService, StatsService } from 'src/chat/services';
-import {
-  GetConversationStatsDto,
-  GetConversationRecordDto,
-} from '../dtos/conversation';
+import { GetConversationStatsDto } from '../dtos/conversation';
 import { AuthGuard } from '../guards/auth.guard';
 import { GetEvaluationStatsDto, GetOperatorStatsDto } from '../dtos/stats';
 import { OnlineTimeService } from '../services';
@@ -29,16 +26,6 @@ export class StatisticsController {
   @Get('conversation-message')
   getConversationMessageStatistics(@Query() query: GetConversationStatsDto) {
     return this.conversationService.getConversationMessageStats(query);
-  }
-
-  @Get('conversation-record')
-  getConversationRecord(@Query() query: GetConversationRecordDto) {
-    const { page = 1, pageSize = 10, ...options } = query;
-    return this.conversationService.getConversationRecord({
-      ...options,
-      skip: (page - 1) * pageSize,
-      limit: pageSize,
-    });
   }
 
   @Get('operator')
