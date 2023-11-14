@@ -6,7 +6,6 @@ export interface GreetingConfig {
 }
 
 export interface NoReadyOperatorMessageConfig {
-  enabled: boolean;
   text: string;
 }
 
@@ -21,11 +20,9 @@ export interface AutoCloseConfig {
 export interface QueueConfig {
   capacity: number;
   fullMessage: {
-    enabled: boolean;
     text: string;
   };
   queuedMessage: {
-    enabled: boolean;
     text: string;
   };
 }

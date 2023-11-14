@@ -360,7 +360,7 @@ export class ChatService {
     });
 
     const queueConfig = await this.configService.get('queue');
-    if (queueConfig && queueConfig.queuedMessage.enabled) {
+    if (queueConfig) {
       const queuePosition = await this.getQueuePosition(conversationId);
       const template = Handlebars.compile(queueConfig.queuedMessage.text);
       await this.createMessage({

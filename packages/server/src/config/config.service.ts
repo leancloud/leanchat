@@ -5,6 +5,7 @@ import { LRUCache } from 'lru-cache';
 
 import { Config } from './config.model';
 import { ConfigKeys } from './interfaces';
+import { DEFAULT_CONFIGS } from './constants';
 
 @Injectable()
 export class ConfigService {
@@ -48,6 +49,8 @@ export class ConfigService {
       this.cache.set(key, config.value);
       return config.value as T;
     }
+
+    return DEFAULT_CONFIGS[key as keyof typeof DEFAULT_CONFIGS] as T;
   }
 
   get<T extends keyof ConfigKeys>(key: T): Promise<ConfigKeys[T] | undefined> {

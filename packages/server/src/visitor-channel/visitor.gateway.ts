@@ -90,7 +90,7 @@ export class VisitorGateway implements OnModuleInit, OnGatewayConnection {
     socket.join(visitorId);
 
     const initData: WidgetInitialized = {
-      status: 'inService',
+      status: 'online',
       messages: [],
     };
 
@@ -99,21 +99,21 @@ export class VisitorGateway implements OnModuleInit, OnGatewayConnection {
       const queueLength = await this.chatService.getQueueLength();
       if (queueLength > queueConfig.capacity) {
         initData.status = 'busy';
-        if (queueConfig.fullMessage.enabled) {
-          initData.messages.push(
-            MessageDto.fromText('busy', queueConfig.fullMessage.text),
-          );
-        }
+        initData.messages.push(
+          MessageDto.fromText('busy', queueConfig.fullMessage.text),
+        );
         socket.emit('initialized', initData);
+        socket.disconnect();
         return;
       }
     }
 
     if (!(await this.chatService.hasReadyOperator())) {
+      initData.status = 'offline';
       const noReadyOperatorMessageConfig = await this.configService.get(
         'noReadyOperatorMessage',
       );
-      if (noReadyOperatorMessageConfig?.enabled) {
+      if (noReadyOperatorMessageConfig) {
         initData.messages.push(
           MessageDto.fromText(
             'noReadyOperator',
@@ -122,6 +122,7 @@ export class VisitorGateway implements OnModuleInit, OnGatewayConnection {
         );
       }
       socket.emit('initialized', initData);
+      socket.disconnect();
       return;
     }
 
