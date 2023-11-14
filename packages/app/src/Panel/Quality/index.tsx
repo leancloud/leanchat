@@ -330,6 +330,11 @@ export default function Quality() {
       render: get('stats.visitorMessageCount'),
     },
     {
+      key: 'round',
+      title: '会话回合数',
+      render: get('stats.round'),
+    },
+    {
       key: 'duration',
       title: '会话持续时长',
       render: flow([get('stats.duration'), renderTime]),
