@@ -1,18 +1,24 @@
 import { ReactNode, useMemo, useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
-import { Controller, FormProvider, useController, useForm, useWatch } from 'react-hook-form';
+import { Controller, FormProvider, useController, useForm } from 'react-hook-form';
 import { Button, Checkbox, DatePicker, Form, Input, InputNumber, Select, Table } from 'antd';
+import { ColumnType } from 'antd/es/table';
 import dayjs from 'dayjs';
 import _ from 'lodash';
+import { useToggle } from 'react-use';
 
+import * as render from '@/Panel/Quality/render';
 import { ChannelSelect } from './components/ChannelSelect';
 import { OperatorSelect } from '../components/OperatorSelect';
 import { CategoryCascader } from '../components/CategoryCascader';
-import { GetConversationRecordStatsOptions, getConversationRecordStats } from '../api/statistics';
 import { useCategories } from '../hooks/category';
 import { ConsultationResult, UserType } from '../types';
 import { useOperators } from '../hooks/operator';
-import { getEvaluationStarText } from './utils';
+import { SearchConversationOptions, searchConversation } from '../api/conversation';
+import { get } from 'lodash/fp';
+import { useGetCategoryName, useGetOperatorName } from '../Quality';
+import { flow } from '../Quality/helpers';
+import { ExportDataColumn, ExportDataDialog } from '../Quality/components/ExportDataDialog';
 
 interface FilterGroupProps {
   label?: ReactNode;
@@ -28,45 +34,6 @@ function FilterGroup({ label, children }: FilterGroupProps) {
   );
 }
 
-function DateRangeField() {
-  const fromController = useController({ name: 'from', rules: { required: true } });
-  const toController = useController({ name: 'to', rules: { required: true } });
-
-  return (
-    <DatePicker.RangePicker
-      value={[fromController.field.value, toController.field.value]}
-      onChange={(values) => {
-        fromController.field.onChange(values?.[0] ?? undefined);
-        toController.field.onChange(values?.[1] ?? undefined);
-      }}
-      status={(fromController.fieldState.error || toController.fieldState.error) && 'error'}
-    />
-  );
-}
-
-function KeywordField() {
-  const typeController = useController({ name: 'keyword.type', defaultValue: 1 });
-  const valueController = useController({ name: 'keyword.value' });
-
-  return (
-    <Input
-      {...valueController.field}
-      allowClear
-      addonBefore={
-        <Select
-          {...typeController.field}
-          options={[
-            { label: '客服会话内容', value: 1 },
-            { label: '用户会话内容', value: 0 },
-          ]}
-          style={{ width: 140, textAlign: 'left' }}
-        />
-      }
-      style={{ width: 300 }}
-    />
-  );
-}
-
 interface NumberFieldProps {
   name: string;
   label: ReactNode;
@@ -74,7 +41,7 @@ interface NumberFieldProps {
 }
 
 function NumberField({ name, label, suffix }: NumberFieldProps) {
-  const typeController = useController({ name: `${name}.type`, defaultValue: '>' });
+  const typeController = useController({ name: `${name}.type`, defaultValue: 'gt' });
   const valueController = useController({ name: `${name}.value` });
 
   return (
@@ -86,8 +53,8 @@ function NumberField({ name, label, suffix }: NumberFieldProps) {
           <Select
             {...typeController.field}
             options={[
-              { label: '大于', value: '>' },
-              { label: '小于', value: '<' },
+              { label: '大于', value: 'gt' },
+              { label: '小于', value: 'lt' },
             ]}
             style={{ width: 70, textAlign: 'left' }}
           />
@@ -104,90 +71,32 @@ interface NumberFieldValue {
   value: number;
 }
 
-function encodeNumberFieldValue({ type, value }: NumberFieldValue) {
-  return `${type}${value * 1000}`;
-}
-
-function QueuedField() {
-  return (
-    <Controller
-      name="queued"
-      render={({ field }) => (
-        <Select
-          {...field}
-          allowClear
-          placeholder="排队情况"
-          options={[
-            { label: '未排队', value: false },
-            { label: '排队', value: true },
-          ]}
-          style={{ width: 100 }}
-        />
-      )}
-    />
-  );
-}
-
-function ClosedByField() {
-  return (
-    <Controller
-      name="closedBy"
-      render={({ field }) => (
-        <Select
-          {...field}
-          allowClear
-          placeholder="会话结束方式"
-          options={[
-            { label: '客服关闭', value: UserType.Operator },
-            { label: '用户关闭', value: UserType.Visitor },
-            { label: '系统关闭', value: UserType.System },
-          ]}
-        />
-      )}
-    />
-  );
-}
-
-function ConsultationResultField() {
-  return (
-    <Controller
-      name="consultationResult"
-      render={({ field }) => (
-        <Select
-          {...field}
-          allowClear
-          placeholder="咨询结果"
-          options={[
-            { label: '有效咨询', value: ConsultationResult.Valid },
-            { label: '无效咨询', value: ConsultationResult.Invalid },
-            { label: '客服无应答', value: ConsultationResult.OperatorNoResponse },
-          ]}
-          style={{ width: 150 }}
-        />
-      )}
-    />
-  );
+function encodeNumberFieldValue(value?: Partial<NumberFieldValue>) {
+  if (value && value.type && typeof value.value === 'number') {
+    return { [value.type]: value.value };
+  }
 }
 
 interface FilterFormData {
-  from: dayjs.Dayjs;
-  to: dayjs.Dayjs;
-  channel?: string;
+  dateRange: [dayjs.Dayjs, dayjs.Dayjs];
+  channel?: number;
   operatorId?: string;
   extra?: boolean;
-  keyword?: {
-    type: number;
-    value: string;
+  message?: {
+    from: number;
+    text: string;
   };
   duration?: {
-    type: '>' | '<';
-    value: number;
+    type: 'gt' | 'lt';
+    value?: number;
   };
   averageResponseTime?: {
-    type: '>' | '<';
-    value: number;
+    type: 'gt' | 'lt';
+    value?: number;
   };
-  evaluationStar?: number;
+  evaluation?: {
+    star?: number;
+  };
   queued?: boolean;
   closedBy?: number;
   consultationResult?: number;
@@ -197,18 +106,24 @@ interface FilterFormData {
 interface FilterFormProps {
   initData?: FilterFormData;
   onChange: (data: FilterFormData) => void;
+  onExport: () => void;
 }
 
-function FilterForm({ initData, onChange }: FilterFormProps) {
+function FilterForm({ initData, onChange, onExport }: FilterFormProps) {
   const form = useForm({ defaultValues: initData });
-
-  const extra = useWatch({ control: form.control, name: 'extra' });
+  const extra = form.watch('extra');
 
   return (
     <FormProvider {...form}>
       <Form onFinish={form.handleSubmit(onChange)} onReset={() => form.reset()}>
         <div className="flex flex-wrap items-center gap-2">
-          <DateRangeField />
+          <Controller
+            name="dateRange"
+            rules={{ required: true }}
+            render={({ field, fieldState: { error } }) => (
+              <DatePicker.RangePicker {...field} allowClear={false} status={error && 'error'} />
+            )}
+          />
 
           <Controller
             name="channel"
@@ -242,14 +157,39 @@ function FilterForm({ initData, onChange }: FilterFormProps) {
         {extra && (
           <div className="mt-3 border bg-[#f7f7f7] rounded p-4 space-y-3">
             <FilterGroup label="会话筛选">
-              <KeywordField />
+              <Controller
+                name="message.text"
+                render={({ field }) => (
+                  <Input
+                    {...field}
+                    allowClear
+                    addonBefore={
+                      <Controller
+                        name="message.from"
+                        defaultValue={UserType.Operator}
+                        render={({ field }) => (
+                          <Select
+                            {...field}
+                            options={[
+                              { label: '客服会话内容', value: UserType.Operator },
+                              { label: '用户会话内容', value: UserType.Visitor },
+                            ]}
+                            style={{ width: 140, textAlign: 'left' }}
+                          />
+                        )}
+                      />
+                    }
+                    style={{ width: 300 }}
+                  />
+                )}
+              />
               <NumberField name="duration" label="会话持续时长" suffix="秒" />
               <NumberField name="averageResponseTime" label="会话平均响应时长" suffix="秒" />
             </FilterGroup>
 
             <FilterGroup label="评价筛选">
               <Controller
-                name="evaluationStar"
+                name="evaluation.star"
                 render={({ field }) => (
                   <Select
                     {...field}
@@ -266,9 +206,52 @@ function FilterForm({ initData, onChange }: FilterFormProps) {
             </FilterGroup>
 
             <FilterGroup label="状态情况">
-              <QueuedField />
-              <ClosedByField />
-              <ConsultationResultField />
+              <Controller
+                name="queued"
+                render={({ field }) => (
+                  <Select
+                    {...field}
+                    allowClear
+                    placeholder="排队情况"
+                    options={[
+                      { label: '未排队', value: false },
+                      { label: '排队', value: true },
+                    ]}
+                    style={{ width: 100 }}
+                  />
+                )}
+              />
+              <Controller
+                name="closedBy"
+                render={({ field }) => (
+                  <Select
+                    {...field}
+                    allowClear
+                    placeholder="会话结束方式"
+                    options={[
+                      { label: '客服关闭', value: UserType.Operator },
+                      { label: '用户关闭', value: UserType.Visitor },
+                      { label: '系统关闭', value: UserType.System },
+                    ]}
+                  />
+                )}
+              />
+              <Controller
+                name="consultationResult"
+                render={({ field }) => (
+                  <Select
+                    {...field}
+                    allowClear
+                    placeholder="咨询结果"
+                    options={[
+                      { label: '有效咨询', value: ConsultationResult.Valid },
+                      { label: '无效咨询', value: ConsultationResult.Invalid },
+                      { label: '客服无应答', value: ConsultationResult.OperatorNoResponse },
+                    ]}
+                    style={{ width: 150 }}
+                  />
+                )}
+              />
             </FilterGroup>
 
             <FilterGroup label="服务总结">
@@ -286,117 +269,191 @@ function FilterForm({ initData, onChange }: FilterFormProps) {
           </div>
         )}
 
-        <div className="mt-3 space-x-2">
+        <div className="mt-3 flex gap-2">
           <Button type="primary" htmlType="submit">
             查询
           </Button>
           <Button htmlType="reset">重置</Button>
+          <Button className="ml-auto" onClick={onExport}>
+            导出
+          </Button>
         </div>
       </Form>
     </FormProvider>
   );
 }
 
-function renderDuration(ms?: number) {
-  if (ms === undefined) {
-    return '-';
-  }
-  const second = Math.floor(ms / 1000);
-  const minute = Math.floor(second / 60);
-  if (minute) {
-    return `${minute}分${second % 60}秒`;
-  }
-  return `${second}秒`;
-}
-
-function renderDate(date?: string | number | dayjs.Dayjs) {
-  if (date === undefined) {
-    return '-';
-  }
-  return dayjs(date).format('YYYY-MM-DD HH:mm:ss');
-}
-
 export function ConversationRecord() {
-  const [formData, setFormData] = useState<FilterFormData>(() => ({
-    from: dayjs(),
-    to: dayjs(),
-  }));
+  const [formData, setFormData] = useState<FilterFormData>({
+    dateRange: [dayjs(), dayjs()],
+  });
 
   const [page, setPage] = useState(1);
   const [pageSize, setPageSize] = useState(20);
 
-  const options = useMemo(() => {
-    const {
-      from,
-      to,
-      channel,
-      operatorId,
-      extra,
-      keyword,
-      duration,
-      averageResponseTime,
-      evaluationStar,
-      queued,
-      closedBy,
-      consultationResult,
-    } = formData;
-
-    const options: GetConversationRecordStatsOptions = {
-      from: from.startOf('day').toISOString(),
-      to: to.endOf('day').toISOString(),
-      channel,
-      operatorId,
+  const options = useMemo<SearchConversationOptions>(() => {
+    return {
+      from: formData.dateRange[0].startOf('day').toISOString(),
+      to: formData.dateRange[1].endOf('day').toISOString(),
+      channel: formData.channel,
+      operatorId: formData.operatorId ? [formData.operatorId] : undefined,
+      ...(formData.extra
+        ? {
+            message: formData.message,
+            duration: encodeNumberFieldValue(formData.duration),
+            averageResponseTime: encodeNumberFieldValue(formData.averageResponseTime),
+            evaluation: formData.evaluation,
+            queued: formData.queued,
+            closedBy: formData.closedBy,
+            consultationResult: formData.consultationResult,
+            categoryId: formData.categoryId ? [formData.categoryId] : undefined,
+          }
+        : {}),
       page,
       pageSize,
     };
-    if (extra) {
-      if (keyword?.value) {
-        options.messageKeyword = keyword.value;
-        options.messageFrom = keyword.type;
-      }
-      if (duration?.value) {
-        options.duration = encodeNumberFieldValue(duration);
-      }
-      if (averageResponseTime?.value) {
-        options.averageResponseTime = encodeNumberFieldValue(averageResponseTime);
-      }
-      options.evaluationStar = evaluationStar;
-      options.queued = queued;
-      options.closedBy = closedBy;
-      options.consultationResult = consultationResult;
-      options.categoryId = formData.categoryId;
-    }
-    return options;
   }, [formData, page, pageSize]);
 
   const { data, isFetching } = useQuery({
-    queryKey: ['ConversationRecordStats', options],
-    queryFn: () => getConversationRecordStats(options),
+    queryKey: ['ConversationRecord', options],
+    queryFn: () => searchConversation(options),
   });
 
   const { data: categories } = useCategories();
-  const categoryMap = useMemo(() => _.keyBy(categories, (c) => c.id), [categories]);
-  const getCategoryPath = (id: string): string[] => {
-    const category = categoryMap[id];
-    if (category) {
-      if (category.parentId) {
-        return [...getCategoryPath(category.parentId), category.name];
-      }
-      return [category.name];
-    }
-    return [];
-  };
+  const getCategoryName = useGetCategoryName(categories);
 
   const { data: operators } = useOperators();
-  const operatorMap = useMemo(() => _.keyBy(operators, (o) => o.id), [operators]);
+  const getOperatorName = useGetOperatorName(operators);
+
+  const columns: (ColumnType<any> & ExportDataColumn)[] = [
+    {
+      key: 'id',
+      title: '会话ID',
+      render: render.id,
+    },
+    {
+      key: 'createdAt',
+      title: '会话开始时间',
+      render: render.createdAt,
+    },
+    {
+      key: 'closedAt',
+      title: '会话结束时间',
+      render: render.closedAt,
+    },
+    {
+      key: 'visitorId',
+      title: '用户ID',
+      render: render.visitorId,
+    },
+    {
+      key: 'visitorName',
+      title: '用户名称',
+      render: get('visitorName'),
+    },
+    {
+      key: 'categoryId',
+      title: '分类',
+      render: flow([get('categoryId'), getCategoryName]),
+    },
+    {
+      key: 'evaluationStar',
+      title: '满意度',
+      render: render.evaluationStar,
+    },
+    {
+      key: 'messageCount',
+      title: '总会话消息数',
+      render: render.messageCount,
+    },
+    {
+      key: 'operatorId',
+      title: '客服ID',
+      render: render.operatorId,
+    },
+    {
+      key: 'operatorName',
+      title: '客服名称',
+      render: render.operatorName(getOperatorName),
+    },
+    {
+      key: 'consultationResult',
+      title: '咨询结果',
+      render: render.consultationResult,
+    },
+    {
+      key: 'evaluationInvited',
+      title: '是否邀请评价',
+      render: render.evaluationInvited,
+    },
+    {
+      key: 'receptionTime',
+      title: '会话总时长',
+      render: render.receptionTime,
+    },
+    {
+      key: 'firstResponseTime',
+      title: '首次响应时长',
+      render: render.firstResponseTime,
+    },
+    {
+      key: 'firstMessageFromType',
+      title: '第一次发言者',
+      render: render.firstMessageFromType,
+    },
+    {
+      key: 'lastMessageCreator',
+      title: '最后发言者',
+      render: render.lastMessageFromType,
+    },
+    {
+      key: 'visitorLastMessageCreatedAt',
+      title: '用户最后消息时间',
+      render: render.visitorLastMessageCreatedAt,
+    },
+    {
+      key: 'operatorLastMessageCreatedAt',
+      title: '客服最后消息时间',
+      render: render.operatorLastMessageCreatedAt,
+    },
+    {
+      key: 'firstMessageCreatedAt',
+      title: '第一条消息时间',
+      render: render.firstMessageCreatedAt,
+    },
+    {
+      key: 'lastMessageCreatedAt',
+      title: '最后一条消息时间',
+      render: render.lastMessageCreatedAt,
+    },
+    {
+      key: 'firstOperatorJoinedAt',
+      title: '成功接入客服时间',
+      render: render.firstOperatorJoinedAt,
+    },
+    {
+      key: 'operatorFirstMessageCreatedAt',
+      title: '客服首次回复时间',
+      render: render.operatorFirstMessageCreatedAt,
+    },
+  ];
+
+  const [exportDialogOpen, toggleExportDialog] = useToggle(false);
 
   return (
     <div>
-      <FilterForm initData={formData} onChange={setFormData} />
+      <FilterForm
+        initData={formData}
+        onChange={(data) => {
+          setFormData(data);
+          setPage(1);
+        }}
+        onExport={toggleExportDialog}
+      />
 
       <Table
         className="mt-5"
-        dataSource={data?.items}
+        dataSource={data?.data}
         rowKey="id"
         scroll={{ x: 'max-content' }}
         loading={isFetching}
@@ -409,189 +466,14 @@ export function ConversationRecord() {
           },
           showSizeChanger: true,
         }}
-        columns={[
-          {
-            dataIndex: 'id',
-            title: '会话ID',
-          },
-          {
-            dataIndex: 'createdAt',
-            title: '会话开始时间',
-            render: renderDate,
-          },
-          {
-            dataIndex: 'closedAt',
-            title: '会话结束时间',
-            render: renderDate,
-          },
-          {
-            dataIndex: 'visitorId',
-            title: '用户ID',
-          },
-          {
-            dataIndex: 'visitorName',
-            title: '用户名称',
-            render: (name) => name || '-',
-          },
-          {
-            dataIndex: 'categoryId',
-            title: '分类',
-            render: (categoryId: string) => getCategoryPath(categoryId).join(' / ') || '-',
-          },
-          {
-            dataIndex: ['evaluation', 'star'],
-            title: '满意度',
-            render: getEvaluationStarText,
-          },
-          {
-            key: 'messageCount',
-            title: '总会话消息数',
-            render: (record) => {
-              const visitor = record.stats.visitorMessageCount || 0;
-              const operator = record.stats.operatorMessageCount || 0;
-              return visitor + operator;
-            },
-          },
-          {
-            dataIndex: 'operatorId',
-            title: '客服ID',
-          },
-          {
-            key: 'operatorName',
-            dataIndex: 'operatorId',
-            title: '客服名称',
-            render: (operatorId) => {
-              const operator = operatorMap[operatorId];
-              if (operator) {
-                return `${operator.internalName}(${operator.externalName})`;
-              }
-              return 'unknown';
-            },
-          },
-          {
-            dataIndex: ['stats', 'consultationResult'],
-            title: '咨询结果',
-            render: (result: number) =>
-              ({
-                [ConsultationResult.Valid]: '有效咨询',
-                [ConsultationResult.Invalid]: '无效咨询',
-                [ConsultationResult.OperatorNoResponse]: '客服无应答',
-              })[result],
-          },
-          {
-            dataIndex: 'evaluationInvitedAt',
-            title: '是否邀请评价',
-            render: (value) => (value ? '已邀请' : '未邀请'),
-          },
-          {
-            dataIndex: ['stats', 'receptionTime'],
-            title: '会话总时长',
-            render: renderDuration,
-          },
-          {
-            dataIndex: ['stats', 'firstResponseTime'],
-            title: '首次响应时长',
-            render: renderDuration,
-          },
-          {
-            key: 'firstMessageCreator',
-            title: '第一次发言者',
-            render: ({
-              stats: { operatorFirstMessageCreatedAt, visitorFirstMessageCreatedAt },
-            }) => {
-              if (operatorFirstMessageCreatedAt && visitorFirstMessageCreatedAt) {
-                return dayjs(operatorFirstMessageCreatedAt).isBefore(visitorFirstMessageCreatedAt)
-                  ? '客服'
-                  : '用户';
-              } else if (operatorFirstMessageCreatedAt) {
-                return '客服';
-              } else if (visitorFirstMessageCreatedAt) {
-                return '用户';
-              } else {
-                return '-';
-              }
-            },
-          },
-          {
-            key: 'lastMessageCreator',
-            title: '最后发言者',
-            render: ({ stats: { operatorLastMessageCreatedAt, visitorLastMessageCreatedAt } }) => {
-              if (operatorLastMessageCreatedAt && visitorLastMessageCreatedAt) {
-                return dayjs(operatorLastMessageCreatedAt).isAfter(visitorLastMessageCreatedAt)
-                  ? '客服'
-                  : '用户';
-              } else if (operatorLastMessageCreatedAt) {
-                return '客服';
-              } else if (visitorLastMessageCreatedAt) {
-                return '用户';
-              } else {
-                return '-';
-              }
-            },
-          },
-          {
-            dataIndex: ['stats', 'visitorLastMessageCreatedAt'],
-            title: '用户最后消息时间',
-            render: renderDate,
-          },
-          {
-            dataIndex: ['stats', 'operatorLastMessageCreatedAt'],
-            title: '客服最后消息时间',
-            render: renderDate,
-          },
-          {
-            key: 'firstMessageCreatedAt',
-            title: '第一条消息时间',
-            render: ({
-              stats: { operatorFirstMessageCreatedAt, visitorFirstMessageCreatedAt },
-            }) => {
-              if (operatorFirstMessageCreatedAt && visitorFirstMessageCreatedAt) {
-                const d1 = dayjs(operatorFirstMessageCreatedAt);
-                const d2 = dayjs(visitorFirstMessageCreatedAt);
-                if (d1.isBefore(d2)) {
-                  return renderDate(d1);
-                } else {
-                  return renderDate(d2);
-                }
-              }
-              if (operatorFirstMessageCreatedAt) {
-                return renderDate(operatorFirstMessageCreatedAt);
-              }
-              if (visitorFirstMessageCreatedAt) {
-                return renderDate(visitorFirstMessageCreatedAt);
-              }
-              return '-';
-            },
-          },
-          {
-            key: 'lastMessageCreatedAt',
-            title: '最后一条消息时间',
-            render: ({ stats }) => {
-              if (stats.operatorLastMessageCreatedAt && stats.visitorLastMessageCreatedAt) {
-                const d1 = dayjs(stats.operatorLastMessageCreatedAt);
-                const d2 = dayjs(stats.visitorLastMessageCreatedAt);
-                return d1.isAfter(d2) ? renderDate(d1) : renderDate(d2);
-              }
-              if (stats.operatorLastMessageCreatedAt) {
-                return renderDate(stats.operatorLastMessageCreatedAt);
-              }
-              if (stats.visitorLastMessageCreatedAt) {
-                return renderDate(stats.visitorLastMessageCreatedAt);
-              }
-              return '-';
-            },
-          },
-          {
-            dataIndex: ['stats', 'firstOperatorJoinedAt'],
-            title: '成功接入客服时间',
-            render: renderDate,
-          },
-          {
-            dataIndex: ['stats', 'operatorFirstMessageCreatedAt'],
-            title: '客服首次回复时间',
-            render: renderDate,
-          },
-        ]}
+        columns={columns}
+      />
+
+      <ExportDataDialog
+        open={exportDialogOpen}
+        onClose={toggleExportDialog}
+        searchOptions={options}
+        columns={columns}
       />
     </div>
   );

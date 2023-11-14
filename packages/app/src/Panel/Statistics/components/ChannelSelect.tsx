@@ -9,7 +9,7 @@ export const ChannelSelect = forwardRef<RefSelectProps, SelectProps>((props, ref
       options={[
         {
           label: '在线聊天',
-          value: 0,
+          value: 1,
         },
       ]}
       {...props}

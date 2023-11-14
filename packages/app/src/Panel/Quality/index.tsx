@@ -1,28 +1,27 @@
 import { useCallback, useMemo, useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { useToggle } from 'react-use';
-import { Button, Checkbox, Modal, Table } from 'antd';
+import { Button, Table } from 'antd';
 import { ColumnType } from 'antd/es/table';
-import { CheckboxValueType } from 'antd/es/checkbox/Group';
 import dayjs from 'dayjs';
 import _ from 'lodash';
-import { eq, find, get, has } from 'lodash/fp';
-import Papa from 'papaparse';
+import { eq, find, get } from 'lodash/fp';
 
 import {
   ConversationData,
   SearchConversationOptions,
   searchConversation,
 } from '@/Panel/api/conversation';
-import { useExportData as useExportData2 } from '@/Panel/hooks/useExportData';
 import { SearchForm, SearchFormData } from './components/SearchForm';
 import { useCategories } from '../hooks/category';
 import { Category, Operator, UserType } from '../types';
 import { useOperators } from '../hooks/operator';
-import { downloadCSV, flow, formatDate, percent, renderTime } from './helpers';
+import { flow, formatDate, renderTime } from './helpers';
 import { ConversationInfo } from './components/ConversationInfo';
+import * as render from './render';
+import { ExportDataDialog, ExportDataColumn } from './components/ExportDataDialog';
 
-function useGetCategoryName(categories?: Category[]) {
+export function useGetCategoryName(categories?: Category[]) {
   const categoryMap = useMemo(() => _.keyBy(categories, (c) => c.id), [categories]);
   const getCategoryPath = useCallback(
     (id: string): Category[] => {
@@ -44,179 +43,13 @@ function useGetCategoryName(categories?: Category[]) {
   );
 }
 
-function useGetOperatorName(operators?: Operator[]) {
+export function useGetOperatorName(operators?: Operator[]) {
   const operatorMap = useMemo(() => _.keyBy(operators, (o) => o.id), [operators]);
   return useCallback(
     (id: string) => {
       return operatorMap[id]?.internalName;
     },
     [operatorMap],
-  );
-}
-
-const getFirstMessageUserType = (data: ConversationData) => {
-  if (data.stats) {
-    const { visitorFirstMessageCreatedAt: v, operatorFirstMessageCreatedAt: o } = data.stats;
-    if (v && o) {
-      return dayjs(v).isBefore(o) ? '用户' : '客服';
-    }
-    if (v) {
-      return '用户';
-    }
-    if (o) {
-      return '客服';
-    }
-  }
-};
-
-const getLastMessageUserType = (data: ConversationData) => {
-  if (data.stats) {
-    const { visitorFirstMessageCreatedAt: v, operatorFirstMessageCreatedAt: o } = data.stats;
-    if (v && o) {
-      return dayjs(v).isAfter(o) ? '用户' : '客服';
-    }
-    if (v) {
-      return '用户';
-    }
-    if (o) {
-      return '客服';
-    }
-  }
-};
-
-function getFirstMessageCreatedAt(data: ConversationData) {
-  if (data.stats) {
-    const { operatorFirstMessageCreatedAt: o, visitorFirstMessageCreatedAt: v } = data.stats;
-    if (o && v) {
-      return dayjs(o).isBefore(v) ? o : v;
-    }
-    return o || v;
-  }
-}
-
-function getLastMessageCreatedAt(data: ConversationData) {
-  if (data.stats) {
-    const { operatorLastMessageCreatedAt: o, visitorLastMessageCreatedAt: v } = data.stats;
-    if (o && v) {
-      return dayjs(o).isAfter(v) ? o : v;
-    }
-    return o || v;
-  }
-}
-
-function getChatDuration(data: ConversationData) {
-  const first = getFirstMessageCreatedAt(data);
-  const last = getLastMessageCreatedAt(data);
-  if (first && last) {
-    return dayjs(last).diff(first, 'ms');
-  }
-}
-
-interface ExportDataColumn {
-  key: string;
-  title: string;
-  render: (value: any) => any;
-}
-
-interface ExportDataDialogProps {
-  open?: boolean;
-  onClose: () => void;
-  searchOptions: SearchConversationOptions;
-  columns: ExportDataColumn[];
-}
-
-function ExportDataDialog({ open, onClose, searchOptions, columns }: ExportDataDialogProps) {
-  const [checkedCols, setCheckedCols] = useState<CheckboxValueType[]>(
-    columns.map((col) => col.key),
-  );
-
-  const [progress, setProgress] = useState(0);
-
-  const { exportData, isLoading, cancel } = useExportData2({
-    fetchData: (cursor) => {
-      return searchConversation({
-        ...searchOptions,
-        page: 1,
-        pageSize: 1000,
-        from: cursor || searchOptions.from,
-      });
-    },
-    getNextCursor: (lastData) => {
-      if (lastData.data.length < 1000) {
-        return;
-      }
-      const conv = _.last(lastData.data);
-      if (conv) {
-        return dayjs(conv.createdAt).add(1, 'ms').toISOString();
-      }
-    },
-    delay: 0,
-    onProgress: ({ totalCount }, data) => {
-      const loaded = _.sum(data.map((t) => t.data.length));
-      setProgress(percent(loaded, loaded + totalCount));
-    },
-    onSuccess: (data) => {
-      const cols = columns.filter((col) => checkedCols.includes(col.key));
-      const rows = data.flatMap((t) => t.data).map((data) => cols.map((col) => col.render(data)));
-      const content = Papa.unparse({
-        fields: cols.map((col) => col.title),
-        data: rows,
-      });
-      downloadCSV(content, '导出数据.csv');
-    },
-  });
-
-  const handleCheckAll = () => {
-    if (checkedCols.length === columns.length) {
-      setCheckedCols([]);
-    } else {
-      setCheckedCols(columns.map((col) => col.key));
-    }
-  };
-
-  const handleExport = () => {
-    setProgress(0);
-    exportData();
-  };
-
-  const handleClose = () => {
-    cancel();
-    onClose();
-  };
-
-  return (
-    <Modal
-      title="导出数据"
-      open={open}
-      onCancel={handleClose}
-      maskClosable={false}
-      okText={isLoading ? `${progress}%` : '导出'}
-      okButtonProps={{ disabled: checkedCols.length === 0 }}
-      onOk={handleExport}
-      confirmLoading={isLoading}
-    >
-      <div className="mt-4 mb-2">
-        <div className="mb-2 font-medium">
-          <span className="mr-2">选择字段</span>
-          <Checkbox
-            checked={checkedCols.length === columns.length}
-            indeterminate={checkedCols.length > 0 && checkedCols.length < columns.length}
-            onChange={handleCheckAll}
-          >
-            全选
-          </Checkbox>
-        </div>
-        <Checkbox.Group disabled={false} value={checkedCols} onChange={setCheckedCols}>
-          <div className="grid grid-cols-3 gap-x-2 gap-y-1">
-            {columns.map((col) => (
-              <Checkbox key={col.key} value={col.key}>
-                {col.title}
-              </Checkbox>
-            ))}
-          </div>
-        </Checkbox.Group>
-      </div>
-    </Modal>
   );
 }
 
@@ -229,9 +62,8 @@ export default function Quality() {
   });
 
   const { data } = useQuery({
-    enabled: !!options,
     queryKey: ['SearchConversationResult', options],
-    queryFn: () => searchConversation(options!),
+    queryFn: () => searchConversation(options),
   });
 
   const handleSearchFormSubmit = (data: SearchFormData) => {
@@ -280,17 +112,17 @@ export default function Quality() {
     {
       key: 'id',
       title: '会话ID',
-      render: (data: ConversationData) => data.id,
+      render: render.id,
     },
     {
       key: 'createdAt',
       title: '会话开始时间',
-      render: flow([get('createdAt'), formatDate]),
+      render: render.createdAt,
     },
     {
       key: 'closedAt',
       title: '会话结束时间',
-      render: flow([get('closedAt'), formatDate]),
+      render: render.closedAt,
     },
     {
       key: 'categoryId',
@@ -300,12 +132,12 @@ export default function Quality() {
     {
       key: 'visitorId',
       title: '用户ID',
-      render: get('visitorId'),
+      render: render.visitorId,
     },
     {
       key: 'operatorId',
       title: '负责客服',
-      render: flow([get('operatorId'), getOperatorName]),
+      render: flow([render.operatorId, getOperatorName]),
     },
     {
       key: 'joinedOperatorIds',
@@ -356,20 +188,14 @@ export default function Quality() {
       ]),
     },
     {
-      key: 'evaluationInvitedAt',
+      key: 'evaluationInvited',
       title: '是否邀请评价',
-      render: _.cond([
-        [has('evaluationInvitedAt'), _.constant('已邀请')],
-        [_.stubTrue, _.constant('未邀请')],
-      ]),
+      render: render.evaluationInvited,
     },
     {
       key: 'evaluationStar',
       title: '满意度',
-      render: flow([
-        get('evaluation.star'),
-        (star: number) => [, '非常不满意', '不满意', '一般', '满意', '非常满意'][star],
-      ]),
+      render: render.evaluationStar,
     },
     {
       key: 'evaluationFeedback',
@@ -384,22 +210,22 @@ export default function Quality() {
     {
       key: 'firstMessageFrom',
       title: '第一次发言者类型',
-      render: getFirstMessageUserType,
+      render: render.firstMessageFromType,
     },
     {
       key: 'firstMessageCreatedAt',
       title: '第一条消息时间',
-      render: flow([getFirstMessageCreatedAt, formatDate]),
+      render: render.firstMessageCreatedAt,
     },
     {
       key: 'lastMessageFrom',
       title: '最后发言者类型',
-      render: getLastMessageUserType,
+      render: render.lastMessageFromType,
     },
     {
       key: 'lastMessageCreatedAt',
       title: '最后一条消息时间',
-      render: flow([getLastMessageCreatedAt, formatDate]),
+      render: render.lastMessageCreatedAt,
     },
     {
       key: 'maxResponseTime',
@@ -409,7 +235,7 @@ export default function Quality() {
     {
       key: 'chatDuration',
       title: '会话聊天时长',
-      render: flow([getChatDuration, renderTime]),
+      render: render.chatDuration,
     },
     {
       key: 'queuedAtOrfirstOperatorJoinedAt',
