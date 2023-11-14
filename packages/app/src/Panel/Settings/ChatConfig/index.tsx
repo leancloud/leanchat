@@ -72,23 +72,7 @@ function NoReadyOperatorMessageConfigForm() {
   }
 
   return (
-    <Form
-      initialValues={
-        data || {
-          enabled: false,
-          text: '抱歉，目前没有客服在线 😓',
-        }
-      }
-      onFinish={update}
-    >
-      <Form.Item
-        wrapperCol={{ offset: 4 }}
-        name="enabled"
-        valuePropName="checked"
-        style={{ marginBottom: 10 }}
-      >
-        <Checkbox>开启</Checkbox>
-      </Form.Item>
+    <Form initialValues={data || undefined} onFinish={update}>
       <Form.Item
         wrapperCol={{ offset: 4 }}
         name="text"
@@ -189,22 +173,7 @@ function QueueConfigForm() {
   }
 
   return (
-    <Form
-      initialValues={
-        data || {
-          capacity: 0,
-          queuedMessage: {
-            enabled: false,
-            text: '您已进入排队系统，当前人数 {{ queue.length }}，您排在第 {{ queue.position }} 位。',
-          },
-          fullMessage: {
-            enabled: false,
-            text: '您好，当前排队人数较多，请您稍后再试。',
-          },
-        }
-      }
-      onFinish={update}
-    >
+    <Form initialValues={data || undefined} onFinish={update}>
       <Form.Item
         labelCol={{ span: 4 }}
         wrapperCol={{ span: 22 }}
@@ -220,37 +189,23 @@ function QueueConfigForm() {
         labelCol={{ span: 4 }}
         wrapperCol={{ span: 22 }}
         label="排队提示"
-        name={['queuedMessage', 'enabled']}
-        valuePropName="checked"
-        style={{ marginBottom: 10 }}
-      >
-        <Checkbox>开启</Checkbox>
-      </Form.Item>
-      <Form.Item
-        wrapperCol={{ offset: 4 }}
         name={['queuedMessage', 'text']}
         rules={[{ required: true }]}
         extra="可使用占位符 {{ queue.position }}"
       >
         <Input.TextArea rows={3} />
       </Form.Item>
+
       <Form.Item
+        label="上限提示"
         labelCol={{ span: 4 }}
         wrapperCol={{ span: 22 }}
-        label="上限提示"
-        name={['fullMessage', 'enabled']}
-        valuePropName="checked"
-        style={{ marginBottom: 10 }}
-      >
-        <Checkbox>开启</Checkbox>
-      </Form.Item>
-      <Form.Item
-        wrapperCol={{ offset: 4 }}
         name={['fullMessage', 'text']}
         rules={[{ required: true }]}
       >
         <Input.TextArea rows={3} />
       </Form.Item>
+
       <Form.Item wrapperCol={{ offset: 4 }}>
         <Button type="primary" htmlType="submit" loading={isUpdating}>
           保存
@@ -269,10 +224,10 @@ export function ChatConfig() {
       }}
     >
       <div className="max-w-[800px]">
-        <h2 className="text-base font-medium">欢迎语</h2>
+        <h2 className="text-base font-medium mb-4">欢迎语</h2>
         <GreetingConfigForm />
 
-        <h2 className="text-base font-medium">无客服在线提示语</h2>
+        <h2 className="text-base font-medium my-4">无客服在线提示语</h2>
         <NoReadyOperatorMessageConfigForm />
 
         <h2 className="text-base font-medium my-4">自动踢线</h2>
