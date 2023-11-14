@@ -77,6 +77,13 @@ class Stats {
 
   @Prop()
   duration?: number;
+
+  /**
+   * 会话回合数
+   * 用户发言到下一次客服发言计 1 回合
+   */
+  @Prop()
+  round?: number;
 }
 
 @Index({ visitorId: 1 })

@@ -128,6 +128,8 @@ export class ConversationStatsProcessor {
       conversation.createdAt,
     );
 
+    stats.round = this.getRound(chatMessages);
+
     await this.conversationService.updateConversation(conversation.id, {
       stats,
     });
@@ -153,5 +155,20 @@ export class ConversationStatsProcessor {
     }
 
     return list;
+  }
+
+  private getRound(messages: Message[]) {
+    let round = 0;
+    let lastUserType: UserType | undefined;
+    for (const message of messages) {
+      if (
+        message.from.type === UserType.Operator &&
+        lastUserType === UserType.Visitor
+      ) {
+        round += 1;
+      }
+      lastUserType = message.from.type;
+    }
+    return round;
   }
 }
