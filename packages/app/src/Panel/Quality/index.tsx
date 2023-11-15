@@ -18,7 +18,7 @@ import { useCategories } from '../hooks/category';
 import { Category, Operator, UserType } from '../types';
 import { useOperators } from '../hooks/operator';
 import { ConversationInfo } from '../Statistics/components/ConversationInfo';
-import * as render from './render';
+import * as render from '../Statistics/render';
 import { ExportDataDialog, ExportDataColumn } from '../Statistics/components/ExportDataDialog';
 
 export function useGetCategoryName(categories?: Category[]) {
