@@ -19,7 +19,7 @@ import { Category, Operator, UserType } from '../types';
 import { useOperators } from '../hooks/operator';
 import { ConversationInfo } from '../Statistics/components/ConversationInfo';
 import * as render from './render';
-import { ExportDataDialog, ExportDataColumn } from './components/ExportDataDialog';
+import { ExportDataDialog, ExportDataColumn } from '../Statistics/components/ExportDataDialog';
 
 export function useGetCategoryName(categories?: Category[]) {
   const categoryMap = useMemo(() => _.keyBy(categories, (c) => c.id), [categories]);

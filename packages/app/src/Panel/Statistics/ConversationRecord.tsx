@@ -18,7 +18,7 @@ import { useOperators } from '../hooks/operator';
 import { SearchConversationOptions, searchConversation } from '../api/conversation';
 import { useGetCategoryName, useGetOperatorName } from '../Quality';
 import { flow } from './helpers';
-import { ExportDataColumn, ExportDataDialog } from '../Quality/components/ExportDataDialog';
+import { ExportDataColumn, ExportDataDialog } from './components/ExportDataDialog';
 
 interface FilterGroupProps {
   label?: ReactNode;
