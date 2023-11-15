@@ -12,11 +12,11 @@ import {
   SearchConversationOptions,
   searchConversation,
 } from '@/Panel/api/conversation';
+import { flow, formatDate, renderTime } from '@/Panel/Statistics/helpers';
 import { SearchForm, SearchFormData } from './components/SearchForm';
 import { useCategories } from '../hooks/category';
 import { Category, Operator, UserType } from '../types';
 import { useOperators } from '../hooks/operator';
-import { flow, formatDate, renderTime } from './helpers';
 import { ConversationInfo } from './components/ConversationInfo';
 import * as render from './render';
 import { ExportDataDialog, ExportDataColumn } from './components/ExportDataDialog';

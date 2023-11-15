@@ -7,7 +7,7 @@ import Papa from 'papaparse';
 
 import { SearchConversationOptions, searchConversation } from '@/Panel/api/conversation';
 import { useExportData } from '@/Panel/hooks/useExportData';
-import { downloadCSV, percent } from '../helpers';
+import { downloadCSV, percent } from '@/Panel/Statistics/helpers';
 
 export interface ExportDataColumn {
   key: string;

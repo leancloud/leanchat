@@ -5,6 +5,7 @@ import { Button, Checkbox, DatePicker, Form, Input, InputNumber, Select, Table }
 import { ColumnType } from 'antd/es/table';
 import dayjs from 'dayjs';
 import _ from 'lodash';
+import { get } from 'lodash/fp';
 import { useToggle } from 'react-use';
 
 import * as render from '@/Panel/Quality/render';
@@ -15,9 +16,8 @@ import { useCategories } from '../hooks/category';
 import { ConsultationResult, UserType } from '../types';
 import { useOperators } from '../hooks/operator';
 import { SearchConversationOptions, searchConversation } from '../api/conversation';
-import { get } from 'lodash/fp';
 import { useGetCategoryName, useGetOperatorName } from '../Quality';
-import { flow } from '../Quality/helpers';
+import { flow } from './helpers';
 import { ExportDataColumn, ExportDataDialog } from '../Quality/components/ExportDataDialog';
 
 interface FilterGroupProps {
