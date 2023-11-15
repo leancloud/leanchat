@@ -225,7 +225,7 @@ function ReopenConversation({ message }: MessageComponentProps) {
 }
 
 const MessageComponents: Record<number, JSXElementConstructor<MessageComponentProps>> = {
-  [MessageType.Message]: EvaluateMessage,
+  [MessageType.Evaluate]: EvaluateMessage,
   [MessageType.Assign]: ({ message }) => {
     return <LogMessage>客服 {message.data.operatorId} 进入会话</LogMessage>;
   },
