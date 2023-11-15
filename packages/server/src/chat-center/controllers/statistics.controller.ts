@@ -48,7 +48,6 @@ export class StatisticsController {
     );
 
     const normalize = (items: any[], key: string) => {
-      console.dir(items, { depth: 3 });
       return items.map(({ _id, ...rest }) => ({
         id: _id.toHexString(),
         [key]: rest,
