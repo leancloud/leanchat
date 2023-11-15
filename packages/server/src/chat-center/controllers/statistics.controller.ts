@@ -47,11 +47,13 @@ export class StatisticsController {
       query,
     );
 
-    const normalize = (items: any[], key: string) =>
-      items.map(({ _id, ...rest }) => ({
+    const normalize = (items: any[], key: string) => {
+      console.dir(items, { depth: 3 });
+      return items.map(({ _id, ...rest }) => ({
         id: _id.toHexString(),
         [key]: rest,
       }));
+    };
 
     const mergeObjectArray = (items: any[]) =>
       items.reduce((result, current) => ({ ...result, ...current }), {});
