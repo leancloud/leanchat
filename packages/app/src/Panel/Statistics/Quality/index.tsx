@@ -1,4 +1,4 @@
-import { useCallback, useMemo, useState } from 'react';
+import { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { useToggle } from 'react-use';
 import { Button, Table } from 'antd';
@@ -14,34 +14,12 @@ import {
 } from '@/Panel/api/conversation';
 import { flow, formatDate, renderTime } from '@/Panel/Statistics/helpers';
 import { SearchForm, SearchFormData } from './components/SearchForm';
-import { useCategories } from '../../hooks/category';
-import { Category, UserType } from '../../types';
+import { UserType } from '../../types';
 import { ConversationInfo } from '../components/ConversationInfo';
 import * as render from '../render';
 import { ExportDataDialog, ExportDataColumn } from '../components/ExportDataDialog';
 import { useGetOperatorName } from '../hooks/useGetOperatorName';
-
-export function useGetCategoryName(categories?: Category[]) {
-  const categoryMap = useMemo(() => _.keyBy(categories, (c) => c.id), [categories]);
-  const getCategoryPath = useCallback(
-    (id: string): Category[] => {
-      const category = categoryMap[id];
-      if (category) {
-        return category.parentId ? [...getCategoryPath(category.parentId), category] : [category];
-      }
-      return [];
-    },
-    [categoryMap],
-  );
-  return useCallback(
-    (id: string) => {
-      return getCategoryPath(id)
-        .map((c) => c.name)
-        .join('/');
-    },
-    [getCategoryPath],
-  );
-}
+import { useGetCategoryName } from '../hooks/useGetCategoryName';
 
 export default function Quality() {
   const [options, setOptions] = useState<SearchConversationOptions>({
@@ -78,14 +56,12 @@ export default function Quality() {
     });
   };
 
-  const { data: categories } = useCategories();
-  const getCategoryName = useGetCategoryName(categories);
-
-  const { getOperatorName, isLoading: peratorNameLoading } = useGetOperatorName();
+  const { getCategoryName, isLoading: categoryNameLoading } = useGetCategoryName();
+  const { getOperatorName, isLoading: operatorNameLoading } = useGetOperatorName();
 
   const [exportModalOpen, toggleExportModal] = useToggle(false);
   const handleExportData = () => {
-    if (!data || !categories || peratorNameLoading) {
+    if (!data || categoryNameLoading || operatorNameLoading) {
       return;
     }
     if (data.totalCount > 10000) {

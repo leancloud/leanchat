@@ -12,13 +12,12 @@ import * as render from './render';
 import { ChannelSelect } from './components/ChannelSelect';
 import { OperatorSelect } from '../components/OperatorSelect';
 import { CategoryCascader } from '../components/CategoryCascader';
-import { useCategories } from '../hooks/category';
 import { ConsultationResult, UserType } from '../types';
 import { SearchConversationOptions, searchConversation } from '../api/conversation';
-import { useGetCategoryName } from './Quality';
 import { flow } from './helpers';
 import { ExportDataColumn, ExportDataDialog } from './components/ExportDataDialog';
 import { useGetOperatorName } from './hooks/useGetOperatorName';
+import { useGetCategoryName } from './hooks/useGetCategoryName';
 
 interface FilterGroupProps {
   label?: ReactNode;
@@ -319,8 +318,7 @@ export function ConversationRecord() {
     queryFn: () => searchConversation(options),
   });
 
-  const { data: categories } = useCategories();
-  const getCategoryName = useGetCategoryName(categories);
+  const { getCategoryName } = useGetCategoryName();
   const { getOperatorName } = useGetOperatorName();
 
   const columns: (ColumnType<any> & ExportDataColumn)[] = [
