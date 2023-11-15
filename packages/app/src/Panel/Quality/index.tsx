@@ -17,7 +17,7 @@ import { SearchForm, SearchFormData } from './components/SearchForm';
 import { useCategories } from '../hooks/category';
 import { Category, Operator, UserType } from '../types';
 import { useOperators } from '../hooks/operator';
-import { ConversationInfo } from './components/ConversationInfo';
+import { ConversationInfo } from '../Statistics/components/ConversationInfo';
 import * as render from './render';
 import { ExportDataDialog, ExportDataColumn } from './components/ExportDataDialog';
 
