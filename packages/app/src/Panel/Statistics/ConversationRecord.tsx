@@ -8,7 +8,7 @@ import _ from 'lodash';
 import { get } from 'lodash/fp';
 import { useToggle } from 'react-use';
 
-import * as render from '@/Panel/Quality/render';
+import * as render from './render';
 import { ChannelSelect } from './components/ChannelSelect';
 import { OperatorSelect } from '../components/OperatorSelect';
 import { CategoryCascader } from '../components/CategoryCascader';
@@ -16,7 +16,7 @@ import { useCategories } from '../hooks/category';
 import { ConsultationResult, UserType } from '../types';
 import { useOperators } from '../hooks/operator';
 import { SearchConversationOptions, searchConversation } from '../api/conversation';
-import { useGetCategoryName, useGetOperatorName } from '../Quality';
+import { useGetCategoryName, useGetOperatorName } from './Quality';
 import { flow } from './helpers';
 import { ExportDataColumn, ExportDataDialog } from './components/ExportDataDialog';
 

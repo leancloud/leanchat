@@ -20,7 +20,7 @@ import {
   subtract,
   timeDuration,
 } from './utils';
-import { useGetOperatorName } from '../Quality';
+import { useGetOperatorName } from './Quality';
 import { useOperators } from '../hooks/operator';
 
 export function OperatorStats() {

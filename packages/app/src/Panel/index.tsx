@@ -19,7 +19,7 @@ import { useSubscribeOperatorsStatus } from './hooks/operator';
 import { NowProvider } from './contexts/NowContext';
 
 const Login = lazy(() => import('./Login'));
-const Quality = lazy(() => import('./Quality'));
+const Quality = lazy(() => import('./Statistics/Quality'));
 const Statistics = lazy(() => import('./Statistics'));
 const Settings = lazy(() => import('./Settings'));
 

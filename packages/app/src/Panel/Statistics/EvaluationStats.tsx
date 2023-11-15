@@ -12,7 +12,7 @@ import {
 } from '../api/statistics';
 import { getEvaluationStarText } from './utils';
 import { useOperators } from '../hooks/operator';
-import { useGetOperatorName } from '../Quality';
+import { useGetOperatorName } from './Quality';
 
 export function EvaluationStats() {
   const [formData, setFormData] = useState<BasicFilterFormData>({
