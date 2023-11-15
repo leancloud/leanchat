@@ -10,8 +10,8 @@ import {
   GetEvaluationStatsOptions,
   getEvaluationStats,
 } from '../api/statistics';
-import { getEvaluationStarText } from './utils';
 import { useGetOperatorName } from './hooks/useGetOperatorName';
+import { evaluationStar } from './render';
 
 export function EvaluationStats() {
   const [formData, setFormData] = useState<BasicFilterFormData>({
@@ -81,9 +81,9 @@ export function EvaluationStats() {
       title: '用户ID',
     },
     {
-      dataIndex: ['evaluation', 'star'],
+      key: 'evaluationStar',
       title: '满意度',
-      render: getEvaluationStarText,
+      render: evaluationStar,
     },
     {
       dataIndex: ['evaluation', 'feedback'],

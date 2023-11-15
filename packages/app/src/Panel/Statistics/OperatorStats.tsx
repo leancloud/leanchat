@@ -4,23 +4,12 @@ import { Table } from 'antd';
 import { ColumnsType } from 'antd/es/table';
 import dayjs from 'dayjs';
 import _ from 'lodash';
+import { get, getOr, multiply } from 'lodash/fp';
 
 import { BasicFilterForm, BasicFilterFormData } from './components/BasicFilterForm';
 import { OperatorStats as OperatorStatsSchema, getOperatorStats } from '../api/statistics';
-import {
-  add,
-  defaultValue,
-  divide,
-  fixed,
-  flow,
-  multiply,
-  percent,
-  push,
-  pushValue,
-  subtract,
-  timeDuration,
-} from './utils';
 import { useGetOperatorName } from './hooks/useGetOperatorName';
+import { divide, sum, subtract, flow, renderTime, toPercent } from './helpers';
 
 export function OperatorStats() {
   const [formData, setFormData] = useState<BasicFilterFormData>({
@@ -46,194 +35,186 @@ export function OperatorStats() {
 
   const columns: ColumnsType<OperatorStatsSchema> = [
     {
-      dataIndex: 'id',
+      key: 'id',
       title: '客服ID',
+      render: get('id'),
     },
     {
       key: 'operatorName',
-      dataIndex: 'id',
       title: '客服名称',
-      render: getOperatorName,
+      render: flow([get('id'), getOperatorName]),
     },
     {
-      dataIndex: ['conversation', 'totalCount'],
+      key: 'conversationTotalCount',
       title: '咨询总量',
-      render: (value) => value ?? 0,
+      render: getOr(0, 'conversation.totalCount'),
     },
     {
-      dataIndex: ['conversation', 'validCount'],
+      key: 'conversationValidCount',
       title: '有效会话量',
-      render: (value) => value ?? 0,
+      render: getOr(0, 'conversation.validCount'),
     },
     {
-      dataIndex: ['conversation', 'invalidCount'],
+      key: 'conversationInvalidCount',
       title: '无效会话量',
-      render: (value) => value ?? 0,
+      render: getOr(0, 'conversation.invalidCount'),
     },
     {
-      dataIndex: ['conversation', 'operatorNoResponseCount'],
+      key: 'conversationOperatorNoResponseCount',
       title: '客服无应答量',
-      render: (value) => value ?? 0,
+      render: getOr(0, 'conversation.operatorNoResponseCount'),
     },
     {
       key: 'transferIn',
       title: '人工转入会话',
-      render: flow(push('transferIn.count'), defaultValue(0)),
+      render: getOr(0, 'transferIn.count'),
     },
     {
       key: 'transferOut',
       title: '人工转出会话',
-      render: flow(push('transferOut.count'), defaultValue(0)),
+      render: getOr(0, 'transferOut.count'),
     },
     {
       key: 'averageFirstResponseTime',
       title: '平均首次响应时长',
-      render: flow(push('conversation.averageFirstResponseTime'), timeDuration()),
+      render: flow([get('conversation.averageFirstResponseTime'), renderTime]),
     },
     {
       key: 'averageResponseTime',
       title: '平均响应时长',
-      render: flow(
-        push('conversation.responseTime'),
-        push('conversation.responseCount'),
-        divide(),
-        timeDuration(),
-      ),
+      render: flow([
+        divide(get('conversation.responseTime'), get('conversation.responseCount')),
+        renderTime,
+      ]),
     },
     {
       key: 'maxResponseTime',
       title: '最长响应时间',
-      render: flow(push('conversation.maxResponseTime'), timeDuration()),
+      render: flow([get('conversation.maxResponseTime'), renderTime]),
     },
     {
       key: 'averageValidDuration',
       title: '平均会话时长',
-      render: flow(
-        push('conversation.validDuration'),
-        push('conversation.validCount'),
-        divide(),
-        timeDuration(),
-      ),
+      render: flow([
+        divide(get('conversation.validDuration'), get('conversation.validCount')),
+        renderTime,
+      ]),
     },
     {
       key: 'averageMessageCount',
       title: '平均消息条数',
-      render: flow(
-        push('conversation.messageCount'),
-        push('conversation.totalCount'),
-        divide(),
-        fixed(2),
-      ),
+      render: flow([
+        divide(get('conversation.messageCount'), get('conversation.totalCount')),
+        (avg: number) => avg.toFixed(2),
+      ]),
     },
     {
       key: 'onlineTime',
       title: '登录时长',
-      render: flow(push('online.totalTime'), pushValue(1000 * 60), multiply(), timeDuration()),
+      render: flow([get('online.totalTime'), multiply(1000 * 60), renderTime]),
     },
     {
       key: 'readyTime',
       title: '在线时长',
-      render: flow(push('online.readyTime'), pushValue(1000 * 60), multiply(), timeDuration()),
+      render: flow([get('online.readyTime'), multiply(1000 * 60), renderTime]),
     },
     {
       key: 'busyTime',
       title: '忙碌时长',
-      render: flow(push('online.busyTime'), pushValue(1000 * 60), multiply(), timeDuration()),
+      render: flow([get('online.busyTime'), multiply(1000 * 60), renderTime]),
     },
     {
       key: 'postprocessingDuration',
       title: '后处理总时长',
-      render: flow(push('postprocessing.duration'), timeDuration()),
+      render: flow([getOr(0, 'postprocessing.duration'), renderTime]),
     },
     {
       key: 'postprocessingCount',
       title: '后处理次数',
-      render: flow(push('postprocessing.count')),
+      render: getOr(0, 'postprocessing.count'),
     },
     {
       key: 'leaveTime',
       title: '离开时长',
-      render: flow(push('online.leaveTime'), pushValue(1000 * 60), multiply(), timeDuration()),
+      render: flow([get('online.leaveTime'), multiply(1000 * 60), renderTime]),
     },
     {
       key: 'averageValidReceptionTime',
       title: '平均人工接待时长',
-      render: flow(
-        push('conversation.validReceptionTime'),
-        push('conversation.validCount'),
-        divide(),
-        timeDuration(),
-      ),
+      render: flow([
+        divide(get('conversation.validReceptionTime'), get('conversation.validCount')),
+        renderTime,
+      ]),
     },
     {
       key: 'totalEvaluationCount',
       title: '评价总数',
-      render: flow(push('conversation.validEvaluationCount')),
+      render: getOr(0, 'conversation.validEvaluationCount'),
     },
     {
       key: 'noEvaluationCount',
       title: '未评价总数',
-      render: flow(
-        push('conversation.validCount'),
-        push('conversation.validEvaluationCount'),
-        subtract(),
+      render: subtract(
+        getOr(0, 'conversation.validCount'),
+        getOr(0, 'conversation.validEvaluationCount'),
       ),
     },
     {
       key: 'evaluationPercentage',
       title: '参评率',
-      render: flow(
-        push('conversation.validEvaluationCount'),
-        push('conversation.validCount'),
-        divide(),
-        percent(),
-      ),
+      render: flow([
+        divide(get('conversation.validEvaluationCount'), get('conversation.validCount')),
+        toPercent,
+      ]),
     },
     {
-      dataIndex: ['conversation', 'validEvaluationInvitationCount'],
+      key: 'validEvaluationInvitationCount',
       title: '客服邀请量',
+      render: getOr(0, 'conversation.validEvaluationInvitationCount'),
     },
     {
       key: 'evaluationInvitationPercentage',
       title: '客服邀请率',
-      render: flow(
-        push('conversation.validEvaluationInvitationCount'),
-        push('conversation.validCount'),
-        divide(),
-        percent(),
-      ),
+      render: flow([
+        divide(get('conversation.validEvaluationInvitationCount'), get('conversation.validCount')),
+        toPercent,
+      ]),
     },
     {
       key: 'negativeRate',
       title: '差评率',
-      render: flow(
-        push('conversation.evaluationStar1'),
-        push('conversation.evaluationStar2'),
-        add(),
-        push('conversation.validEvaluationCount'),
-        divide(),
-        percent(),
-      ),
+      render: flow([
+        divide(
+          sum([get('conversation.evaluationStar1'), get('conversation.evaluationStar2')]),
+          get('conversation.validEvaluationCount'),
+        ),
+        toPercent,
+      ]),
     },
     {
-      dataIndex: ['conversation', 'evaluationStar5'],
+      key: 'evaluationStar5',
       title: '非常满意量',
+      render: getOr(0, 'conversation.evaluationStar5'),
     },
     {
-      dataIndex: ['conversation', 'evaluationStar4'],
+      key: 'evaluationStar4',
       title: '满意量',
+      render: getOr(0, 'conversation.evaluationStar4'),
     },
     {
-      dataIndex: ['conversation', 'evaluationStar3'],
+      key: 'evaluationStar3',
       title: '一般量',
+      render: getOr(0, 'conversation.evaluationStar3'),
     },
     {
-      dataIndex: ['conversation', 'evaluationStar2'],
+      key: 'evaluationStar2',
       title: '不满意量',
+      render: getOr(0, 'conversation.evaluationStar2'),
     },
     {
-      dataIndex: ['conversation', 'evaluationStar1'],
+      key: 'evaluationStar1',
       title: '非常不满意量',
+      render: getOr(0, 'conversation.evaluationStar1'),
     },
   ];
 
