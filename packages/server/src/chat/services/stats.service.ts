@@ -168,7 +168,15 @@ export class StatsService {
             { $match: inMatch },
             {
               $group: {
-                _id: '$data.operatorId',
+                _id: {
+                  operatorId: '$data.operatorId',
+                  cid: '$conversationId',
+                },
+              },
+            },
+            {
+              $group: {
+                _id: '$_id.operatorId',
                 count: { $sum: 1 },
               },
             },
@@ -177,7 +185,15 @@ export class StatsService {
             { $match: outMatch },
             {
               $group: {
-                _id: '$data.previousOperatorId',
+                _id: {
+                  operatorId: '$data.previousOperatorId',
+                  cid: '$conversationId',
+                },
+              },
+            },
+            {
+              $group: {
+                _id: '$_id.operatorId',
                 count: { $sum: 1 },
               },
             },
