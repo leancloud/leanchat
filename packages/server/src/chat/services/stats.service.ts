@@ -32,6 +32,7 @@ export class StatsService {
   }: GetOperatorStatsOptions) {
     const $match: FilterQuery<Conversation> = {
       createdAt: { $gte: from, $lte: to },
+      operatorId: { $exists: true },
       stats: { $exists: true },
     };
 
