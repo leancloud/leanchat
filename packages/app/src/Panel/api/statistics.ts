@@ -131,7 +131,12 @@ interface GetOperatorStatsOptions {
 }
 
 export async function getOperatorStats(options: GetOperatorStatsOptions) {
-  const res = await client.get<OperatorStats[]>('/statistics/operator', { params: options });
+  const res = await client.get<OperatorStats[]>('/statistics/operator', {
+    params: {
+      ...options,
+      operatorId: options.operatorId?.join(',') || undefined,
+    },
+  });
   return res.data;
 }
 
