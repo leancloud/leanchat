@@ -55,7 +55,7 @@ export class StatisticsController {
     };
 
     const mergeObjectArray = (items: any[]) =>
-      items.reduce((result, current) => ({ ...result, ...current }), {});
+      items.reduce((result, current) => Object.assign(result, current), {});
 
     return _.chain([
       normalize(conversationStats, 'conversation'),
