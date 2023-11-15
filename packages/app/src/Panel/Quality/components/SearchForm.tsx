@@ -1,11 +1,11 @@
 import { useState } from 'react';
 import { Button, Checkbox, DatePicker, Form, Input, Select } from 'antd';
 import { Dayjs } from 'dayjs';
+import { last } from 'lodash/fp';
 
 import { CategoryCascader } from '@/Panel/components/CategoryCascader';
 import { OperatorSelect } from '@/Panel/components/OperatorSelect';
 import { UserType } from '@/Panel/types';
-import { last } from 'lodash/fp';
 
 export interface SearchFormData {
   date: [Dayjs, Dayjs];
