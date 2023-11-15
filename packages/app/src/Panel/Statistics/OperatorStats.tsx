@@ -1,15 +1,16 @@
 import { useMemo, useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
-import { Table } from 'antd';
-import { ColumnsType } from 'antd/es/table';
+import { Button, Table } from 'antd';
+import { ColumnType } from 'antd/es/table';
 import dayjs from 'dayjs';
 import _ from 'lodash';
 import { get, getOr, multiply } from 'lodash/fp';
+import Papa from 'papaparse';
 
 import { BasicFilterForm, BasicFilterFormData } from './components/BasicFilterForm';
 import { OperatorStats as OperatorStatsSchema, getOperatorStats } from '../api/statistics';
 import { useGetOperatorName } from './hooks/useGetOperatorName';
-import { divide, sum, subtract, flow, renderTime, toPercent } from './helpers';
+import { divide, sum, subtract, flow, renderTime, toPercent, downloadCSV } from './helpers';
 
 export function OperatorStats() {
   const [formData, setFormData] = useState<BasicFilterFormData>({
@@ -33,7 +34,10 @@ export function OperatorStats() {
 
   const { getOperatorName } = useGetOperatorName();
 
-  const columns: ColumnsType<OperatorStatsSchema> = [
+  const columns: (ColumnType<OperatorStatsSchema> & {
+    title: string;
+    render: (row: any) => any;
+  })[] = [
     {
       key: 'id',
       title: '客服ID',
@@ -218,9 +222,25 @@ export function OperatorStats() {
     },
   ];
 
+  const handleExport = () => {
+    if (!data) {
+      return;
+    }
+    const content = Papa.unparse({
+      fields: columns.map((col) => col.title),
+      data: data.map((row) => columns.map((col) => col.render(row))),
+    });
+    downloadCSV(content, '客服工作量统计.csv');
+  };
+
   return (
     <>
-      <BasicFilterForm initData={formData} onChange={setFormData} />
+      <div className="flex">
+        <BasicFilterForm initData={formData} onChange={setFormData} />
+        <Button className="ml-auto" onClick={handleExport}>
+          导出
+        </Button>
+      </div>
 
       <Table
         style={{ marginTop: 20 }}
