@@ -14,11 +14,11 @@ import { OperatorSelect } from '../components/OperatorSelect';
 import { CategoryCascader } from '../components/CategoryCascader';
 import { useCategories } from '../hooks/category';
 import { ConsultationResult, UserType } from '../types';
-import { useOperators } from '../hooks/operator';
 import { SearchConversationOptions, searchConversation } from '../api/conversation';
-import { useGetCategoryName, useGetOperatorName } from './Quality';
+import { useGetCategoryName } from './Quality';
 import { flow } from './helpers';
 import { ExportDataColumn, ExportDataDialog } from './components/ExportDataDialog';
+import { useGetOperatorName } from './hooks/useGetOperatorName';
 
 interface FilterGroupProps {
   label?: ReactNode;
@@ -321,9 +321,7 @@ export function ConversationRecord() {
 
   const { data: categories } = useCategories();
   const getCategoryName = useGetCategoryName(categories);
-
-  const { data: operators } = useOperators();
-  const getOperatorName = useGetOperatorName(operators);
+  const { getOperatorName } = useGetOperatorName();
 
   const columns: (ColumnType<any> & ExportDataColumn)[] = [
     {

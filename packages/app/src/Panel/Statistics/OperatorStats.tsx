@@ -20,8 +20,7 @@ import {
   subtract,
   timeDuration,
 } from './utils';
-import { useGetOperatorName } from './Quality';
-import { useOperators } from '../hooks/operator';
+import { useGetOperatorName } from './hooks/useGetOperatorName';
 
 export function OperatorStats() {
   const [formData, setFormData] = useState<BasicFilterFormData>({
@@ -43,8 +42,7 @@ export function OperatorStats() {
     queryFn: () => getOperatorStats(options),
   });
 
-  const { data: operators } = useOperators();
-  const getOperatorName = useGetOperatorName(operators);
+  const { getOperatorName } = useGetOperatorName();
 
   const columns: ColumnsType<OperatorStatsSchema> = [
     {

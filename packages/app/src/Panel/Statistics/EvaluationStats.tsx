@@ -11,8 +11,7 @@ import {
   getEvaluationStats,
 } from '../api/statistics';
 import { getEvaluationStarText } from './utils';
-import { useOperators } from '../hooks/operator';
-import { useGetOperatorName } from './Quality';
+import { useGetOperatorName } from './hooks/useGetOperatorName';
 
 export function EvaluationStats() {
   const [formData, setFormData] = useState<BasicFilterFormData>({
@@ -39,8 +38,7 @@ export function EvaluationStats() {
     queryFn: () => getEvaluationStats(options),
   });
 
-  const { data: operators } = useOperators();
-  const getOperatorName = useGetOperatorName(operators);
+  const { getOperatorName } = useGetOperatorName();
 
   const columns: ColumnsType<EvaluationStatsSchema> = [
     {

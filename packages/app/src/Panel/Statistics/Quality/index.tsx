@@ -15,11 +15,11 @@ import {
 import { flow, formatDate, renderTime } from '@/Panel/Statistics/helpers';
 import { SearchForm, SearchFormData } from './components/SearchForm';
 import { useCategories } from '../../hooks/category';
-import { Category, Operator, UserType } from '../../types';
-import { useOperators } from '../../hooks/operator';
+import { Category, UserType } from '../../types';
 import { ConversationInfo } from '../components/ConversationInfo';
 import * as render from '../render';
 import { ExportDataDialog, ExportDataColumn } from '../components/ExportDataDialog';
+import { useGetOperatorName } from '../hooks/useGetOperatorName';
 
 export function useGetCategoryName(categories?: Category[]) {
   const categoryMap = useMemo(() => _.keyBy(categories, (c) => c.id), [categories]);
@@ -40,16 +40,6 @@ export function useGetCategoryName(categories?: Category[]) {
         .join('/');
     },
     [getCategoryPath],
-  );
-}
-
-export function useGetOperatorName(operators?: Operator[]) {
-  const operatorMap = useMemo(() => _.keyBy(operators, (o) => o.id), [operators]);
-  return useCallback(
-    (id: string) => {
-      return operatorMap[id]?.internalName;
-    },
-    [operatorMap],
   );
 }
 
@@ -91,12 +81,11 @@ export default function Quality() {
   const { data: categories } = useCategories();
   const getCategoryName = useGetCategoryName(categories);
 
-  const { data: operators } = useOperators();
-  const getOperatorName = useGetOperatorName(operators);
+  const { getOperatorName, isLoading: peratorNameLoading } = useGetOperatorName();
 
   const [exportModalOpen, toggleExportModal] = useToggle(false);
   const handleExportData = () => {
-    if (!data || !categories || !operators) {
+    if (!data || !categories || peratorNameLoading) {
       return;
     }
     if (data.totalCount > 10000) {
