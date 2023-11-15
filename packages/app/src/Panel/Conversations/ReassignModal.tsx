@@ -28,7 +28,7 @@ export function ReassignModal({ open, onClose }: ReassignModalProps) {
       ),
       name: o.internalName,
       value: o.id,
-      disabled: o.status !== 0,
+      disabled: o.status !== 1,
     }));
   }, [operators]);
 
