@@ -200,7 +200,7 @@ export default function Quality() {
     {
       key: 'chatDuration',
       title: '会话聊天时长',
-      render: render.chatDuration,
+      render: flow([render.chatDuration, renderTime]),
     },
     {
       key: 'queuedAtOrfirstOperatorJoinedAt',
