@@ -219,7 +219,7 @@ export default function Quality() {
     {
       key: 'queueConnectionTime',
       title: '排队等待时长',
-      render: flow([get('stats.queueConnectionTime'), formatDate]),
+      render: flow([get('stats.queueConnectionTime'), renderTime]),
     },
   ];
 
