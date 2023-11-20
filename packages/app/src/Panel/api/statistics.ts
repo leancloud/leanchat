@@ -147,6 +147,7 @@ export interface EvaluationStats {
   operatorId?: string;
   evaluation: Evaluation;
   evaluationInvitedAt?: string;
+  createdAt: string;
 }
 
 interface EvaluationStatsResult {
@@ -170,6 +171,8 @@ export async function getEvaluationStats(options: GetEvaluationStatsOptions) {
       to: options.to.toISOString(),
       channel: options.channel,
       operatorId: options.operatorId?.join(','),
+      page: options.page,
+      pageSize: options.pageSize,
     },
   });
   return res.data;

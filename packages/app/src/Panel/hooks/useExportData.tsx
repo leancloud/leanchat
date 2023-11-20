@@ -77,8 +77,7 @@ export interface UseExportDataOptions<TData> {
   delay?: number;
 }
 
-export interface UseExportDataReturns<TData> {
-  data: TData[];
+export interface UseExportDataReturns {
   isLoading: boolean;
   error?: any;
   exportData: () => void;
@@ -91,9 +90,8 @@ export function useExportData<TData>({
   onProgress,
   onSuccess,
   delay,
-}: UseExportDataOptions<TData>): UseExportDataReturns<TData> {
-  const [state, setState] = useState<{ data: TData[]; isLoading: boolean; error?: any }>({
-    data: [],
+}: UseExportDataOptions<TData>): UseExportDataReturns {
+  const [state, setState] = useState<{ isLoading: boolean; error?: any }>({
     isLoading: false,
   });
 
@@ -110,7 +108,7 @@ export function useExportData<TData>({
 
   const exportData = useCallback(() => {
     taskRef.current?.cancel();
-    setState({ data: [], isLoading: true });
+    setState({ isLoading: true });
     const task = new ExportDataTask(
       fetchData,
       getNextCursor,

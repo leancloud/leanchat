@@ -1,8 +1,11 @@
 import { useMemo, useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
-import { Table } from 'antd';
-import { ColumnsType } from 'antd/es/table';
+import { Button, Modal, Progress, Table } from 'antd';
+import { ColumnType } from 'antd/es/table';
 import dayjs from 'dayjs';
+import Papa from 'papaparse';
+import _ from 'lodash';
+import { cond, constant, get, has, stubTrue } from 'lodash/fp';
 
 import { BasicFilterForm, BasicFilterFormData } from './components/BasicFilterForm';
 import {
@@ -12,6 +15,14 @@ import {
 } from '../api/statistics';
 import { useGetOperatorName } from './hooks/useGetOperatorName';
 import { evaluationStar } from './render';
+import { useExportData } from '../hooks/useExportData';
+import { downloadCSV, flow, formatDate, percent } from './helpers';
+
+export interface ExportDataColumn {
+  key: string;
+  title: string;
+  render: (value: any) => any;
+}
 
 export function EvaluationStats() {
   const [formData, setFormData] = useState<BasicFilterFormData>({
@@ -40,45 +51,39 @@ export function EvaluationStats() {
 
   const { getOperatorName } = useGetOperatorName();
 
-  const columns: ColumnsType<EvaluationStatsSchema> = [
+  const columns: (ColumnType<EvaluationStatsSchema> & ExportDataColumn)[] = [
     {
-      dataIndex: 'id',
+      key: 'id',
       title: '会话ID',
+      render: get('id'),
     },
     {
-      dataIndex: ['evaluation', 'createdAt'],
+      key: 'createdAt',
       title: '评价时间',
-      render: (dateString: string) => dayjs(dateString).format('YYYY-MM-DD HH:mm:ss'),
+      render: flow([get('evaluation.createdAt'), formatDate]),
     },
     {
       key: 'evaluationType',
       title: '评价类型',
-      render: (stats: EvaluationStatsSchema) => {
-        if (stats.evaluationInvitedAt) {
-          return '邀请评价';
-        } else {
-          return '主动评价';
-        }
-      },
+      render: cond([
+        [has('evaluationInvitedAt'), constant('邀请评价')],
+        [stubTrue, constant('主动评价')],
+      ]),
     },
     {
       key: 'operatorName',
       title: '客服名称',
-      render: (stats: EvaluationStatsSchema) => {
-        if (!stats.operatorId) {
-          return '-';
-        }
-        return getOperatorName(stats.operatorId);
-      },
+      render: flow([get('operatorId'), getOperatorName]),
     },
     {
-      dataIndex: 'visitorName',
+      key: 'visitorName',
       title: '用户名称',
-      render: (name: string | undefined) => name ?? '-',
+      render: get('visitorName'),
     },
     {
-      dataIndex: 'visitorId',
+      key: 'visitorId',
       title: '用户ID',
+      render: get('visitorId'),
     },
     {
       key: 'evaluationStar',
@@ -86,15 +91,74 @@ export function EvaluationStats() {
       render: evaluationStar,
     },
     {
-      dataIndex: ['evaluation', 'feedback'],
+      key: 'feedback',
       title: '评价标签',
-      render: (feedback: string) => feedback || '-',
+      render: get('evaluation.feedback'),
     },
   ];
 
+  const [exportedCount, setExportedCount] = useState(0);
+
+  const {
+    exportData,
+    cancel,
+    isLoading: isExporting,
+  } = useExportData({
+    fetchData: (cursor) => {
+      return getEvaluationStats({
+        ...options,
+        page: 1,
+        pageSize: 1000,
+        from: cursor || options.from,
+      });
+    },
+    getNextCursor: (lastData) => {
+      if (lastData.items.length < 1000) {
+        return;
+      }
+      const lastItem = _.last(lastData.items);
+      if (lastItem) {
+        return dayjs(lastItem.createdAt).add(1, 'ms').toDate();
+      }
+    },
+    onProgress: ({ items }) => {
+      setExportedCount((count) => count + items.length);
+    },
+    onSuccess: (data) => {
+      const rows = data
+        .flatMap((t) => t.items)
+        .map((item) => columns.map((col) => col.render(item)));
+      const content = Papa.unparse({
+        fields: columns.map((col) => col.title),
+        data: rows,
+      });
+      downloadCSV(content, '满意度评价统计.csv');
+    },
+  });
+
+  const handleExport = () => {
+    if (!data) {
+      return;
+    }
+    if (data.totalCount > 10000) {
+      return alert('导出数据量过大，请缩小检索范围');
+    }
+    setExportedCount(0);
+    exportData();
+  };
+
   return (
     <>
-      <BasicFilterForm initData={formData} onChange={setFormData} />
+      <div className="flex">
+        <BasicFilterForm initData={formData} onChange={setFormData} />
+        <Button
+          className="ml-auto"
+          disabled={!data || data.totalCount === 0}
+          onClick={handleExport}
+        >
+          导出
+        </Button>
+      </div>
 
       <Table
         className="mt-5"
@@ -114,6 +178,21 @@ export function EvaluationStats() {
         scroll={{ x: 'max-content' }}
         columns={columns}
       />
+
+      <Modal
+        open={isExporting}
+        title="导出进度"
+        closable={false}
+        maskClosable={false}
+        footer={<Button onClick={cancel}>取消</Button>}
+      >
+        {data && (
+          <>
+            <Progress percent={percent(exportedCount, data.totalCount)} />
+            <div className="text-center">1 / 100</div>
+          </>
+        )}
+      </Modal>
     </>
   );
 }
