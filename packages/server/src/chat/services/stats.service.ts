@@ -295,6 +295,7 @@ export class StatsService {
           operatorId: 1,
           evaluation: 1,
           evaluationInvitedAt: 1,
+          createdAt: 1,
         },
       },
       {
