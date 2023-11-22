@@ -27,6 +27,7 @@ export async function createOperator(data: CreateOpeatorData) {
 interface UpdateOperatorData {
   id: string;
   password?: string;
+  role?: number;
   externalName?: string;
   internalName?: string;
   concurrency?: number;

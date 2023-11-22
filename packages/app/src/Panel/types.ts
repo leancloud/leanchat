@@ -33,8 +33,14 @@ export interface Conversation {
   createdAt: string;
 }
 
+export enum OperatorRole {
+  Operator = 1,
+  Admin = 2,
+}
+
 export interface Operator {
   id: string;
+  role: OperatorRole;
   username: string;
   externalName: string;
   internalName: string;
