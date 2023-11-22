@@ -112,6 +112,7 @@ export class OperatorService implements OnApplicationBootstrap {
 
   async updateOperator(operatorId: string, data: UpdateOperatorData) {
     const $set: AnyKeys<Operator> = {
+      role: data.role,
       externalName: data.externalName,
       internalName: data.internalName,
       concurrency: data.concurrency,

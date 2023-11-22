@@ -14,9 +14,12 @@ import { ZodValidationPipe } from 'nestjs-zod';
 import { ChatService, Operator, OperatorRole, OperatorService } from 'src/chat';
 import { AuthGuard } from '../guards/auth.guard';
 import { CurrentOperator } from '../decorators/current-operator.decorator';
-import { OperatorDto, SetStatusDto } from '../dtos/operator';
-import { CreateOperatorDto } from '../dtos/create-operator.dto';
-import { UpdateOperatorDto } from '../dtos/update-operator.dto';
+import {
+  OperatorDto,
+  CreateOperatorDto,
+  UpdateOperatorDto,
+  SetStatusDto,
+} from '../dtos/operator';
 
 @Controller('operators')
 @UseGuards(AuthGuard)

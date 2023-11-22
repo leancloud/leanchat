@@ -11,15 +11,11 @@ export interface CreateOperatorData {
 
 export interface UpdateOperatorData {
   password?: string;
-
+  role?: OperatorRole;
   externalName?: string;
-
   internalName?: string;
-
   concurrency?: number;
-
   workload?: number;
-
   status?: OperatorStatus;
   statusUpdatedAt?: Date;
 }
