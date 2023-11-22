@@ -11,7 +11,7 @@ import {
 } from '@nestjs/common';
 import { ZodValidationPipe } from 'nestjs-zod';
 
-import { ChatService, Operator, OperatorRole, OperatorService } from 'src/chat';
+import { ChatService, Operator, OperatorService } from 'src/chat';
 import { AuthGuard } from '../guards/auth.guard';
 import { CurrentOperator } from '../decorators/current-operator.decorator';
 import {
@@ -32,10 +32,7 @@ export class OperatorController {
 
   @Post()
   async createOperator(@Body() data: CreateOperatorDto) {
-    const operator = await this.operatorService.createOperator({
-      ...data,
-      role: OperatorRole.Operator,
-    });
+    const operator = await this.operatorService.createOperator(data);
     return OperatorDto.fromDocument(operator);
   }
 
