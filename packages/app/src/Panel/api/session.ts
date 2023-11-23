@@ -1,7 +1,13 @@
 import { Operator } from '@/Panel/types';
 import { client } from './client';
 
-export async function createSession(username: string, password: string) {
-  const res = await client.post<Operator>('/sessions', { username, password });
+interface CreateSessionData {
+  username?: string;
+  password?: string;
+  token?: string;
+}
+
+export async function createSession(data: CreateSessionData) {
+  const res = await client.post<Operator>('/sessions', data);
   return res.data;
 }

@@ -72,34 +72,41 @@ function User() {
         onClick: (e) => setStatus(parseInt(e.key)),
         items: [
           {
-            key: 1,
-            name: '在线',
-            color: '#34b857',
-          },
-          {
-            key: 2,
-            name: '忙碌',
-            color: '#ffaf3d',
-          },
-          {
-            key: 3,
-            name: '离开',
-            color: '#e81332',
+            key: 'info',
+            label: user.internalName,
             disabled: true,
           },
-        ].map(({ key, name, color, disabled }) => ({
-          key,
-          disabled,
-          label: (
-            <div className="flex items-center">
-              <div
-                className="w-[10px] h-[10px] rounded-full mr-2"
-                style={{ backgroundColor: color }}
-              />
-              {name}
-            </div>
-          ),
-        })),
+          ...[
+            {
+              key: 1,
+              name: '在线',
+              color: '#34b857',
+            },
+            {
+              key: 2,
+              name: '忙碌',
+              color: '#ffaf3d',
+            },
+            {
+              key: 3,
+              name: '离开',
+              color: '#e81332',
+              disabled: true,
+            },
+          ].map(({ key, name, color, disabled }) => ({
+            key,
+            disabled,
+            label: (
+              <div className="flex items-center">
+                <div
+                  className="w-[10px] h-[10px] rounded-full mr-2"
+                  style={{ backgroundColor: color }}
+                />
+                {name}
+              </div>
+            ),
+          })),
+        ],
       }}
     >
       <button className="relative">

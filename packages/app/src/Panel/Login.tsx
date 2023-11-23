@@ -1,10 +1,11 @@
 import { Controller, useForm } from 'react-hook-form';
-import { Navigate, useNavigate } from 'react-router-dom';
+import { Navigate, useNavigate, useSearchParams } from 'react-router-dom';
 import { Alert, Button, Form, Input } from 'antd';
 import { useMutation } from '@tanstack/react-query';
 
 import { createSession } from './api/session';
 import { useAuthContext } from './auth';
+import { useEffectOnce } from './hooks/useEffectOnce';
 
 interface LoginData {
   username: string;
@@ -16,22 +17,40 @@ export default function Login() {
   const { control, handleSubmit } = useForm<LoginData>();
   const navigate = useNavigate();
 
+  const [searchParams] = useSearchParams();
+  const token = searchParams.get('token');
+
   const {
     mutate: login,
     error,
     isLoading,
   } = useMutation({
-    mutationFn: ({ username, password }: LoginData) => {
-      return createSession(username, password);
-    },
+    mutationFn: createSession,
     onSuccess: (user) => {
       setUser(user);
-      navigate('..');
+      navigate('..', { replace: true });
+    },
+    onError: () => {
+      if (token) {
+        const url = new URL(location.href);
+        url.searchParams.delete('token');
+        location.replace(url);
+      }
     },
   });
 
+  useEffectOnce(() => {
+    if (token) {
+      login({ token });
+    }
+  });
+
+  if (token) {
+    return '正在登陆';
+  }
+
   if (user) {
-    return <Navigate to=".." />;
+    return <Navigate to=".." replace />;
   }
 
   return (
