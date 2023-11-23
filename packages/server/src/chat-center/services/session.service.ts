@@ -5,7 +5,7 @@ import {
 } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { verify } from 'jsonwebtoken';
-import { infer as Infer } from 'zod';
+import { z } from 'zod';
 import _ from 'lodash';
 
 import { OperatorService } from 'src/chat/services';
@@ -16,9 +16,8 @@ import { CreateOperatorSchema } from '../dtos/operator';
 
 const JwtSchema = CreateOperatorSchema.omit({ password: true })
   .partial()
-  .required({
-    username: true,
-  });
+  .required({ username: true })
+  .extend({ sync: z.boolean().optional() });
 
 @Injectable()
 export class SessionService {
@@ -57,7 +56,10 @@ export class SessionService {
     }
   }
 
-  private syncOperatorData(operator: Operator, data: Infer<typeof JwtSchema>) {
+  private syncOperatorData(
+    operator: Operator,
+    data: z.infer<typeof JwtSchema>,
+  ) {
     const updateData: UpdateOperatorData = {};
     if (data.role !== undefined && operator.role !== data.role) {
       updateData.role = data.role;
@@ -101,6 +103,6 @@ export class SessionService {
         concurrency: data.concurrency,
       });
     }
-    return this.syncOperatorData(operator, data);
+    return data.sync ? this.syncOperatorData(operator, data) : operator;
   }
 }
