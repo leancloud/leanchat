@@ -8,7 +8,7 @@ export const CreateOperatorSchema = z.object({
     .string()
     .min(6)
     .max(24)
-    .regex(/^[a-zA-Z0-9_]+$/),
+    .regex(/^[a-zA-Z0-9_-@.]+$/),
   password: z.string().min(6).max(64),
   role: z.nativeEnum(OperatorRole),
   externalName: z.string().max(16),
