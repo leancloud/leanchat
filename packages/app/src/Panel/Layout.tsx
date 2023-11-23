@@ -7,7 +7,7 @@ import { Avatar } from '@/Panel/components/Avatar';
 import { setStatus } from './api/operator';
 import { useCurrentUser } from './auth';
 
-interface Nav {
+export interface Nav {
   to: string;
   icon: JSXElementConstructor<{ className?: string }>;
 }

@@ -12,7 +12,6 @@ import {
 } from 'react-router-dom';
 import { HiUserGroup, HiTag } from 'react-icons/hi2';
 import { FaUserCheck } from 'react-icons/fa';
-import { MdAccountCircle } from 'react-icons/md';
 import { IoFlashOutline } from 'react-icons/io5';
 import { BsFillChatLeftDotsFill } from 'react-icons/bs';
 import cx from 'classnames';
@@ -38,16 +37,6 @@ interface NavGroup {
 }
 
 const navs: NavSection[] = [
-  {
-    name: '个人',
-    items: [
-      {
-        icon: MdAccountCircle,
-        name: '账号',
-        path: 'account',
-      },
-    ],
-  },
   {
     name: '通用',
     items: [
@@ -169,9 +158,6 @@ export default function Settings() {
   return (
     <Routes>
       <Route element={<Layout />}>
-        <Route path="account">
-          <Route index element="Todo" />
-        </Route>
         <Route path="chat" element={<ChatConfig />} />
         <Route path="team/operators">
           <Route index element={<Operators />} />
@@ -181,7 +167,7 @@ export default function Settings() {
         <Route path="categories" element={<Categories />} />
         <Route path="quick-replies" element={<QuickReplies />} />
       </Route>
-      <Route path="*" element={<Navigate to="account" replace />} />
+      <Route path="*" element={<Navigate to="chat" replace />} />
     </Routes>
   );
 }

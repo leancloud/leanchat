@@ -1,4 +1,4 @@
-import { ComponentProps } from 'react';
+import { ComponentProps, ReactNode } from 'react';
 import { FaUserCheck, FaUser, FaUserGroup, FaMagnifyingGlass } from 'react-icons/fa6';
 import { Transition } from '@headlessui/react';
 import cx from 'classnames';
@@ -6,6 +6,8 @@ import cx from 'classnames';
 import { useOperators } from '../hooks/operator';
 import { Avatar } from '../components/Avatar';
 import { useScrolled } from '../hooks/useScrolled';
+import { useCurrentUser } from '../auth';
+import { OperatorRole } from '../types';
 
 function SiderButton({ active, ...props }: ComponentProps<'button'> & { active?: boolean }) {
   return (
@@ -19,6 +21,44 @@ function SiderButton({ active, ...props }: ComponentProps<'button'> & { active?:
   );
 }
 
+interface SectionProps {
+  title: string;
+  children?: ReactNode;
+}
+
+function Section({ title, children }: SectionProps) {
+  return (
+    <>
+      <div className="text-xs text-[#a8a8a8] mb-3 px-5">{title}</div>
+      <div className="flex flex-col mb-5 px-2">{children}</div>
+    </>
+  );
+}
+
+interface TeamSectionProps {
+  activeOperatorId?: string;
+  onClick: (operatorId: string) => void;
+}
+
+function TeamSection({ activeOperatorId, onClick }: TeamSectionProps) {
+  const { data: operators } = useOperators();
+
+  return (
+    <Section title="团队">
+      {operators?.map((operator) => (
+        <SiderButton
+          key={operator.id}
+          active={operator.id === activeOperatorId}
+          onClick={() => onClick(operator.id)}
+        >
+          <Avatar size={20} status={operator.status} />
+          <div className="ml-3"> {operator.internalName}</div>
+        </SiderButton>
+      ))}
+    </Section>
+  );
+}
+
 interface SiderProps {
   stream: string;
   onChangeStream: (stream: string) => void;
@@ -26,9 +66,8 @@ interface SiderProps {
 }
 
 export function Sider({ stream, onChangeStream, show = true }: SiderProps) {
-  const { data: operators } = useOperators();
-
   const { ref, scrolled } = useScrolled();
+  const user = useCurrentUser();
 
   return (
     <Transition
@@ -54,8 +93,7 @@ export function Sider({ stream, onChangeStream, show = true }: SiderProps) {
             </button>
           </div>
           <div ref={ref} className="overflow-y-auto">
-            <div className="text-xs text-[#a8a8a8] mb-3 px-5">会话</div>
-            <div className="flex flex-col mb-5 px-2">
+            <Section title="会话">
               {[
                 {
                   key: 'myOpen',
@@ -89,21 +127,16 @@ export function Sider({ stream, onChangeStream, show = true }: SiderProps) {
                   {label}
                 </SiderButton>
               ))}
-            </div>
+            </Section>
 
-            <div className="text-xs text-[#a8a8a8] mb-3 px-5">团队</div>
-            <div className="flex flex-col mb-5 px-2">
-              {operators?.map((operator) => (
-                <SiderButton
-                  key={operator.id}
-                  active={stream === `operator/${operator.id}`}
-                  onClick={() => onChangeStream(`operator/${operator.id}`)}
-                >
-                  <Avatar size={20} status={operator.status} />
-                  <div className="ml-3"> {operator.internalName}</div>
-                </SiderButton>
-              ))}
-            </div>
+            {user.role === OperatorRole.Admin && (
+              <TeamSection
+                activeOperatorId={
+                  stream.startsWith('operator/') ? stream.slice('operator/'.length) : undefined
+                }
+                onClick={(operatorId) => onChangeStream(`operator/${operatorId}`)}
+              />
+            )}
           </div>
         </div>
       </div>

@@ -1,7 +1,7 @@
 import { PropsWithChildren, Suspense, lazy, useState } from 'react';
 import { BrowserRouter, Navigate, Outlet, Route, Routes, useNavigate } from 'react-router-dom';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
-import { ConfigProvider, Spin, message } from 'antd';
+import { ConfigProvider, Result, Spin, message } from 'antd';
 import zhCN from 'antd/locale/zh_CN';
 import { StyleProvider } from '@ant-design/cssinjs';
 import { MdSettings } from 'react-icons/md';
@@ -9,21 +9,22 @@ import { BiSolidInbox, BiSolidDoughnutChart, BiCheckShield } from 'react-icons/b
 import axios from 'axios';
 
 import { SocketProvider, useSocket } from '@/socket';
-import { AuthProvider } from './auth';
+import { AuthProvider, useCurrentUser } from './auth';
 import Conversations from './Conversations';
-import { Layout } from './Layout';
+import { Layout, Nav } from './Layout';
 import { Compose } from './compose';
 import { useAutoPushNewMessage, useSubscribeConversations } from './hooks/conversation';
 import { useAuthContext } from './auth';
 import { useSubscribeOperatorsStatus } from './hooks/operator';
 import { NowProvider } from './contexts/NowContext';
+import { OperatorRole } from './types';
 
 const Login = lazy(() => import('./Login'));
 const Quality = lazy(() => import('./Statistics/Quality'));
 const Statistics = lazy(() => import('./Statistics'));
 const Settings = lazy(() => import('./Settings'));
 
-const navs = [
+const navs: (Nav & { roles?: OperatorRole[] })[] = [
   {
     to: 'conversations',
     icon: BiSolidInbox,
@@ -31,14 +32,17 @@ const navs = [
   {
     to: 'quality',
     icon: BiCheckShield,
+    roles: [OperatorRole.Admin],
   },
   {
     to: 'statistics',
     icon: BiSolidDoughnutChart,
+    roles: [OperatorRole.Admin],
   },
   {
     to: 'settings',
     icon: MdSettings,
+    roles: [OperatorRole.Admin],
   },
 ];
 
@@ -52,14 +56,14 @@ function Fallback() {
   );
 }
 
-function Entry2() {
+function SocketSubscription() {
   const socket = useSocket();
 
   useAutoPushNewMessage(socket);
   useSubscribeConversations(socket);
   useSubscribeOperatorsStatus(socket);
 
-  return <Outlet />;
+  return null;
 }
 
 function RequireAuth({ children }: PropsWithChildren) {
@@ -72,12 +76,23 @@ function RequireAuth({ children }: PropsWithChildren) {
   return children;
 }
 
+function RequireRole({ roles, children }: PropsWithChildren<{ roles: OperatorRole[] }>) {
+  const user = useCurrentUser();
+  if (!roles.includes(user.role)) {
+    return <Result status="403" title="未经授权的访问" subTitle="对不起，您没有权限访问此页面。" />;
+  }
+  return children;
+}
+
 function Entry() {
+  const user = useCurrentUser();
+
   return (
     <SocketProvider uri="/o">
-      <Layout navs={navs}>
+      <SocketSubscription />
+      <Layout navs={navs.filter((nav) => !nav.roles || nav.roles.includes(user.role))}>
         <Suspense fallback={<Fallback />}>
-          <Entry2 />
+          <Outlet />
         </Suspense>
       </Layout>
     </SocketProvider>
@@ -139,9 +154,30 @@ export default function Panel() {
               }
             >
               <Route path="conversations" element={<Conversations />} />
-              <Route path="quality/*" element={<Quality />} />
-              <Route path="statistics/*" element={<Statistics />} />
-              <Route path="settings/*" element={<Settings />} />
+              <Route
+                path="quality/*"
+                element={
+                  <RequireRole roles={[OperatorRole.Admin]}>
+                    <Quality />
+                  </RequireRole>
+                }
+              />
+              <Route
+                path="statistics/*"
+                element={
+                  <RequireRole roles={[OperatorRole.Admin]}>
+                    <Statistics />
+                  </RequireRole>
+                }
+              />
+              <Route
+                path="settings/*"
+                element={
+                  <RequireRole roles={[OperatorRole.Admin]}>
+                    <Settings />
+                  </RequireRole>
+                }
+              />
             </Route>
           </Routes>
         </AuthProvider>
