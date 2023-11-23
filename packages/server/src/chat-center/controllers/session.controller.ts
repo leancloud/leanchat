@@ -1,38 +1,44 @@
 import { promisify } from 'node:util';
 import {
+  BadRequestException,
   Body,
   Controller,
   Delete,
   Post,
   Req,
-  UnauthorizedException,
   UsePipes,
 } from '@nestjs/common';
 import { Request } from 'express';
 import { ZodValidationPipe } from 'nestjs-zod';
 
-import { OperatorService } from 'src/chat';
+import { Operator } from 'src/chat';
+import { SessionService } from '../services';
 import { OperatorDto } from '../dtos/operator';
 import { CreateSessionDto } from '../dtos/create-session.dto';
 
 @Controller('sessions')
 @UsePipes(ZodValidationPipe)
 export class SessionController {
-  constructor(private operatorService: OperatorService) {}
+  constructor(private sessionService: SessionService) {}
 
   @Post()
   async createSession(@Req() req: Request, @Body() data: CreateSessionDto) {
-    const operator = await this.operatorService.getOperatorByUsername(
-      data.username,
-      true,
-    );
+    let operator: Operator | null | undefined;
+
+    if (data.username && data.password) {
+      operator = await this.sessionService.createSessionByUsername(
+        data.username,
+        data.password,
+      );
+    } else if (data.token) {
+      operator = await this.sessionService.createSessionByToken(data.token);
+    } else {
+      throw new BadRequestException('无效的登录凭证');
+    }
+
     if (!operator) {
-      throw new UnauthorizedException(`客服 ${data.username} 不存在`);
+      throw new BadRequestException('登录失败');
     }
-    if (!(await operator.comparePassword(data.password))) {
-      throw new UnauthorizedException('用户名密码不匹配');
-    }
-    delete operator.password;
 
     await promisify(req.session.regenerate).call(req.session);
     req.session.uid = operator.id;

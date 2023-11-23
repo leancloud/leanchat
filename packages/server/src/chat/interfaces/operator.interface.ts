@@ -6,7 +6,7 @@ export interface CreateOperatorData {
   password: string;
   internalName: string;
   externalName: string;
-  concurrency: number;
+  concurrency?: number;
 }
 
 export interface UpdateOperatorData {

@@ -14,7 +14,7 @@ export class OperatorService implements OnApplicationBootstrap {
   @InjectModel(Operator)
   private operatorModel: ReturnModelType<typeof Operator>;
 
-  private generateRandomPassword(length: number) {
+  generateRandomPassword(length: number) {
     if (length <= 0) {
       throw new Error('Password length must be greater than 0');
     }
@@ -56,7 +56,7 @@ export class OperatorService implements OnApplicationBootstrap {
       username: data.username,
       internalName: data.internalName,
       externalName: data.externalName,
-      concurrency: data.concurrency,
+      concurrency: data.concurrency ?? 0,
     });
     await operator.setPassword(data.password);
     await operator.save();
@@ -104,7 +104,6 @@ export class OperatorService implements OnApplicationBootstrap {
         password,
         externalName: '管理员',
         internalName: '管理员',
-        concurrency: 0,
       });
       return { admin, password };
     } catch {}

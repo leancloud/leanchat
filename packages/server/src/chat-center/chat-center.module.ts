@@ -11,6 +11,7 @@ import {
   AutoCloseConversationService,
   ConversationTransformService,
   OnlineTimeService,
+  SessionService,
 } from './services';
 import {
   APIController,
@@ -37,6 +38,7 @@ import { MessageDto } from './dtos/message';
     AutoCloseConversationService,
     OnlineTimeService,
     ConversationTransformService,
+    SessionService,
   ],
   controllers: [
     APIController,
