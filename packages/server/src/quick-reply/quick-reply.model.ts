@@ -15,7 +15,7 @@ export class QuickReply {
   @Prop()
   content: string;
 
-  @Prop()
+  @Prop({ type: String })
   tags?: string[];
 
   createdAt: Date;
