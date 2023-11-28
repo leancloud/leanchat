@@ -48,11 +48,11 @@
     "lodash": "^4.17.21",
     "lru-cache": "^10.0.1",
     "mongoose": "^7.5.0",
-    "nestjs-zod": "^2.3.3",
+    "nestjs-zod": "^3.0.0",
     "reflect-metadata": "^0.1.13",
     "rxjs": "^7.8.1",
     "socket.io": "^4.7.2",
-    "zod": "^3.21.4"
+    "zod": "^3.22.4"
   },
   "devDependencies": {
     "@nestjs/cli": "^10.1.11",
