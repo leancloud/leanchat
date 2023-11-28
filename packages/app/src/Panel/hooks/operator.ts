@@ -1,9 +1,9 @@
 import { useEffect } from 'react';
-import { useQuery, useQueryClient } from '@tanstack/react-query';
+import { UseQueryOptions, useQuery, useQueryClient } from '@tanstack/react-query';
 import { Socket } from 'socket.io-client';
 import { produce } from 'immer';
 
-import { getOperators } from '@/Panel/api/operator';
+import { getOperator, getOperators } from '@/Panel/api/operator';
 import { Operator } from '@/Panel/types';
 import { useAuthContext } from '../auth';
 
@@ -12,11 +12,19 @@ interface OperatorStatusChangedEvent {
   status: number;
 }
 
-export function useOperators() {
+export function useOperators(options?: UseQueryOptions<Operator[]>) {
   return useQuery({
     queryKey: ['Operators'],
     queryFn: getOperators,
     staleTime: 1000 * 60 * 5,
+    ...options,
+  });
+}
+
+export function useOperator(operatorId: string) {
+  return useQuery({
+    queryKey: ['Operator', operatorId],
+    queryFn: () => getOperator(operatorId),
   });
 }
 

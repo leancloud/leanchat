@@ -1,6 +1,7 @@
 import { ComponentProps, ReactNode } from 'react';
 import { FaUserCheck, FaUser, FaUserGroup, FaMagnifyingGlass } from 'react-icons/fa6';
 import { Transition } from '@headlessui/react';
+import { Popover } from 'antd';
 import cx from 'classnames';
 
 import { useOperators } from '../hooks/operator';
@@ -8,6 +9,7 @@ import { Avatar } from '../components/Avatar';
 import { useScrolled } from '../hooks/useScrolled';
 import { useCurrentUser } from '../auth';
 import { OperatorRole } from '../types';
+import { OperatorProfile } from './components/OperatorProfile';
 
 function SiderButton({ active, ...props }: ComponentProps<'button'> & { active?: boolean }) {
   return (
@@ -46,14 +48,22 @@ function TeamSection({ activeOperatorId, onClick }: TeamSectionProps) {
   return (
     <Section title="团队">
       {operators?.map((operator) => (
-        <SiderButton
+        <Popover
           key={operator.id}
-          active={operator.id === activeOperatorId}
-          onClick={() => onClick(operator.id)}
+          placement="rightTop"
+          arrow={false}
+          mouseEnterDelay={1}
+          destroyTooltipOnHide
+          content={() => <OperatorProfile operatorId={operator.id} />}
         >
-          <Avatar size={20} status={operator.status} />
-          <div className="ml-3"> {operator.internalName}</div>
-        </SiderButton>
+          <SiderButton
+            active={operator.id === activeOperatorId}
+            onClick={() => onClick(operator.id)}
+          >
+            <Avatar size={20} status={operator.status} />
+            <div className="ml-3"> {operator.internalName}</div>
+          </SiderButton>
+        </Popover>
       ))}
     </Section>
   );

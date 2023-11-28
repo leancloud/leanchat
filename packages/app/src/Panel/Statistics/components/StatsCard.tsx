@@ -24,7 +24,7 @@ export function StatsCard({ title, value }: StatsCardProps) {
       className="border bg-[#f7f7f7] w-[180px] h-[100px] flex flex-col justify-center items-center"
     >
       <div className="text-sm leading-[14px]">{title}</div>
-      <div ref={valueRef} className="text-[28px] leading-[28px] mt-[10px] break-keep">
+      <div ref={valueRef} className="text-[28px] leading-[28px] mt-[10px] break-keep px-2">
         {value}
       </div>
     </div>

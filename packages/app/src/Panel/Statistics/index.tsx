@@ -5,13 +5,19 @@ import { ConversationMessageStatistics } from './MessageStatistics';
 import { ConversationRecord } from './ConversationRecord';
 import { OperatorStats } from './OperatorStats';
 import { EvaluationStats } from './EvaluationStats';
+import { WorkStats } from './WorkStats';
 
 export default function Statistics() {
   return (
     <div className="p-10 pt-6 bg-white h-full overflow-auto">
       <Tabs
-        defaultActiveKey="conversation"
+        defaultActiveKey="work"
         items={[
+          {
+            key: 'work',
+            label: '工作统计',
+            children: <WorkStats />,
+          },
           {
             key: 'conversation',
             label: '会话统计',

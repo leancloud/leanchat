@@ -177,3 +177,15 @@ export async function getEvaluationStats(options: GetEvaluationStatsOptions) {
   });
   return res.data;
 }
+
+export interface WorkStats {
+  openCount: number;
+  totalCount: number;
+  queueLength: number;
+  maxQueueingTime?: number;
+}
+
+export async function getWorkStats() {
+  const res = await client.get<WorkStats>('/statistics/work');
+  return res.data;
+}

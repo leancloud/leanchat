@@ -45,7 +45,14 @@ export interface Operator {
   externalName: string;
   internalName: string;
   concurrency: number;
-  status: number;
+  status: OperatorStatus;
+  workload: number;
+}
+
+export enum OperatorStatus {
+  Ready = 1,
+  Busy = 2,
+  Leave = 3,
 }
 
 export interface Category {
