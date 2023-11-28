@@ -2,7 +2,11 @@ import { Controller, Get, Query, UseGuards, UsePipes } from '@nestjs/common';
 import { ZodValidationPipe } from 'nestjs-zod';
 import _ from 'lodash';
 
-import { ConversationService, StatsService } from 'src/chat/services';
+import {
+  ChatService,
+  ConversationService,
+  StatsService,
+} from 'src/chat/services';
 import { GetConversationStatsDto } from '../dtos/conversation';
 import { AuthGuard } from '../guards/auth.guard';
 import { GetEvaluationStatsDto, GetOperatorStatsDto } from '../dtos/stats';
@@ -16,6 +20,7 @@ export class StatisticsController {
     private conversationService: ConversationService,
     private statsService: StatsService,
     private operatorOnlineService: OperatorOnlineService,
+    private chatService: ChatService,
   ) {}
 
   @Get('conversation')
@@ -79,5 +84,22 @@ export class StatisticsController {
       skip: (page - 1) * pageSize,
       limit: pageSize,
     });
+  }
+
+  @Get('work')
+  async getWorkStats() {
+    const openCount = await this.conversationService.getOpenConversationCount();
+    const totalCount = await this.conversationService.countConversations({});
+    const queueLength = await this.chatService.getQueueLength();
+    const earliestEnqueueTime =
+      await this.chatService.getTheEarliestEnqueueTime();
+    const maxQueueingTime =
+      earliestEnqueueTime && Date.now() - earliestEnqueueTime.getTime();
+    return {
+      openCount,
+      totalCount,
+      queueLength,
+      maxQueueingTime,
+    };
   }
 }

@@ -13,7 +13,9 @@ export class OperatorDto {
 
   concurrency: number;
 
-  status?: number;
+  status: number;
+
+  workload: number;
 
   static fromDocument(operator: Operator) {
     const dto = new OperatorDto();
@@ -24,6 +26,7 @@ export class OperatorDto {
     dto.internalName = operator.internalName;
     dto.concurrency = operator.concurrency;
     dto.status = operator.status ?? OperatorStatus.Leave;
+    dto.workload = operator.workload ?? 0;
     return dto;
   }
 }

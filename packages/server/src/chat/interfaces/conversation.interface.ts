@@ -14,12 +14,15 @@ export interface CreateConversationData {
   visitorId: string;
 }
 
-export interface GetConversationOptions {
+export interface ConversationFilters {
   status?: ConversationStatus;
   operatorId?: string | null;
   desc?: boolean;
   before?: Date;
   after?: Date;
+}
+
+export interface GetConversationOptions extends ConversationFilters {
   skip?: number;
   limit?: number;
 }

@@ -331,6 +331,18 @@ export class ChatService {
     return rank + 1;
   }
 
+  async getTheEarliestEnqueueTime() {
+    const [, time] = await this.redis.zrange(
+      'conversation_queue',
+      0,
+      0,
+      'WITHSCORES',
+    );
+    if (time) {
+      return new Date(parseInt(time));
+    }
+  }
+
   @OnEvent('conversation.created', { async: true })
   async addAutoAssignJob({ conversation }: ConversationCreatedEvent) {
     const queueSize = await this.getQueueLength();

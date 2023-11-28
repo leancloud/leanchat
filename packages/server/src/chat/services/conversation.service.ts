@@ -14,6 +14,7 @@ import _ from 'lodash';
 import { objectId } from 'src/helpers';
 import { Conversation, Message } from '../models';
 import {
+  ConversationFilters,
   CreateConversationData,
   GetConversationMessageStatsOptions,
   GetConversationOptions,
@@ -61,15 +62,13 @@ export class ConversationService {
     return this.conversationModel.findById(id).exec();
   }
 
-  getConversations({
+  private createConversationQuery({
     status,
     operatorId,
     desc,
     before,
     after,
-    skip,
-    limit = 10,
-  }: GetConversationOptions) {
+  }: ConversationFilters) {
     const query = this.conversationModel.find();
     if (operatorId !== undefined) {
       if (operatorId === null) {
@@ -88,11 +87,28 @@ export class ConversationService {
     if (after) {
       query.gt('createdAt', after);
     }
+    return query;
+  }
+
+  getConversations({ skip, limit = 10, ...filters }: GetConversationOptions) {
+    const query = this.createConversationQuery(filters);
     if (skip) {
       query.skip(skip);
     }
     query.limit(limit);
     return query.exec();
+  }
+
+  countConversations(filters: ConversationFilters) {
+    const query = this.createConversationQuery(filters);
+    return query.countDocuments().exec();
+  }
+
+  getOpenConversationCount(operatorId?: string) {
+    return this.countConversations({
+      operatorId,
+      status: ConversationStatus.Open,
+    });
   }
 
   async getInactiveConversationIds({
@@ -176,17 +192,6 @@ export class ConversationService {
     }
 
     return conversation;
-  }
-
-  getOpenConversationCount(operatorId: string) {
-    return this.conversationModel
-      .count({
-        operatorId,
-        closedAt: {
-          $exists: false,
-        },
-      })
-      .exec();
   }
 
   async getConversationStats({
