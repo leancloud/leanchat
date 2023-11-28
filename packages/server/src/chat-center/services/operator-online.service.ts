@@ -30,16 +30,12 @@ export class OperatorOnlineService {
     }
   }
 
-  async gc(daysBefore = 90) {
-    const result = await this.onlineRecordModel
-      .deleteMany({
-        timestamp: {
-          $lt: subDays(new Date(), daysBefore),
-        },
-      })
-      .limit(1000)
-      .exec();
-    return result.deletedCount;
+  async gc(daysBefore = 180) {
+    await this.onlineRecordModel.deleteMany({
+      timestamp: {
+        $lt: subDays(new Date(), daysBefore),
+      },
+    });
   }
 
   async getOnlineTimeStats(from: Date, to: Date, operatorIds?: string[]) {
