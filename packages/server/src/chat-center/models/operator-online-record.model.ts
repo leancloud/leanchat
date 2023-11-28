@@ -4,11 +4,11 @@ import { Types } from 'mongoose';
 @Index({ timestamp: 1, operatorId: 1 }, { unique: true })
 @ModelOptions({
   schemaOptions: {
-    collection: 'operator_online_time',
+    collection: 'operator_online_record',
     versionKey: false,
   },
 })
-export class OperatorOnlineTime {
+export class OperatorOnlineRecord {
   _id: Types.ObjectId;
 
   id: string;

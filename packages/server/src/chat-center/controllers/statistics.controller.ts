@@ -6,7 +6,7 @@ import { ConversationService, StatsService } from 'src/chat/services';
 import { GetConversationStatsDto } from '../dtos/conversation';
 import { AuthGuard } from '../guards/auth.guard';
 import { GetEvaluationStatsDto, GetOperatorStatsDto } from '../dtos/stats';
-import { OperatorOnlineTimeService } from '../services';
+import { OperatorOnlineService } from '../services';
 
 @Controller('statistics')
 @UseGuards(AuthGuard)
@@ -15,7 +15,7 @@ export class StatisticsController {
   constructor(
     private conversationService: ConversationService,
     private statsService: StatsService,
-    private onlineTimeService: OperatorOnlineTimeService,
+    private operatorOnlineService: OperatorOnlineService,
   ) {}
 
   @Get('conversation')
@@ -33,7 +33,7 @@ export class StatisticsController {
     const conversationStats =
       await this.statsService.getOperatorConversationStats(query);
 
-    const onlineStats = await this.onlineTimeService.getOnlineTimeStats(
+    const onlineStats = await this.operatorOnlineService.getOnlineTimeStats(
       query.from,
       query.to,
       query.operatorId,

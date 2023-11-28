@@ -5,16 +5,16 @@ import { FilterQuery, Types } from 'mongoose';
 import { startOfMinute, subDays } from 'date-fns';
 
 import { OperatorService, OperatorStatus } from 'src/chat';
-import { OperatorOnlineTime } from '../models/operator-online-time.model';
+import { OperatorOnlineRecord } from '../models/operator-online-record.model';
 
 @Injectable()
-export class OperatorOnlineTimeService {
-  @InjectModel(OperatorOnlineTime)
-  private operatorOnlineTimeModel: ReturnModelType<typeof OperatorOnlineTime>;
+export class OperatorOnlineService {
+  @InjectModel(OperatorOnlineRecord)
+  private onlineRecordModel: ReturnModelType<typeof OperatorOnlineRecord>;
 
   constructor(private operatorService: OperatorService) {}
 
-  async recordOnlineTime(operatorIds: string[]) {
+  async createOnlineRecord(operatorIds: string[]) {
     const operators = await this.operatorService.getOperators(operatorIds);
 
     const time = startOfMinute(new Date());
@@ -24,14 +24,14 @@ export class OperatorOnlineTimeService {
       status: operator.status ?? OperatorStatus.Leave,
     }));
     try {
-      await this.operatorOnlineTimeModel.insertMany(docs, { ordered: false });
+      await this.onlineRecordModel.insertMany(docs, { ordered: false });
     } catch {
       // ignore duplicate key error
     }
   }
 
   async gc(daysBefore = 90) {
-    const result = await this.operatorOnlineTimeModel
+    const result = await this.onlineRecordModel
       .deleteMany({
         timestamp: {
           $lt: subDays(new Date(), daysBefore),
@@ -43,7 +43,7 @@ export class OperatorOnlineTimeService {
   }
 
   async getOnlineTimeStats(from: Date, to: Date, operatorIds?: string[]) {
-    const $match: FilterQuery<OperatorOnlineTime> = {
+    const $match: FilterQuery<OperatorOnlineRecord> = {
       timestamp: {
         $gte: from,
         $lte: to,
@@ -62,7 +62,7 @@ export class OperatorOnlineTimeService {
       },
     });
 
-    const results = await this.operatorOnlineTimeModel.aggregate([
+    const results = await this.onlineRecordModel.aggregate([
       { $match },
       {
         $group: {

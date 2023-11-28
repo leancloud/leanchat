@@ -5,12 +5,12 @@ import { TypegooseModule } from '@m8a/nestjs-typegoose';
 import { ChatModule } from 'src/chat';
 import { CategoryModule } from 'src/category';
 import { QuickReplyModule } from 'src/quick-reply';
-import { OperatorOnlineTime } from './models/operator-online-time.model';
+import { OperatorOnlineRecord } from './models/operator-online-record.model';
 import { ChatGateway } from './chat.gateway';
 import {
   AutoCloseConversationService,
   ConversationTransformService,
-  OperatorOnlineTimeService,
+  OperatorOnlineService,
   SessionService,
 } from './services';
 import {
@@ -28,7 +28,7 @@ import { MessageDto } from './dtos/message';
 
 @Module({
   imports: [
-    TypegooseModule.forFeature([OperatorOnlineTime]),
+    TypegooseModule.forFeature([OperatorOnlineRecord]),
     ChatModule,
     CategoryModule,
     QuickReplyModule,
@@ -36,7 +36,7 @@ import { MessageDto } from './dtos/message';
   providers: [
     ChatGateway,
     AutoCloseConversationService,
-    OperatorOnlineTimeService,
+    OperatorOnlineService,
     ConversationTransformService,
     SessionService,
   ],

@@ -30,7 +30,7 @@ import { ConversationDto } from './dtos/conversation';
 import { CreateMessageDto, MessageDto } from './dtos/message';
 import {
   ConversationTransformService,
-  OperatorOnlineTimeService,
+  OperatorOnlineService,
 } from './services';
 
 @WebSocketGateway({ namespace: 'o' })
@@ -44,7 +44,7 @@ export class ChatGateway implements OnModuleInit, OnGatewayConnection {
     private conversationService: ConversationService,
     private chatService: ChatService,
     private leancloudService: LeanCloudService,
-    private onlineTimeService: OperatorOnlineTimeService,
+    private operatorOnlineService: OperatorOnlineService,
     private convTransformService: ConversationTransformService,
   ) {}
 
@@ -67,8 +67,8 @@ export class ChatGateway implements OnModuleInit, OnGatewayConnection {
     if (operatorIds.length === 0) {
       return;
     }
-    await this.onlineTimeService.recordOnlineTime(_.uniq(operatorIds));
-    await this.onlineTimeService.gc();
+    await this.operatorOnlineService.createOnlineRecord(_.uniq(operatorIds));
+    await this.operatorOnlineService.gc();
   }
 
   handleConnection(socket: Socket) {
