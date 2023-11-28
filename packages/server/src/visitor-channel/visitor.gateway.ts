@@ -146,10 +146,10 @@ export class VisitorGateway implements OnModuleInit, OnGatewayConnection {
     initData.messages = messages.reverse().map(MessageDto.fromDocument);
 
     if (messages.length < messageCount) {
-      const greetingConfig = await this.configService.get('greeting');
-      if (greetingConfig?.enabled) {
+      const greetingMessage = await this.configService.get('greetingMessage');
+      if (greetingMessage?.enabled) {
         initData.messages.unshift(
-          MessageDto.fromText('greeting', greetingConfig.message.text),
+          MessageDto.fromText('greeting', greetingMessage.text),
         );
       }
     }

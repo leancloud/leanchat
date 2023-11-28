@@ -14,14 +14,14 @@ import { ZodSchema } from 'zod';
 import { ConfigService } from 'src/config';
 import { AuthGuard } from '../guards/auth.guard';
 import {
-  GreetingConfigSchema,
+  GreetingMessageConfigSchema,
+  NoReadyOperatorMessageConfigSchema,
   AutoCloseConfigSchema,
   QueueConfigSchema,
-  NoReadyOperatorMessageConfigSchema,
 } from '../dtos/config';
 
 const schemas: Record<string, ZodSchema> = {
-  greeting: GreetingConfigSchema,
+  greetingMessage: GreetingMessageConfigSchema,
   noReadyOperatorMessage: NoReadyOperatorMessageConfigSchema,
   autoClose: AutoCloseConfigSchema,
   queue: QueueConfigSchema,

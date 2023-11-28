@@ -1,10 +1,8 @@
 import { z } from 'zod';
 
-export const GreetingConfigSchema = z.object({
+export const GreetingMessageConfigSchema = z.object({
   enabled: z.boolean(),
-  message: z.object({
-    text: z.string(),
-  }),
+  text: z.string(),
 });
 
 export const NoReadyOperatorMessageConfigSchema = z.object({
