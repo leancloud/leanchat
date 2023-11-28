@@ -6,7 +6,7 @@ import { ConversationService, StatsService } from 'src/chat/services';
 import { GetConversationStatsDto } from '../dtos/conversation';
 import { AuthGuard } from '../guards/auth.guard';
 import { GetEvaluationStatsDto, GetOperatorStatsDto } from '../dtos/stats';
-import { OnlineTimeService } from '../services';
+import { OperatorOnlineTimeService } from '../services';
 
 @Controller('statistics')
 @UseGuards(AuthGuard)
@@ -15,7 +15,7 @@ export class StatisticsController {
   constructor(
     private conversationService: ConversationService,
     private statsService: StatsService,
-    private onlineTimeService: OnlineTimeService,
+    private onlineTimeService: OperatorOnlineTimeService,
   ) {}
 
   @Get('conversation')

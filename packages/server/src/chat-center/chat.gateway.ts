@@ -28,7 +28,10 @@ import { LeanCloudService } from 'src/leancloud';
 import { WsInterceptor } from 'src/common/interceptors';
 import { ConversationDto } from './dtos/conversation';
 import { CreateMessageDto, MessageDto } from './dtos/message';
-import { ConversationTransformService, OnlineTimeService } from './services';
+import {
+  ConversationTransformService,
+  OperatorOnlineTimeService,
+} from './services';
 
 @WebSocketGateway({ namespace: 'o' })
 @UsePipes(ZodValidationPipe)
@@ -41,7 +44,7 @@ export class ChatGateway implements OnModuleInit, OnGatewayConnection {
     private conversationService: ConversationService,
     private chatService: ChatService,
     private leancloudService: LeanCloudService,
-    private onlineTimeService: OnlineTimeService,
+    private onlineTimeService: OperatorOnlineTimeService,
     private convTransformService: ConversationTransformService,
   ) {}
 

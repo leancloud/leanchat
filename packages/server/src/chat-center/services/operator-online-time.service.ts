@@ -5,12 +5,12 @@ import { FilterQuery, Types } from 'mongoose';
 import { startOfMinute } from 'date-fns';
 
 import { OperatorService, OperatorStatus } from 'src/chat';
-import { OnlineTime } from '../models/online-time.model';
+import { OperatorOnlineTime } from '../models/operator-online-time.model';
 
 @Injectable()
-export class OnlineTimeService {
-  @InjectModel(OnlineTime)
-  private onlineTimeModel: ReturnModelType<typeof OnlineTime>;
+export class OperatorOnlineTimeService {
+  @InjectModel(OperatorOnlineTime)
+  private operatorOnlineTimeModel: ReturnModelType<typeof OperatorOnlineTime>;
 
   constructor(private operatorService: OperatorService) {}
 
@@ -24,14 +24,14 @@ export class OnlineTimeService {
       status: operator.status ?? OperatorStatus.Leave,
     }));
     try {
-      await this.onlineTimeModel.insertMany(docs, { ordered: false });
+      await this.operatorOnlineTimeModel.insertMany(docs, { ordered: false });
     } catch {
       // ignore duplicate key error
     }
   }
 
   async getOnlineTimeStats(from: Date, to: Date, operatorIds?: string[]) {
-    const $match: FilterQuery<OnlineTime> = {
+    const $match: FilterQuery<OperatorOnlineTime> = {
       timestamp: {
         $gte: from,
         $lte: to,
@@ -50,7 +50,7 @@ export class OnlineTimeService {
       },
     });
 
-    const results = await this.onlineTimeModel.aggregate([
+    const results = await this.operatorOnlineTimeModel.aggregate([
       { $match },
       {
         $group: {
