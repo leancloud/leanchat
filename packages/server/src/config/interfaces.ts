@@ -1,8 +1,6 @@
-export interface GreetingConfig {
+export interface GreetingMessageConfig {
   enabled: boolean;
-  message: {
-    text: string;
-  };
+  text: string;
 }
 
 export interface NoReadyOperatorMessageConfig {
@@ -28,7 +26,7 @@ export interface QueueConfig {
 }
 
 export interface ConfigKeys {
-  greeting: GreetingConfig;
+  greetingMessage: GreetingMessageConfig;
   noReadyOperatorMessage: NoReadyOperatorMessageConfig;
   autoClose: AutoCloseConfig;
   queue: QueueConfig;

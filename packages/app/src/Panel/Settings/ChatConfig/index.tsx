@@ -13,7 +13,7 @@ function Loading() {
 }
 
 function GreetingConfigForm() {
-  const { data, isLoading, update, isUpdating } = useConfig('greeting', {
+  const { data, isLoading, update, isUpdating } = useConfig('greetingMessage', {
     onSuccess: () => {
       message.success('已保存');
     },
@@ -28,9 +28,7 @@ function GreetingConfigForm() {
       initialValues={
         data || {
           enabled: false,
-          message: {
-            text: '您好，请问有什么可以帮您？',
-          },
+          text: '您好，请问有什么可以帮您？',
         }
       }
       onFinish={update}
@@ -45,7 +43,7 @@ function GreetingConfigForm() {
       </Form.Item>
       <Form.Item
         wrapperCol={{ offset: 4 }}
-        name={['message', 'text']}
+        name="text"
         rules={[{ required: true }]}
         extra="用户打开聊天组件，系统将使用此说辞作为欢迎语"
       >

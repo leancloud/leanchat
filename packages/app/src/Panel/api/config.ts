@@ -1,10 +1,8 @@
 import { client } from './client';
 
-export interface GreetingConfig {
+export interface GreetingMessageConfig {
   enabled: boolean;
-  message: {
-    text: string;
-  };
+  text: string;
 }
 
 export interface NoReadyOperatorMessageConfig {
