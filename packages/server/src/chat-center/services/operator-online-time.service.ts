@@ -2,7 +2,7 @@ import { InjectModel } from '@m8a/nestjs-typegoose';
 import { Injectable } from '@nestjs/common';
 import { ReturnModelType } from '@typegoose/typegoose';
 import { FilterQuery, Types } from 'mongoose';
-import { startOfMinute } from 'date-fns';
+import { startOfMinute, subDays } from 'date-fns';
 
 import { OperatorService, OperatorStatus } from 'src/chat';
 import { OperatorOnlineTime } from '../models/operator-online-time.model';
@@ -28,6 +28,18 @@ export class OperatorOnlineTimeService {
     } catch {
       // ignore duplicate key error
     }
+  }
+
+  async gc(daysBefore = 90) {
+    const result = await this.operatorOnlineTimeModel
+      .deleteMany({
+        timestamp: {
+          $lt: subDays(new Date(), daysBefore),
+        },
+      })
+      .limit(1000)
+      .exec();
+    return result.deletedCount;
   }
 
   async getOnlineTimeStats(from: Date, to: Date, operatorIds?: string[]) {

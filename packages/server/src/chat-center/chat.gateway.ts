@@ -60,14 +60,15 @@ export class ChatGateway implements OnModuleInit, OnGatewayConnection {
   }
 
   @Cron('0 * * * * *')
-  chenkOnline() {
+  async chenkOnline() {
     const operatorIds = Array.from(this.server.sockets.values()).map(
       (socket) => socket.data.id,
     );
     if (operatorIds.length === 0) {
       return;
     }
-    this.onlineTimeService.recordOnlineTime(_.uniq(operatorIds));
+    await this.onlineTimeService.recordOnlineTime(_.uniq(operatorIds));
+    await this.onlineTimeService.gc();
   }
 
   handleConnection(socket: Socket) {
