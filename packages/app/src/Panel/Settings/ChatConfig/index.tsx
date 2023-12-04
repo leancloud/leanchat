@@ -1,5 +1,6 @@
+import { Fragment } from 'react';
 import { BsFillChatLeftDotsFill } from 'react-icons/bs';
-import { Button, Checkbox, Form, Input, InputNumber, Spin, message } from 'antd';
+import { Button, Checkbox, Form, Input, InputNumber, Select, Spin, message } from 'antd';
 
 import { useConfig } from '@/Panel/hooks/config';
 import { Container } from '../components/Container';
@@ -213,6 +214,53 @@ function QueueConfigForm() {
   );
 }
 
+function EvaluationConfigForm() {
+  const { data, isLoading, update, isUpdating } = useConfig('evaluation', {
+    onSuccess: () => {
+      message.success('已保存');
+    },
+  });
+
+  if (isLoading) {
+    return <Loading />;
+  }
+
+  return (
+    <Form initialValues={data || undefined} onFinish={update}>
+      {[
+        { key: 'positive', label: '好评选项' },
+        { key: 'negative', label: '差评选项' },
+      ].map(({ key, label }) => (
+        <Fragment key={key}>
+          <Form.Item
+            labelCol={{ span: 4 }}
+            wrapperCol={{ span: 22 }}
+            label={label}
+            name={['tag', key, 'options']}
+            initialValue={[]}
+            style={{ marginBottom: 10 }}
+          >
+            <Select mode="tags" />
+          </Form.Item>
+          <Form.Item
+            wrapperCol={{ offset: 4 }}
+            valuePropName="checked"
+            name={['tag', key, 'required']}
+            initialValue={false}
+          >
+            <Checkbox>必填</Checkbox>
+          </Form.Item>
+        </Fragment>
+      ))}
+      <Form.Item wrapperCol={{ offset: 4 }}>
+        <Button type="primary" htmlType="submit" loading={isUpdating}>
+          保存
+        </Button>
+      </Form.Item>
+    </Form>
+  );
+}
+
 export function ChatConfig() {
   return (
     <Container
@@ -222,17 +270,20 @@ export function ChatConfig() {
       }}
     >
       <div className="max-w-[800px]">
-        <h2 className="text-base font-medium mb-4">欢迎语</h2>
-        <GreetingConfigForm />
-
-        <h2 className="text-base font-medium my-4">无客服在线提示语</h2>
-        <NoReadyOperatorMessageConfigForm />
-
-        <h2 className="text-base font-medium my-4">自动踢线</h2>
-        <AutoCloseConversationForm />
-
-        <h2 className="text-base font-medium my-4">排队设置</h2>
-        <QueueConfigForm />
+        {(
+          [
+            ['欢迎语', GreetingConfigForm],
+            ['无客服在线提示语', NoReadyOperatorMessageConfigForm],
+            ['自动踢线', AutoCloseConversationForm],
+            ['排队设置', QueueConfigForm],
+            ['评价设置', EvaluationConfigForm],
+          ] as const
+        ).map(([title, Form]) => (
+          <Fragment key={title}>
+            <h2 className="text-base font-medium my-4">{title}</h2>
+            <Form />
+          </Fragment>
+        ))}
       </div>
     </Container>
   );

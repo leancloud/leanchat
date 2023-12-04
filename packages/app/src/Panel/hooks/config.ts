@@ -2,6 +2,7 @@ import { useMutation, useQuery } from '@tanstack/react-query';
 
 import {
   AutoCloseConfig,
+  EvaluationConfig,
   GreetingMessageConfig,
   NoReadyOperatorMessageConfig,
   QueueConfig,
@@ -14,6 +15,7 @@ interface ConfigKeys {
   noReadyOperatorMessage: NoReadyOperatorMessageConfig;
   autoClose: AutoCloseConfig;
   queue: QueueConfig;
+  evaluation: EvaluationConfig;
 }
 
 interface UseConfigOptions {

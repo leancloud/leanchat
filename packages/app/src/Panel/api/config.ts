@@ -27,6 +27,19 @@ export interface QueueConfig {
   };
 }
 
+export interface EvaluationConfig {
+  tag: {
+    positive: {
+      options: string[];
+      required: boolean;
+    };
+    negative: {
+      options: string[];
+      required: boolean;
+    };
+  };
+}
+
 export async function getConfig<T>(key: string) {
   const res = await client.get<T | null>(`/config/${key}`);
   return res.data;
