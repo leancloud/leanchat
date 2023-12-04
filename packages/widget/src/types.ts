@@ -31,9 +31,21 @@ export interface Message {
 
 export interface EvaluateData {
   star: number;
-  feedback: string;
+  feedback?: string;
+  tags?: string[];
 }
 
 export enum UserType {
   Visitor = 1,
+}
+
+export interface EvaluationTag {
+  positive: {
+    options: string[];
+    required: boolean;
+  };
+  negative: {
+    options: string[];
+    required: boolean;
+  };
 }

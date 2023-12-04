@@ -20,11 +20,12 @@ export default function Modern() {
   const [show, setShow] = useState(true);
   const [showEvaluationModal, setShowEvaluationModal] = useState(false);
 
-  const { connected, reconnecting, conversation, messages, send, evaluate, close } = useChat({
-    onInviteEvaluation: () => {
-      setShowEvaluationModal(true);
-    },
-  });
+  const { connected, reconnecting, conversation, messages, evaluationTag, send, evaluate, close } =
+    useChat({
+      onInviteEvaluation: () => {
+        setShowEvaluationModal(true);
+      },
+    });
 
   useEffect(() => {
     iframe.style.position = 'fixed';
@@ -139,6 +140,7 @@ export default function Modern() {
                 <EvaluationDialog
                   onEvaluate={handleEvaluate}
                   onCancel={() => setShowEvaluationModal(false)}
+                  tag={evaluationTag}
                 />
               </Modal>
             )}

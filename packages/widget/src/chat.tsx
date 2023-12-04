@@ -9,7 +9,7 @@ import {
 } from 'react';
 import { Socket } from 'socket.io-client';
 
-import { Conversation, EvaluateData, Message } from './types';
+import { Conversation, EvaluateData, EvaluationTag, Message } from './types';
 import { useAppContext } from './AppContext';
 
 interface ChatContextValue {
@@ -19,6 +19,7 @@ interface ChatContextValue {
   status?: string;
   conversation?: Conversation;
   messages: Message[];
+  evaluationTag?: EvaluationTag;
   send: (data: any) => void;
   evaluate: (data: EvaluateData) => void;
   close: () => void;
@@ -72,12 +73,14 @@ export function Chat({ children }: ChatProps) {
   const [status, setStatus] = useState<string>();
   const [conversation, setConversation] = useState<Conversation>();
   const [messages, setMessages] = useState<Message[]>([]);
+  const [evaluationTag, setEvaluationTag] = useState<EvaluationTag>();
 
   useEvent(socket, 'currentConversation', setConversation);
   useEvent(socket, 'initialized', (data) => {
     setStatus(data.status);
     setMessages(data.messages);
     setConversation(data.conversation);
+    setEvaluationTag(data.evaluationTag);
     if (iframe.contentDocument) {
       const { style } = iframe.contentDocument.documentElement;
       style.setProperty('--color-primary', '#f60');
@@ -113,6 +116,7 @@ export function Chat({ children }: ChatProps) {
         status,
         conversation,
         messages,
+        evaluationTag,
         send,
         evaluate,
         close,
