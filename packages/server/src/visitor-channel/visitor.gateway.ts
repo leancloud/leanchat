@@ -154,6 +154,11 @@ export class VisitorGateway implements OnModuleInit, OnGatewayConnection {
       }
     }
 
+    const evaluationConfig = await this.configService.get('evaluation');
+    if (evaluationConfig) {
+      initData.evaluationTag = evaluationConfig.tag;
+    }
+
     socket.emit('initialized', initData);
   }
 

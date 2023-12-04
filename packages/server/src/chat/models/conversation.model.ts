@@ -18,7 +18,10 @@ class Evaluation {
   star: number;
 
   @Prop()
-  feedback: string;
+  feedback?: string;
+
+  @Prop({ type: String })
+  tags?: string[];
 
   createdAt: Date;
 }

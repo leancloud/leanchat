@@ -29,7 +29,8 @@ export interface GetConversationOptions extends ConversationFilters {
 
 export interface ConversationEvaluation {
   star: number;
-  feedback: string;
+  feedback?: string;
+  tags?: string[];
 }
 
 export interface UpdateConversationData {

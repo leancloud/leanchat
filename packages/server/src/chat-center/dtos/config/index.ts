@@ -29,3 +29,15 @@ export const QueueConfigSchema = z.object({
     text: z.string(),
   }),
 });
+
+const EvaluationTagConfigSchema = z.object({
+  options: z.array(z.string()),
+  required: z.boolean(),
+});
+
+export const EvaluationConfigSchema = z.object({
+  tag: z.object({
+    positive: EvaluationTagConfigSchema,
+    negative: EvaluationTagConfigSchema,
+  }),
+});

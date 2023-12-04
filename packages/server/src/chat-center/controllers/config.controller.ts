@@ -18,6 +18,7 @@ import {
   NoReadyOperatorMessageConfigSchema,
   AutoCloseConfigSchema,
   QueueConfigSchema,
+  EvaluationConfigSchema,
 } from '../dtos/config';
 
 const schemas: Record<string, ZodSchema> = {
@@ -25,6 +26,7 @@ const schemas: Record<string, ZodSchema> = {
   noReadyOperatorMessage: NoReadyOperatorMessageConfigSchema,
   autoClose: AutoCloseConfigSchema,
   queue: QueueConfigSchema,
+  evaluation: EvaluationConfigSchema,
 };
 
 @Controller('config')

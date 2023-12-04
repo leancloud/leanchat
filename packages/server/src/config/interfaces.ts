@@ -25,9 +25,23 @@ export interface QueueConfig {
   };
 }
 
+export interface EvaluationConfig {
+  tag: {
+    positive: {
+      options: string[];
+      required: boolean;
+    };
+    negative: {
+      options: string[];
+      required: boolean;
+    };
+  };
+}
+
 export interface ConfigKeys {
   greetingMessage: GreetingMessageConfig;
   noReadyOperatorMessage: NoReadyOperatorMessageConfig;
   autoClose: AutoCloseConfig;
   queue: QueueConfig;
+  evaluation: EvaluationConfig;
 }

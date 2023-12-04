@@ -14,7 +14,8 @@ export class ConversationDto {
 
   evaluation?: {
     star: number;
-    feedback: string;
+    feedback?: string;
+    tags?: string[];
   };
 
   visitorWaitingSince?: string;
