@@ -1,5 +1,6 @@
 import { ChangeEvent, KeyboardEvent, forwardRef, useRef, useState } from 'react';
 import { PiPaperPlaneRightFill, PiPaperclipHorizontal } from 'react-icons/pi';
+import { HiStar } from 'react-icons/hi2';
 
 import { useUpload } from '../hooks/useUpload';
 
@@ -19,10 +20,12 @@ interface ReplyInputProps {
   disabled?: boolean;
   onReplyText?: (text: string) => void;
   onReplyFile?: (fileId: string) => void;
+  evaluable?: boolean;
+  onClickEvaluate?: () => void;
 }
 
 export const ReplyInput = forwardRef<HTMLTextAreaElement, ReplyInputProps>(
-  ({ disabled, onReplyText, onReplyFile }, ref) => {
+  ({ disabled, onReplyText, onReplyFile, evaluable, onClickEvaluate }, ref) => {
     const [content, setContent] = useState('');
 
     const handleReplyText = () => {
@@ -61,38 +64,49 @@ export const ReplyInput = forwardRef<HTMLTextAreaElement, ReplyInputProps>(
     const uploadTask = tasks[0];
 
     return (
-      <div className="flex p-[10px] pr-0 relative">
-        <textarea
-          ref={ref}
-          className="grow resize-none outline-none border rounded-xl leading-4 pl-[10px] pr-8 py-2 text-sm focus:border-primary"
-          placeholder="我想问..."
-          rows={1}
-          value={content}
-          disabled={disabled}
-          onChange={(e) => {
-            e.target.style.height = '0';
-            const maxHeight = Math.min(
-              e.target.scrollHeight + 2, // 2 for border
-              5 * 16 + 16, // 5 lines, 16 for leading, 16 for padding
-            );
-            e.target.style.height = maxHeight + 'px';
-            setContent(e.target.value);
-          }}
-          onKeyDown={handleTextareaKeyDown}
-        />
-        <button
-          className="flex text-[rgb(157,163,174)] disabled:text-[rgb(210,213,218)] w-8 h-8 absolute right-[42px] top-[11px]"
-          disabled={disabled}
-          onClick={() => fileInputRef.current?.click()}
-        >
-          <input
-            ref={fileInputRef}
-            className="hidden"
-            type="file"
-            onChange={handleFileInputChange}
+      <div className="flex p-[10px] pr-0">
+        <div className="grow flex border rounded-xl focus-within:border-primary overflow-hidden">
+          <button
+            className="flex text-[rgb(157,163,174)] disabled:text-[rgb(210,213,218)] w-8 h-8"
+            disabled={disabled}
+            onClick={() => fileInputRef.current?.click()}
+          >
+            <input
+              ref={fileInputRef}
+              className="hidden"
+              type="file"
+              onChange={handleFileInputChange}
+            />
+            <PiPaperclipHorizontal className="m-auto w-5 h-5 rotate-90" />
+          </button>
+          <textarea
+            ref={ref}
+            className="grow resize-none outline-none leading-4 py-2 text-sm"
+            placeholder="我想问..."
+            rows={1}
+            value={content}
+            disabled={disabled}
+            onChange={(e) => {
+              e.target.style.height = '0';
+              const maxHeight = Math.min(
+                e.target.scrollHeight,
+                5 * 16 + 16, // 5 lines, 16 for leading, 16 for padding
+              );
+              e.target.style.height = maxHeight + 'px';
+              setContent(e.target.value);
+            }}
+            onKeyDown={handleTextareaKeyDown}
           />
-          <PiPaperclipHorizontal className="m-auto w-5 h-5 rotate-90" />
-        </button>
+          {evaluable && (
+            <button
+              className="flex text-[rgb(157,163,174)] disabled:text-[rgb(210,213,218)] w-8 h-8"
+              disabled={disabled}
+              onClick={onClickEvaluate}
+            >
+              <HiStar className="m-auto w-5 h-5" />
+            </button>
+          )}
+        </div>
         <button
           className="w-8 h-8 flex mx-1 text-primary disabled:text-[rgb(210,213,218)] mt-[1px]"
           disabled={disabled || !content.trim()}

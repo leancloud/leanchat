@@ -27,6 +27,8 @@ export default function Modern() {
       },
     });
 
+  const evaluable = Boolean(conversation && !conversation.evaluation);
+
   useEffect(() => {
     iframe.style.position = 'fixed';
     iframe.style.inset = 'auto 0px 0px auto';
@@ -73,7 +75,7 @@ export default function Modern() {
   useLayoutEffect(scrollToBottom, [messages]);
 
   const handleClose = () => {
-    if (conversation && !conversation.evaluation) {
+    if (evaluable) {
       setShowEvaluationModal(true);
       return;
     }
@@ -134,6 +136,8 @@ export default function Modern() {
               disabled={!connected}
               onReplyText={(text) => send({ text })}
               onReplyFile={(fileId) => send({ fileId })}
+              evaluable={evaluable}
+              onClickEvaluate={() => setShowEvaluationModal(true)}
             />
             {showEvaluationModal && (
               <Modal>
