@@ -5,7 +5,7 @@ import { ColumnType } from 'antd/es/table';
 import dayjs from 'dayjs';
 import Papa from 'papaparse';
 import _ from 'lodash';
-import { cond, constant, get, has, stubTrue } from 'lodash/fp';
+import { cond, constant, get, has, join, stubTrue } from 'lodash/fp';
 
 import { BasicFilterForm, BasicFilterFormData } from './components/BasicFilterForm';
 import {
@@ -91,8 +91,13 @@ export function EvaluationStats() {
       render: evaluationStar,
     },
     {
-      key: 'feedback',
+      key: 'tags',
       title: '评价标签',
+      render: flow([get('evaluation.tags'), join(',')]),
+    },
+    {
+      key: 'feedback',
+      title: '评价内容',
       render: get('evaluation.feedback'),
     },
   ];
