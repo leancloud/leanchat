@@ -21,12 +21,11 @@ export function EvaluationDialog({ onEvaluate, onCancel, tag }: EvaluationDialog
 
   const handleSubmit = () => {
     if (canSubmit) {
-      () =>
-        onEvaluate({
-          star,
-          feedback: feedback.trim() || undefined,
-          tags: tags.length ? tags : undefined,
-        });
+      onEvaluate({
+        star,
+        feedback: feedback.trim() || undefined,
+        tags: tags.length ? tags : undefined,
+      });
     }
   };
 
