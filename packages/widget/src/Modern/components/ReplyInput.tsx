@@ -67,7 +67,7 @@ export const ReplyInput = forwardRef<HTMLTextAreaElement, ReplyInputProps>(
       <div className="flex p-[10px] pr-0">
         <div className="grow flex border rounded-xl focus-within:border-primary overflow-hidden">
           <button
-            className="flex text-[rgb(157,163,174)] disabled:text-[rgb(210,213,218)] w-8 h-8"
+            className="flex text-[rgb(157,163,174)] disabled:bg-[#f8f8f8] disabled:text-[rgb(210,213,218)] w-8 h-8"
             disabled={disabled}
             onClick={() => fileInputRef.current?.click()}
           >
@@ -81,7 +81,7 @@ export const ReplyInput = forwardRef<HTMLTextAreaElement, ReplyInputProps>(
           </button>
           <textarea
             ref={ref}
-            className="grow resize-none outline-none leading-4 py-2 text-sm"
+            className="grow resize-none outline-none leading-4 py-2 text-sm disabled:bg-[#f8f8f8]"
             placeholder="我想问..."
             rows={1}
             value={content}
@@ -99,7 +99,7 @@ export const ReplyInput = forwardRef<HTMLTextAreaElement, ReplyInputProps>(
           />
           {evaluable && (
             <button
-              className="flex text-[rgb(157,163,174)] disabled:text-[rgb(210,213,218)] w-8 h-8"
+              className="flex text-[rgb(157,163,174)] disabled:bg-[#f8f8f8] disabled:text-[rgb(210,213,218)] w-8 h-8"
               disabled={disabled}
               onClick={onClickEvaluate}
             >
