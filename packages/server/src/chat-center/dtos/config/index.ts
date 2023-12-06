@@ -6,7 +6,6 @@ export const GreetingMessageConfigSchema = z.object({
 });
 
 export const NoReadyOperatorMessageConfigSchema = z.object({
-  enabled: z.boolean(),
   text: z.string(),
 });
 
