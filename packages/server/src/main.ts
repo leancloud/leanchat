@@ -39,9 +39,10 @@ async function bootstrap() {
   const wsAdapter = new WsAdapter(app);
   wsAdapter.use(sessionMiddleware);
   app.useWebSocketAdapter(wsAdapter);
+  await wsAdapter.connectToRedis(config.get('redis.message'));
 
   app.enableShutdownHooks();
 
-  await app.listen(3000);
+  await app.listen(config.get('LEANCLOUD_APP_PORT', 3000));
 }
 bootstrap();
