@@ -48,7 +48,7 @@ function GreetingConfigForm() {
         rules={[{ required: true }]}
         extra="用户打开聊天组件，系统将使用此说辞作为欢迎语"
       >
-        <Input.TextArea rows={3} />
+        <Input.TextArea autoSize={{ minRows: 2 }} />
       </Form.Item>
       <Form.Item wrapperCol={{ offset: 4 }}>
         <Button type="primary" htmlType="submit" loading={isUpdating}>
@@ -78,7 +78,7 @@ function NoReadyOperatorMessageConfigForm() {
         rules={[{ required: true }]}
         extra="用户打开聊天界面时，如果没有处于「在线」状态的客服，将显示此提示语"
       >
-        <Input.TextArea rows={3} />
+        <Input.TextArea autoSize={{ minRows: 2 }} />
       </Form.Item>
       <Form.Item wrapperCol={{ offset: 4 }}>
         <Button type="primary" htmlType="submit" loading={isUpdating}>
@@ -149,7 +149,7 @@ function AutoCloseConversationForm() {
         rules={[{ required: true }]}
         extra="系统关闭会话时将向用户发送此消息"
       >
-        <Input.TextArea rows={3} />
+        <Input.TextArea autoSize={{ minRows: 2 }} />
       </Form.Item>
       <Form.Item wrapperCol={{ offset: 4 }}>
         <Button type="primary" htmlType="submit" loading={isUpdating}>
@@ -192,7 +192,7 @@ function QueueConfigForm() {
         rules={[{ required: true }]}
         extra="可使用占位符 {{ queue.position }}"
       >
-        <Input.TextArea rows={3} />
+        <Input.TextArea autoSize={{ minRows: 2 }} />
       </Form.Item>
 
       <Form.Item
@@ -202,7 +202,7 @@ function QueueConfigForm() {
         name={['fullMessage', 'text']}
         rules={[{ required: true }]}
       >
-        <Input.TextArea rows={3} />
+        <Input.TextArea autoSize={{ minRows: 2 }} />
       </Form.Item>
 
       <Form.Item wrapperCol={{ offset: 4 }}>
