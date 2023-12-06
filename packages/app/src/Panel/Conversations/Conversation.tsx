@@ -46,7 +46,7 @@ function OperatorLabel({ operatorId, onClick }: OperatorLabelProps) {
       className="flex items-center rounded-full pr-2 transition-colors hover:bg-[#f7f7f7]"
       onClick={onClick}
     >
-      <Avatar size={32} status={operator.status} />
+      <Avatar size={32} user={operator} />
       <div className="ml-2 text-sm">{operator.internalName}</div>
     </button>
   );

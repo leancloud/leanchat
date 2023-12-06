@@ -60,7 +60,7 @@ function TeamSection({ activeOperatorId, onClick }: TeamSectionProps) {
             active={operator.id === activeOperatorId}
             onClick={() => onClick(operator.id)}
           >
-            <Avatar size={20} status={operator.status} />
+            <Avatar size={20} user={operator} />
             <div className="ml-3"> {operator.internalName}</div>
           </SiderButton>
         </Popover>

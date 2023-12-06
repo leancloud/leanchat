@@ -1,15 +1,13 @@
-import { BiBot, BiSolidUser } from 'react-icons/bi';
 import cx from 'classnames';
+
+import { Operator } from '../types';
 
 interface AvatarProps {
   size?: number;
-  type?: string;
-  status?: number;
+  user: Operator;
 }
 
-export function Avatar({ size = 32, type, status }: AvatarProps) {
-  const Icon = type === 'chatbot' ? BiBot : BiSolidUser;
-
+export function Avatar({ size = 32, user }: AvatarProps) {
   return (
     <div
       className="bg-[#e7e7e7] rounded-full text-[#969696] flex relative"
@@ -18,19 +16,25 @@ export function Avatar({ size = 32, type, status }: AvatarProps) {
         height: size,
       }}
     >
-      <Icon className="m-auto w-[60%] h-[60%]" />
-      {status !== undefined && (
-        <div
-          className={cx(
-            'w-[25%] h-[25%] rounded-full absolute right-0 bottom-0 outline outline-offset-0 outline-[10%] outline-white',
-            {
-              'bg-[#34b857]': status === 1,
-              'bg-[#ffaf3d]': status === 2,
-              'bg-[#e81332]': status === 3,
-            },
-          )}
-        />
-      )}
+      <div
+        className="m-auto"
+        style={{
+          fontSize: Math.floor(size * 0.6),
+          lineHeight: Math.floor(size * 0.6) + 'px',
+        }}
+      >
+        {user.internalName.slice(0, 1)}
+      </div>
+      <div
+        className={cx(
+          'w-[25%] h-[25%] rounded-full absolute right-0 bottom-0 outline outline-offset-0 outline-[10%] outline-white',
+          {
+            'bg-[#34b857]': user.status === 1,
+            'bg-[#ffaf3d]': user.status === 2,
+            'bg-[#e81332]': user.status === 3,
+          },
+        )}
+      />
     </div>
   );
 }

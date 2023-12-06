@@ -89,7 +89,7 @@ export default function Conversations() {
       if (operator) {
         return (
           <div className="flex items-center">
-            <Avatar size={24} status={operator.status} />
+            <Avatar size={24} user={operator} />
             <div className="ml-3">{operator.internalName}</div>
           </div>
         );

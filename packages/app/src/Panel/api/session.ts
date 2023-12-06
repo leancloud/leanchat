@@ -11,3 +11,7 @@ export async function createSession(data: CreateSessionData) {
   const res = await client.post<Operator>('/sessions', data);
   return res.data;
 }
+
+export async function deleteSession() {
+  await client.delete('/sessions/current');
+}

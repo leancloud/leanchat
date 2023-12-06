@@ -22,7 +22,7 @@ export function ReassignModal({ open, onClose }: ReassignModalProps) {
     return operators?.map((o) => ({
       label: (
         <div className="flex items-center">
-          <Avatar size={24} status={o.status} />
+          <Avatar size={24} user={o} />
           <div className="ml-2">{o.internalName}</div>
         </div>
       ),

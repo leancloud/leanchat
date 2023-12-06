@@ -6,6 +6,7 @@ import { Dropdown } from 'antd';
 import { Avatar } from '@/Panel/components/Avatar';
 import { setStatus } from './api/operator';
 import { useCurrentUser } from './auth';
+import { deleteSession } from './api/session';
 
 export interface Nav {
   to: string;
@@ -69,48 +70,62 @@ function User() {
     <Dropdown
       trigger={['click']}
       menu={{
-        onClick: (e) => setStatus(parseInt(e.key)),
         items: [
           {
             key: 'info',
             label: user.internalName,
-            disabled: true,
           },
-          ...[
-            {
-              key: 1,
-              name: '在线',
-              color: '#34b857',
+          {
+            key: 'changeStatus',
+            label: '修改状态',
+            onClick: (e) => {
+              setStatus(parseInt(e.key));
             },
-            {
-              key: 2,
-              name: '忙碌',
-              color: '#ffaf3d',
+            children: [
+              {
+                key: 1,
+                name: '在线',
+                color: '#34b857',
+              },
+              {
+                key: 2,
+                name: '忙碌',
+                color: '#ffaf3d',
+              },
+              {
+                key: 3,
+                name: '离开',
+                color: '#e81332',
+                disabled: true,
+              },
+            ].map(({ key, name, color, disabled }) => ({
+              key,
+              disabled,
+              label: (
+                <div className="flex items-center">
+                  <div
+                    className="w-[10px] h-[10px] rounded-full mr-2"
+                    style={{ backgroundColor: color }}
+                  />
+                  {name}
+                </div>
+              ),
+            })),
+          },
+          {
+            key: 'logout',
+            label: '退出登录',
+            onClick: () => {
+              deleteSession().then(() => {
+                window.location.href = '/login';
+              });
             },
-            {
-              key: 3,
-              name: '离开',
-              color: '#e81332',
-              disabled: true,
-            },
-          ].map(({ key, name, color, disabled }) => ({
-            key,
-            disabled,
-            label: (
-              <div className="flex items-center">
-                <div
-                  className="w-[10px] h-[10px] rounded-full mr-2"
-                  style={{ backgroundColor: color }}
-                />
-                {name}
-              </div>
-            ),
-          })),
+          },
         ],
       }}
     >
       <button className="relative">
-        <Avatar size={32} status={user.status} />
+        <Avatar size={32} user={user} />
       </button>
     </Dropdown>
   );
