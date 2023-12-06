@@ -14,3 +14,7 @@
   background-color: #ddd;
   border-radius: 4px;
 }
+
+a {
+  color: var(--color-primary);
+}

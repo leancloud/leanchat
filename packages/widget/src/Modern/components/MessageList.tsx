@@ -1,5 +1,7 @@
-import { ReactNode } from 'react';
+import { ReactNode, memo } from 'react';
 import { PiFile } from 'react-icons/pi';
+import Markdown, { Components } from 'react-markdown';
+import remarkGfm from 'remark-gfm';
 import cx from 'classnames';
 
 import { Message, MessageType, UserType } from '../../types';
@@ -71,17 +73,27 @@ function LogMessage({ content }: LogMessageProps) {
   );
 }
 
+const markdownComponents: Components = {
+  a: (props) => <a {...props} target="_blank" rel="noopener noreferrer" />,
+};
+
 interface MessageItemProps {
   message: Message;
 }
 
-function MessageItem({ message }: MessageItemProps) {
+const MessageItem = memo(({ message }: MessageItemProps) => {
   switch (message.type) {
     case MessageType.Message:
       if (message.data.text) {
         return (
           <MessageBubble isVisitor={message.from.type === UserType.Visitor}>
-            <div className="text-sm whitespace-pre-line break-all">{message.data.text}</div>
+            <Markdown
+              className="text-sm whitespace-pre-line break-all"
+              remarkPlugins={[remarkGfm]}
+              components={markdownComponents}
+            >
+              {message.data.text}
+            </Markdown>
           </MessageBubble>
         );
       }
@@ -96,7 +108,7 @@ function MessageItem({ message }: MessageItemProps) {
     case MessageType.Reopen:
       return <LogMessage content="会话重新开启" />;
   }
-}
+});
 
 interface MessageListProps {
   messages?: Message[];
