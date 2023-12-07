@@ -33,7 +33,7 @@ import {
   OperatorOnlineService,
 } from './services';
 
-@WebSocketGateway({ namespace: 'o' })
+@WebSocketGateway({ namespace: 'o', transports: ['websocket'] })
 @UsePipes(ZodValidationPipe)
 @UseInterceptors(WsInterceptor)
 export class ChatGateway implements OnModuleInit, OnGatewayConnection {
@@ -59,6 +59,21 @@ export class ChatGateway implements OnModuleInit, OnGatewayConnection {
     });
   }
 
+  async handleConnection(socket: Socket) {
+    const operatorId = socket.data.id;
+
+    try {
+      const sockets = await this.server.in(operatorId).fetchSockets();
+      for (const socket of sockets) {
+        socket.emit('evict');
+        socket.disconnect(true);
+      }
+    } catch {} // ignore
+
+    socket.data.onlineTime = Date.now();
+    socket.join(operatorId);
+  }
+
   @Cron('0 * * * * *')
   async chenkOnline() {
     const operatorIds = Array.from(this.server.sockets.values()).map(
@@ -69,10 +84,6 @@ export class ChatGateway implements OnModuleInit, OnGatewayConnection {
     }
     await this.operatorOnlineService.createOnlineRecord(_.uniq(operatorIds));
     await this.operatorOnlineService.gc();
-  }
-
-  handleConnection(socket: Socket) {
-    socket.join(socket.data.id);
   }
 
   @SubscribeMessage('message')
