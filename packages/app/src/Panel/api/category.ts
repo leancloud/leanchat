@@ -11,6 +11,11 @@ export async function createCategory(data: CreateCategoryData) {
   return res.data;
 }
 
+export async function createCategorys(data: CreateCategoryData[]) {
+  const res = await client.post<Category[]>('/categories/batch', { data });
+  return res.data;
+}
+
 export async function getCategories() {
   const res = await client.get<Category[]>('/categories');
   return res.data;

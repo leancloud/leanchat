@@ -30,7 +30,8 @@
     "react-icons": "^4.10.1",
     "react-router-dom": "^6.14.2",
     "react-use": "^17.4.0",
-    "socket.io-client": "^4.7.1"
+    "socket.io-client": "^4.7.1",
+    "xlsx": "https://cdn.sheetjs.com/xlsx-0.20.1/xlsx-0.20.1.tgz"
   },
   "devDependencies": {
     "@types/lodash": "^4.14.196",
