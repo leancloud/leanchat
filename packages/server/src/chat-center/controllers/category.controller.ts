@@ -15,6 +15,7 @@ import { CategoryService } from 'src/category';
 import { AuthGuard } from '../guards/auth.guard';
 import {
   CategoryDto,
+  CreateCategoriesDto,
   CreateCategoryDto,
   UpdateCategoryDto,
 } from '../dtos/category';
@@ -35,6 +36,12 @@ export class CategoryController {
   async createCategory(@Body() data: CreateCategoryDto) {
     const category = await this.categoryService.createCategory(data);
     return CategoryDto.fromDocument(category);
+  }
+
+  @Post('batch')
+  async createSome(@Body() data: CreateCategoriesDto) {
+    const categories = await this.categoryService.createCategories(data.data);
+    return categories.map(CategoryDto.fromDocument);
   }
 
   @Patch(':id')
