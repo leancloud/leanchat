@@ -6,6 +6,7 @@ import zhCN from 'antd/locale/zh_CN';
 import { StyleProvider } from '@ant-design/cssinjs';
 import { MdSettings } from 'react-icons/md';
 import { BiSolidInbox, BiSolidDoughnutChart, BiCheckShield } from 'react-icons/bi';
+import { Toaster } from 'react-hot-toast';
 import axios from 'axios';
 
 import { SocketProvider, useSocket } from '@/socket';
@@ -141,6 +142,7 @@ const Root = new Compose()
 export default function Panel() {
   return (
     <Root>
+      <Toaster />
       <Suspense fallback={<Fallback />}>
         <AuthProvider>
           <Routes>
