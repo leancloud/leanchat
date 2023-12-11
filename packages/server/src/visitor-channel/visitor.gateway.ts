@@ -63,24 +63,23 @@ export class VisitorGateway implements OnModuleInit, OnGatewayConnection {
 
   onModuleInit() {
     this.server.use(async (socket, next) => {
-      const { token } = socket.handshake.auth;
+      let { token } = socket.handshake.auth;
 
       if (token) {
         if (typeof token !== 'string') {
           return next(new Error('Invalid token'));
         }
         const result = this.widgetService.validateToken(token);
-        if (!result) {
-          return next(new Error('Invalid token'));
+        if (result) {
+          socket.data.id = result.id;
+          return next();
         }
-        socket.data.id = result.id;
-      } else {
-        const visitor = await this.visitorService.createVisitor();
-        const token = this.widgetService.createToken(visitor.id);
-        socket.emit('signedUp', { token });
-        socket.data.id = visitor.id;
       }
 
+      const visitor = await this.visitorService.createVisitor();
+      token = this.widgetService.createToken(visitor.id);
+      socket.emit('signedUp', { token });
+      socket.data.id = visitor.id;
       next();
     });
   }
