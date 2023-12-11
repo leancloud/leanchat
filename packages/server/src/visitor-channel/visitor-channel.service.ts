@@ -14,7 +14,7 @@ export class VisitorChannelService {
     private configService: ConfigService,
     private chatService: ChatService,
   ) {
-    this.signSecret = config.getOrThrow('WIDGET_SIGN_SECRET');
+    this.signSecret = config.getOrThrow('LEANCHAT_WIDGET_SIGN_SECRET');
   }
 
   createToken(visitorId: string) {
