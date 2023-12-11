@@ -27,9 +27,10 @@ import { useAutoSize } from '../hooks/useAutoSize';
 interface OperatorLabelProps {
   operatorId: string;
   onClick?: () => void;
+  disabled?: boolean;
 }
 
-function OperatorLabel({ operatorId, onClick }: OperatorLabelProps) {
+function OperatorLabel({ operatorId, onClick, disabled }: OperatorLabelProps) {
   const { data: operators } = useOperators();
 
   const operator = useMemo(
@@ -43,8 +44,9 @@ function OperatorLabel({ operatorId, onClick }: OperatorLabelProps) {
 
   return (
     <button
-      className="flex items-center rounded-full pr-2 transition-colors hover:bg-[#f7f7f7]"
+      className="flex items-center rounded-full pr-2 transition-colors enabled:hover:bg-[#f7f7f7] disabled:cursor-not-allowed"
       onClick={onClick}
+      disabled={disabled}
     >
       <Avatar size={32} user={operator} />
       <div className="ml-2 text-sm">{operator.internalName}</div>
@@ -159,7 +161,11 @@ export function Conversation({ conversationId }: ConversationProps) {
             <div className="text-[20px] font-medium truncate mr-auto">{conversation.id}</div>
             <div className="ml-2 shrink-0 flex items-center gap-3">
               {conversation.operatorId && (
-                <OperatorLabel operatorId={conversation.operatorId} onClick={toggleReassignModal} />
+                <OperatorLabel
+                  operatorId={conversation.operatorId}
+                  onClick={toggleReassignModal}
+                  disabled={closed}
+                />
               )}
               <Tooltip title="历史消息" placement="bottom" mouseEnterDelay={0.5}>
                 <button
@@ -193,6 +199,7 @@ export function Conversation({ conversationId }: ConversationProps) {
                       icon: <FaUserEdit />,
                       label: '重新分配',
                       onClick: toggleReassignModal,
+                      disabled: closed,
                     },
                   ],
                 }}
