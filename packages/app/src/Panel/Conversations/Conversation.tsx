@@ -18,7 +18,7 @@ import { MessageList, MessageListRef } from './MessageList';
 import { Avatar } from '../components/Avatar';
 import { useOperators } from '../hooks/operator';
 import { ReassignModal } from './ReassignModal';
-import { QuickReply, QuickReplyRef } from './QuickReply';
+import { QuickReply } from './QuickReply';
 import { closeConversation, inviteEvaluation, assignconversation } from '../api/conversation';
 import { uploadFile } from '../leancloud';
 import { ConversationStatus } from '../types';
@@ -142,7 +142,6 @@ export function Conversation({ conversationId }: ConversationProps) {
   const [showReassignModal, toggleReassignModal] = useToggle(false);
 
   const messageListRef = useRef<MessageListRef>(null);
-  const quickReplyRef = useRef<QuickReplyRef>(null);
 
   const keyword = content.startsWith('/') ? content.slice(1) : undefined;
 
@@ -210,7 +209,6 @@ export function Conversation({ conversationId }: ConversationProps) {
           <div className="border-t border-[#ececec] relative">
             {showQuickReply && (
               <QuickReply
-                ref={quickReplyRef}
                 onSelect={(content) => {
                   setContent(content);
                   setShowQuickReply(false);
@@ -253,10 +251,6 @@ export function Conversation({ conversationId }: ConversationProps) {
                   setShowQuickReply(e.target.value.startsWith('/'));
                 }}
                 onKeyDown={(e) => {
-                  if (quickReplyRef.current?.handleKeyDown(e)) {
-                    e.preventDefault();
-                    return;
-                  }
                   if (e.key === 'Enter') {
                     if (closed || e.shiftKey) {
                       return;
