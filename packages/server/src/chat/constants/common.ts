@@ -1,6 +1,7 @@
 export enum OperatorRole {
-  Operator = 1,
-  Admin = 2,
+  Operator = 1, // 普通客服
+  Admin = 2, // 管理员
+  Inspector = 3, // 质检员
 }
 
 export enum UserType {
