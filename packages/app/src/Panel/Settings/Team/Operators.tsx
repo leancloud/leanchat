@@ -45,7 +45,11 @@ export function Operators() {
             dataIndex: 'role',
             title: '角色',
             render: (role: OperatorRole) =>
-              ({ [OperatorRole.Operator]: '客服', [OperatorRole.Admin]: '管理员' })[role],
+              ({
+                [OperatorRole.Operator]: '客服',
+                [OperatorRole.Admin]: '管理员',
+                [OperatorRole.Inspector]: '质检',
+              })[role],
           },
           {
             key: 'actions',
@@ -116,6 +120,7 @@ function OperatorForm({
           options={[
             { label: '客服', value: OperatorRole.Operator },
             { label: '管理员', value: OperatorRole.Admin },
+            { label: '质检', value: OperatorRole.Inspector },
           ]}
         />
       </Form.Item>

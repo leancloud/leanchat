@@ -36,6 +36,7 @@ export interface Conversation {
 export enum OperatorRole {
   Operator = 1,
   Admin = 2,
+  Inspector = 3,
 }
 
 export interface Operator {

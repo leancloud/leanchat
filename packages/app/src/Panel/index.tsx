@@ -33,12 +33,12 @@ const navs: (Nav & { roles?: OperatorRole[] })[] = [
   {
     to: 'quality',
     icon: BiCheckShield,
-    roles: [OperatorRole.Admin],
+    roles: [OperatorRole.Admin, OperatorRole.Inspector],
   },
   {
     to: 'statistics',
     icon: BiSolidDoughnutChart,
-    roles: [OperatorRole.Admin],
+    roles: [OperatorRole.Admin, OperatorRole.Inspector],
   },
   {
     to: 'settings',
@@ -159,7 +159,7 @@ export default function Panel() {
               <Route
                 path="quality/*"
                 element={
-                  <RequireRole roles={[OperatorRole.Admin]}>
+                  <RequireRole roles={[OperatorRole.Admin, OperatorRole.Inspector]}>
                     <Quality />
                   </RequireRole>
                 }
@@ -167,7 +167,7 @@ export default function Panel() {
               <Route
                 path="statistics/*"
                 element={
-                  <RequireRole roles={[OperatorRole.Admin]}>
+                  <RequireRole roles={[OperatorRole.Admin, OperatorRole.Inspector]}>
                     <Statistics />
                   </RequireRole>
                 }
