@@ -283,6 +283,11 @@ export class ChatService {
       operator = op;
     }
 
+    if (conversation.closedAt) {
+      // TODO: move out
+      return;
+    }
+
     if (conversation.operatorId?.equals(operator.id)) {
       return;
     }
