@@ -263,7 +263,7 @@ export class ChatService {
       return;
     }
 
-    return _.sample(readyOperators);
+    return _.minBy(_.shuffle(readyOperators), (o) => o.workload);
   }
 
   async assignConversation(
