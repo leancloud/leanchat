@@ -1,4 +1,4 @@
-import { PropsWithChildren, useMemo, useRef, useState } from 'react';
+import { PropsWithChildren, useEffect, useMemo, useRef, useState } from 'react';
 import { useMutation } from '@tanstack/react-query';
 import { AiOutlineClockCircle, AiOutlinePaperClip } from 'react-icons/ai';
 import { FiCheck } from 'react-icons/fi';
@@ -70,7 +70,11 @@ export function Conversation({ conversationId }: ConversationProps) {
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null!);
 
-  useAutoSize(textareaRef, 15);
+  const resize = useAutoSize(textareaRef, 15);
+
+  useEffect(() => {
+    resize();
+  }, [content]);
 
   const handleCreateMessage = async () => {
     const trimedContent = content.trim();
@@ -278,7 +282,7 @@ export function Conversation({ conversationId }: ConversationProps) {
                 </div>
               )}
             </div>
-            <div className="p-5 flex justify-between">
+            <div className="px-5 pb-5 flex justify-between">
               <div>
                 <input
                   ref={fileInputRef}

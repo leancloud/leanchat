@@ -160,8 +160,8 @@ export const QuickReply = forwardRef<QuickReplyRef, QuickReplyProps>(
     return (
       <div className="relative" onKeyDown={handleKeyDown} tabIndex={-1}>
         <div className="absolute bottom-0 w-full z-10 p-1 text-sm">
-          <div className="bg-white h-[400px] border shadow-md rounded flex flex-col">
-            <div className="px-3 py-2 border-b flex items-center">
+          <div className="bg-white border shadow-md rounded">
+            <div className="h-10 px-3 border-b flex items-center">
               <div className="font-medium mr-auto flex items-center">
                 <IoFlashOutline className="mr-1" />
                 快捷回复
@@ -184,60 +184,55 @@ export const QuickReply = forwardRef<QuickReplyRef, QuickReplyProps>(
               </div>
             </div>
             {filteredQuickReplies.length > 0 ? (
-              <>
-                <div className="grow grid grid-cols-4">
-                  <div className="border-r">
+              <div className="grid grid-cols-4">
+                <div className="h-[360px] border-r overflow-auto">
+                  <TagButton
+                    active={tagIndex < 0}
+                    count={filteredQuickReplies.length}
+                    onClick={() => {
+                      if (tagIndex !== -1) {
+                        setTagIndex(-1);
+                        setReplyIndex(0);
+                      }
+                    }}
+                  >
+                    全部
+                  </TagButton>
+                  {tags.map((tag, index) => (
                     <TagButton
-                      active={tagIndex < 0}
-                      count={filteredQuickReplies.length}
+                      key={tag}
+                      active={tagIndex === index}
+                      count={quickRepliesByTag[tag].length}
                       onClick={() => {
-                        if (tagIndex !== -1) {
-                          setTagIndex(-1);
+                        if (tagIndex !== index) {
+                          setTagIndex(index);
                           setReplyIndex(0);
                         }
                       }}
                     >
-                      全部
+                      <span className="text-[#969696] mr-0.5">#</span>
+                      {tag}
                     </TagButton>
-                    {tags.map((tag, index) => (
-                      <TagButton
-                        key={tag}
-                        active={tagIndex === index}
-                        count={quickRepliesByTag[tag].length}
-                        onClick={() => {
-                          if (tagIndex !== index) {
-                            setTagIndex(index);
-                            setReplyIndex(0);
-                          }
-                        }}
-                      >
-                        <span className="text-[#969696] mr-0.5">#</span>
-                        {tag}
-                      </TagButton>
-                    ))}
-                  </div>
-                  <div className="col-span-3 p-1 divide-y divide-dashed">
-                    {currentQuickReplies?.map((quickReply, index) => (
-                      <button
-                        key={quickReply.id}
-                        className={cx(
-                          'p-2 w-full rounded text-left transition-colors outline-none',
-                          {
-                            'bg-primary-100': index === replyIndex && !inTag,
-                            'bg-gray-100': index === replyIndex && inTag,
-                          },
-                        )}
-                        onMouseMove={() => setReplyIndex(index)}
-                        onClick={handleSelect}
-                      >
-                        {quickReply.content}
-                      </button>
-                    ))}
-                  </div>
+                  ))}
                 </div>
-              </>
+                <div className="h-[360px] col-span-3 p-1 divide-y divide-dashed overflow-auto">
+                  {currentQuickReplies?.map((quickReply, index) => (
+                    <button
+                      key={quickReply.id}
+                      className={cx('p-2 w-full rounded text-left transition-colors outline-none', {
+                        'bg-primary-100': index === replyIndex && !inTag,
+                        'bg-gray-100': index === replyIndex && inTag,
+                      })}
+                      onMouseMove={() => setReplyIndex(index)}
+                      onClick={handleSelect}
+                    >
+                      {quickReply.content}
+                    </button>
+                  ))}
+                </div>
+              </div>
             ) : (
-              <Empty className="m-auto" />
+              <Empty className="m-auto py-20" />
             )}
           </div>
         </div>
