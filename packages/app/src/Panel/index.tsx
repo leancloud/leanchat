@@ -116,6 +116,7 @@ function PanelQueryClientProvider({ children }: PropsWithChildren) {
     return new QueryClient({
       defaultOptions: {
         queries: {
+          refetchOnReconnect: true,
           refetchOnWindowFocus: false,
           retry: false,
           onError,
