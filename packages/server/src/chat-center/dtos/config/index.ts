@@ -20,11 +20,9 @@ export const AutoCloseConfigSchema = z.object({
 export const QueueConfigSchema = z.object({
   capacity: z.number().int().min(0),
   fullMessage: z.object({
-    enabled: z.boolean(),
     text: z.string(),
   }),
   queuedMessage: z.object({
-    enabled: z.boolean(),
     text: z.string(),
   }),
 });
