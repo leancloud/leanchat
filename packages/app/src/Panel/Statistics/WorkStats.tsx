@@ -33,9 +33,9 @@ function OperatorPie() {
 
   const config: PieConfig = {
     data: [
-      { type: '工作客服数', value: operatorByStatus[OperatorStatus.Ready] },
-      { type: '空闲客服数', value: operatorByStatus[OperatorStatus.Busy] },
-      { type: '休息客服数', value: operatorByStatus[OperatorStatus.Leave] },
+      { type: '在线客服数', value: operatorByStatus[OperatorStatus.Ready] },
+      { type: '忙碌客服数', value: operatorByStatus[OperatorStatus.Busy] },
+      { type: '离开客服数', value: operatorByStatus[OperatorStatus.Leave] },
     ],
     angleField: 'value',
     colorField: 'type',
