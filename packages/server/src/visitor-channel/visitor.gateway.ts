@@ -84,6 +84,27 @@ export class VisitorGateway implements OnModuleInit, OnGatewayConnection {
     });
   }
 
+  private async notifyOfflineStatus(socket: Socket) {
+    const message = await this.configService.get('noReadyOperatorMessage');
+    const data: WidgetInitialized = {
+      status: 'offline',
+      messages: [],
+    };
+    if (message) {
+      data.messages.push(MessageDto.fromText('offline_message', message.text));
+    }
+    socket.emit('initialized', data);
+    socket.disconnect();
+  }
+
+  private notifyBusyStatus(socket: Socket, text: string) {
+    socket.emit('initialized', {
+      status: 'busy',
+      messages: [MessageDto.fromText('busy_message', text)],
+    } satisfies WidgetInitialized);
+    socket.disconnect();
+  }
+
   async handleConnection(socket: Socket) {
     const visitorId = socket.data.id;
     socket.join(visitorId);
@@ -93,45 +114,37 @@ export class VisitorGateway implements OnModuleInit, OnGatewayConnection {
       messages: [],
     };
 
-    const queueConfig = await this.configService.get('queue');
-    if (queueConfig?.capacity) {
-      const queueLength = await this.chatService.getQueueLength();
-      if (queueLength > queueConfig.capacity) {
-        initData.status = 'busy';
-        initData.messages.push(
-          MessageDto.fromText('busy', queueConfig.fullMessage.text),
-        );
-        socket.emit('initialized', initData);
-        socket.disconnect();
-        return;
-      }
-    }
-
-    if (!(await this.chatService.hasReadyOperator())) {
-      initData.status = 'offline';
-      const noReadyOperatorMessageConfig = await this.configService.get(
-        'noReadyOperatorMessage',
-      );
-      if (noReadyOperatorMessageConfig) {
-        initData.messages.push(
-          MessageDto.fromText(
-            'noReadyOperator',
-            noReadyOperatorMessageConfig.text,
-          ),
-        );
-      }
-      socket.emit('initialized', initData);
+    const visitor = await this.visitorService.getVisitor(visitorId);
+    if (!visitor) {
+      // TODO: throw an error
       socket.disconnect();
       return;
     }
 
-    const visitor = await this.visitorService.getVisitor(visitorId);
-    if (visitor && visitor.currentConversationId) {
+    let checkStatus = !visitor.currentConversationId;
+    if (visitor.currentConversationId) {
       const conversation = await this.conversationService.getConversation(
         visitor.currentConversationId.toString(),
       );
       if (conversation) {
         initData.conversation = ConversationDto.fromDocument(conversation);
+        checkStatus = conversation.closedAt !== undefined;
+      }
+    }
+
+    if (checkStatus) {
+      if (!(await this.chatService.hasReadyOperator())) {
+        this.notifyOfflineStatus(socket);
+        return;
+      }
+
+      const queueConfig = await this.configService.get('queue');
+      if (queueConfig?.capacity) {
+        const queueLength = await this.chatService.getQueueLength();
+        if (queueLength >= queueConfig.capacity) {
+          this.notifyBusyStatus(socket, queueConfig.fullMessage.text);
+          return;
+        }
       }
     }
 
@@ -144,13 +157,11 @@ export class VisitorGateway implements OnModuleInit, OnGatewayConnection {
     });
     initData.messages = messages.reverse().map(MessageDto.fromDocument);
 
-    if (messages.length < messageCount) {
-      const greetingMessage = await this.configService.get('greetingMessage');
-      if (greetingMessage?.enabled) {
-        initData.messages.unshift(
-          MessageDto.fromText('greeting', greetingMessage.text),
-        );
-      }
+    const greetingMessage = await this.configService.get('greetingMessage');
+    if (greetingMessage?.enabled) {
+      initData.messages.push(
+        MessageDto.fromText('greeting', greetingMessage.text),
+      );
     }
 
     const evaluationConfig = await this.configService.get('evaluation');
@@ -180,9 +191,19 @@ export class VisitorGateway implements OnModuleInit, OnGatewayConnection {
       );
     }
     if (!conversation || conversation.status === ConversationStatus.Closed) {
-      const isBusy = await this.widgetService.isBusy();
-      if (isBusy) {
+      const hasReadyOperator = await this.chatService.hasReadyOperator();
+      if (!hasReadyOperator) {
+        this.notifyOfflineStatus(socket);
         return;
+      }
+
+      const queueConfig = await this.configService.get('queue');
+      if (queueConfig && queueConfig.capacity) {
+        const queueLength = await this.chatService.getQueueLength();
+        if (queueLength >= queueConfig.capacity) {
+          this.notifyBusyStatus(socket, queueConfig.fullMessage.text);
+          return;
+        }
       }
 
       conversation = await this.conversationService.createConversation({
