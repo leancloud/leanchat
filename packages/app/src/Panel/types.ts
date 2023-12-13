@@ -29,6 +29,7 @@ export interface Conversation {
   lastMessage?: Message;
   categoryId?: string;
   evaluation?: Evaluation;
+  evaluationInvitedAt?: string;
   visitorWaitingSince?: string;
   createdAt: string;
 }
