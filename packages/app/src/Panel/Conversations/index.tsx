@@ -178,7 +178,14 @@ export default function Conversations() {
       </div>
 
       <div className="grow bg-white overflow-hidden">
-        {conversationId && <Conversation key={conversationId} conversationId={conversationId} />}
+        {conversationId && (
+          <Conversation
+            key={conversationId}
+            conversationId={conversationId}
+            reopen={stream === 'myOpen'}
+            onReopen={() => reopen(conversationId)}
+          />
+        )}
       </div>
     </div>
   );

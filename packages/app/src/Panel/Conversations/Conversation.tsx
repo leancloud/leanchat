@@ -56,9 +56,11 @@ function OperatorLabel({ operatorId, onClick, disabled }: OperatorLabelProps) {
 
 interface ConversationProps {
   conversationId: string;
+  reopen?: boolean;
+  onReopen?: () => void;
 }
 
-export function Conversation({ conversationId }: ConversationProps) {
+export function Conversation({ conversationId, reopen, onReopen }: ConversationProps) {
   const user = useCurrentUser();
   const socket = useSocket();
 
@@ -318,6 +320,18 @@ export function Conversation({ conversationId }: ConversationProps) {
                 <JoinConversationMask onJoin={joinConversation} />
               </Mask>
             )}
+
+            {reopen && closed && (
+              <Mask>
+                <div className="text-center">
+                  <div className="text-sm mb-2">会话已结束</div>
+                  <Button type="primary" onClick={onReopen}>
+                    重新打开
+                  </Button>
+                  <div className="text-sm mt-2">(若用户开启了新的会话, 重新打开将失败)</div>
+                </div>
+              </Mask>
+            )}
           </div>
         </div>
 
@@ -347,11 +361,6 @@ function JoinConversationMask({ onJoin }: JoinConversationMaskProps) {
       <Button type="primary" onClick={onJoin}>
         加入会话
       </Button>
-      <div className="mt-3 text-sm">
-        or press
-        <span className="bg-[#f5f7f9] text-xs px-1.5 mx-1.5 border rounded">⏎ Enter</span>
-        to start typing
-      </div>
     </div>
   );
 }
