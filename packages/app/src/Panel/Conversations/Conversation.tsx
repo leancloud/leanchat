@@ -74,7 +74,7 @@ export function Conversation({ conversationId, reopen, onReopen }: ConversationP
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null!);
 
-  const resize = useAutoSize(textareaRef, 15);
+  const resize = useAutoSize(textareaRef, 3, 15);
 
   useEffect(() => {
     resize();
@@ -257,7 +257,6 @@ export function Conversation({ conversationId, reopen, onReopen }: ConversationP
               <textarea
                 ref={textareaRef}
                 className="outline-none resize-none w-full placeholder:!text-[#a8a8a8] leading-5 bg-white"
-                rows={1}
                 disabled={closed}
                 placeholder={closed ? '会话已结束' : 'Enter 发送, Shift + Enter 换行'}
                 value={closed ? '' : content}
