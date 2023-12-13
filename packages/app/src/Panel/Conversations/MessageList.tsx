@@ -5,6 +5,7 @@ import {
   ReactNode,
   RefObject,
   forwardRef,
+  memo,
   useCallback,
   useEffect,
   useImperativeHandle,
@@ -23,10 +24,11 @@ import _ from 'lodash';
 import { Message as IMessage, MessageType, Operator, UserType } from '@/Panel/types';
 import { useNow } from '../contexts/NowContext';
 import { useConversationMessages, useVisitorMessages } from '../hooks/message';
+import { useOperators } from '../hooks/operator';
 import { useConversationContext } from './contexts/ConversationContext';
 import style from './MessageList.module.css';
 import { bytesToSize } from './utils';
-import { useOperators } from '../hooks/operator';
+import { useOperatorName } from './hooks/useOperatorName';
 
 interface DateGroup {
   date: dayjs.Dayjs;
@@ -226,9 +228,10 @@ function ReopenConversation({ message }: MessageComponentProps) {
 
 const MessageComponents: Record<number, JSXElementConstructor<MessageComponentProps>> = {
   [MessageType.Evaluate]: EvaluateMessage,
-  [MessageType.Assign]: ({ message }) => {
-    return <LogMessage>客服 {message.data.operatorId} 进入会话</LogMessage>;
-  },
+  [MessageType.Assign]: memo(({ message }) => {
+    const name = useOperatorName(message.data.operatorId);
+    return <LogMessage>{name} 进入会话</LogMessage>;
+  }),
   [MessageType.Close]: CloseConversation,
   [MessageType.Reopen]: ReopenConversation,
 };
