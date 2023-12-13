@@ -1,6 +1,9 @@
 import { ReactNode, createContext, useContext, useEffect, useRef, useState } from 'react';
 import toast from 'react-hot-toast';
 import { Socket, io } from 'socket.io-client';
+import { useQueryClient } from '@tanstack/react-query';
+
+import { useEffectEvent } from './Panel/hooks/useEffectEvent';
 
 const SocketContext = createContext<Socket | undefined>(undefined);
 
@@ -17,6 +20,19 @@ export function SocketProvider({ children, fallback, uri, auth }: SocketProvider
   const reconnectToastId = useRef<string>();
   const [evicted, setEvicted] = useState(false);
 
+  const queryClient = useQueryClient();
+
+  const onReconnect = useEffectEvent(() => {
+    // 重新获取消息数据, 防止漏消息
+    queryClient.invalidateQueries(['Messages']);
+
+    if (reconnectToastId.current) {
+      // 隐藏重连 toast
+      toast.dismiss(reconnectToastId.current);
+      reconnectToastId.current = undefined;
+    }
+  });
+
   useEffect(() => {
     if (socketRef.current) return;
 
@@ -28,15 +44,9 @@ export function SocketProvider({ children, fallback, uri, auth }: SocketProvider
     socketRef.current = socket;
 
     const onConnect = () => setConnected(true);
-    const onReconnect = () => {
+    const onDisconnect = () => {
       if (!reconnectToastId.current) {
         reconnectToastId.current = toast.loading('与服务器失去连接, 正在重连...');
-      }
-    };
-    const onReconnected = () => {
-      if (reconnectToastId.current) {
-        toast.dismiss(reconnectToastId.current);
-        reconnectToastId.current = undefined;
       }
     };
     const onEvict = () => {
@@ -45,8 +55,8 @@ export function SocketProvider({ children, fallback, uri, auth }: SocketProvider
 
     socket.on('connect', onConnect);
     socket.on('evict', onEvict);
-    socket.io.on('reconnect_attempt', onReconnect);
-    socket.io.on('reconnect', onReconnected);
+    socket.io.on('reconnect_attempt', onDisconnect);
+    socket.io.on('reconnect', onReconnect);
   }, []);
 
   if (evicted) {
