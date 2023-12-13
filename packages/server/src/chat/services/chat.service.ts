@@ -296,6 +296,8 @@ export class ChatService {
 
     await this.conversationService.updateConversation(conversation.id, {
       operatorId: operator.id,
+      // reset visitorWaitingSince on first assign
+      visitorWaitingSince: previousOperatorId ? undefined : new Date(),
     });
     await this.messageService.createMessage(conversation, {
       type: MessageType.Assign,
