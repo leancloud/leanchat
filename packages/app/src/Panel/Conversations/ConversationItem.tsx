@@ -7,6 +7,7 @@ import { Dropdown } from 'antd';
 import { Conversation } from '../types';
 import { useNow } from '../contexts/NowContext';
 import { diffTime } from './utils';
+import { EvaluationStar } from './components/EvaluationStar';
 
 interface UnreadAlertProps {
   waitedAt: string;
@@ -70,11 +71,15 @@ export function ConversationItem({
     >
       <div className="flex items-center">
         {avatar}
-        <div className="ml-[10px] grow overflow-hidden">
+        <div className="ml-[10px] overflow-hidden">
           <div className="flex items-center">
-            <div className="text-sm font-medium truncate mr-auto">{title}</div>
+            <div className="text-sm font-medium truncate">{title}</div>
           </div>
         </div>
+        {conversation.evaluation && (
+          <EvaluationStar className="ml-2" count={conversation.evaluation.star} />
+        )}
+        <div className="grow" />
         {conversation.lastMessage && (
           <div className={cx('text-xs text-[#a8a8a8] shrink-0 ml-2', menu && 'group-hover:hidden')}>
             {diffTime(now, conversation.lastMessage.createdAt)}
