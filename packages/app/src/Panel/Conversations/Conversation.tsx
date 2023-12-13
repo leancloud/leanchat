@@ -5,7 +5,7 @@ import { FiCheck } from 'react-icons/fi';
 import { HiDotsHorizontal } from 'react-icons/hi';
 import { FaUserEdit } from 'react-icons/fa';
 import { useToggle } from 'react-use';
-import { Button, Dropdown, Progress, Tooltip, message } from 'antd';
+import { Button, Dropdown, Modal, Progress, Tooltip, message } from 'antd';
 import cx from 'classnames';
 import _ from 'lodash';
 
@@ -99,13 +99,10 @@ export function Conversation({ conversationId, reopen, onReopen }: ConversationP
   const [uploading, setUploading] = useState(false);
   const [uploadPercent, setUploadPercent] = useState(50);
 
-  const handleChangeFiles = async (files: FileList | null) => {
-    if (!files || !files.length) {
-      return;
-    }
+  const sendFileMessage = async (file: File) => {
     setUploading(true);
     try {
-      const id = await uploadFile(files[0], {
+      const id = await uploadFile(file, {
         onProgress: (e) => setUploadPercent(e.percent || 0),
       });
       socket.emit('message', {
@@ -118,7 +115,6 @@ export function Conversation({ conversationId, reopen, onReopen }: ConversationP
     } finally {
       setUploading(false);
       setUploadPercent(0);
-      fileInputRef.current.value = '';
     }
   };
 
@@ -273,6 +269,17 @@ export function Conversation({ conversationId, reopen, onReopen }: ConversationP
                     handleCreateMessage();
                   }
                 }}
+                onPasteCapture={(e) => {
+                  const { files } = e.clipboardData;
+                  if (files.length) {
+                    e.preventDefault();
+                    Modal.confirm({
+                      title: '发送附件',
+                      content: '检测到您粘贴了一个文件，是否以附件的形式发送？',
+                      onOk: () => sendFileMessage(files[0]),
+                    });
+                  }
+                }}
                 style={{
                   boxShadow: 'unset',
                   padding: '16px 14px',
@@ -296,7 +303,14 @@ export function Conversation({ conversationId, reopen, onReopen }: ConversationP
                   ref={fileInputRef}
                   type="file"
                   className="hidden"
-                  onChange={(e) => handleChangeFiles(e.target.files)}
+                  onChange={(e) => {
+                    const { files } = e.target;
+                    if (files && files.length) {
+                      sendFileMessage(files[0]).then(() => {
+                        fileInputRef.current.value = '';
+                      });
+                    }
+                  }}
                 />
                 <Button
                   icon={<AiOutlinePaperClip className="w-[18px] h-[18px] mt-0.5" />}
