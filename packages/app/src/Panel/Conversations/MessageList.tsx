@@ -16,7 +16,7 @@ import {
 } from 'react';
 import { AiOutlineFile } from 'react-icons/ai';
 import { FiArrowDown } from 'react-icons/fi';
-import { Divider } from 'antd';
+import { Divider, Tooltip } from 'antd';
 import dayjs from 'dayjs';
 import cx from 'classnames';
 import _ from 'lodash';
@@ -175,10 +175,12 @@ interface MessageComponentProps {
   message: IMessage;
 }
 
-function LogMessage({ children }: PropsWithChildren) {
+function LogMessage({ children, createdAt }: PropsWithChildren<{ createdAt: string }>) {
   return (
     <div className="flex justify-center my-4">
-      <div className="text-xs bg-[#e7e7e7] rounded px-2 py-1 max-w-[80%]">{children}</div>
+      <Tooltip title={dayjs(createdAt).format('YYYY-MM-DD HH:mm:ss')}>
+        <div className="text-xs bg-[#e7e7e7] rounded px-2 py-1 max-w-[80%]">{children}</div>
+      </Tooltip>
     </div>
   );
 }
@@ -191,7 +193,7 @@ function EvaluateMessage({ message }: MessageComponentProps) {
   };
 
   return (
-    <LogMessage>
+    <LogMessage createdAt={message.createdAt}>
       <div className="flex flex-col items-center">
         <div className="flex items-center">
           用户已评价: <EvaluationStar className="ml-1" count={star} />
@@ -205,7 +207,7 @@ function EvaluateMessage({ message }: MessageComponentProps) {
 
 function CloseConversation({ message }: MessageComponentProps) {
   return (
-    <LogMessage>
+    <LogMessage createdAt={message.createdAt}>
       <div>
         {
           {
@@ -222,7 +224,7 @@ function CloseConversation({ message }: MessageComponentProps) {
 
 function ReopenConversation({ message }: MessageComponentProps) {
   return (
-    <LogMessage>
+    <LogMessage createdAt={message.createdAt}>
       <div>
         {
           {
@@ -241,7 +243,7 @@ const MessageComponents: Record<number, JSXElementConstructor<MessageComponentPr
   [MessageType.Evaluate]: EvaluateMessage,
   [MessageType.Assign]: memo(({ message }) => {
     const name = useOperatorName(message.data.operatorId);
-    return <LogMessage>{name} 进入会话</LogMessage>;
+    return <LogMessage createdAt={message.createdAt}>{name} 进入会话</LogMessage>;
   }),
   [MessageType.Close]: CloseConversation,
   [MessageType.Reopen]: ReopenConversation,
