@@ -64,7 +64,7 @@ export const firstMessageFromType = (data: ConversationData) => {
 
 export const lastMessageFromType = (data: ConversationData) => {
   if (data.stats) {
-    const { visitorFirstMessageCreatedAt: v, operatorFirstMessageCreatedAt: o } = data.stats;
+    const { visitorLastMessageCreatedAt: v, operatorLastMessageCreatedAt: o } = data.stats;
     if (v && o) {
       return dayjs(v).isAfter(o) ? '用户' : '客服';
     }
