@@ -18,6 +18,8 @@ export class ConversationDto {
     tags?: string[];
   };
 
+  evaluationInvitedAt?: string;
+
   visitorWaitingSince?: string;
 
   createdAt: string;
@@ -36,6 +38,7 @@ export class ConversationDto {
     dto.operatorId = conv.operatorId?.toString();
     dto.categoryId = conv.categoryId?.toString();
     dto.evaluation = conv.evaluation;
+    dto.evaluationInvitedAt = conv.evaluationInvitedAt?.toISOString();
     dto.visitorWaitingSince = conv.visitorWaitingSince?.toISOString();
     dto.createdAt = conv.createdAt.toISOString();
     dto.updatedAt = conv.updatedAt.toISOString();

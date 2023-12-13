@@ -137,6 +137,7 @@ export class ChatGateway implements OnModuleInit, OnGatewayConnection {
       'operatorId',
       'categoryId',
       'evaluation',
+      'evaluationInvitedAt',
       'visitorWaitingSince',
     ];
     if (!subscribedFields.some((field) => field in payload.data)) {
