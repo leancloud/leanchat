@@ -29,6 +29,7 @@ import { useConversationContext } from './contexts/ConversationContext';
 import style from './MessageList.module.css';
 import { bytesToSize } from './utils';
 import { useOperatorName } from './hooks/useOperatorName';
+import { EvaluationStar } from './components/EvaluationStar';
 
 interface DateGroup {
   date: dayjs.Dayjs;
@@ -183,11 +184,21 @@ function LogMessage({ children }: PropsWithChildren) {
 }
 
 function EvaluateMessage({ message }: MessageComponentProps) {
-  const { star, feedback } = message.data.evaluation;
+  const { star, feedback, tags } = message.data.evaluation as {
+    star: number;
+    feedback?: string;
+    tags?: string[];
+  };
+
   return (
     <LogMessage>
-      <div className="text-center">用户已评价：{'⭐️'.repeat(star)}</div>
-      {feedback && <div className="mt-0.5 break-all">{feedback}</div>}
+      <div className="flex flex-col items-center">
+        <div className="flex items-center">
+          用户已评价: <EvaluationStar className="ml-1" count={star} />
+        </div>
+        {tags && <div>评价标签: {tags.join(',')}</div>}
+        {feedback && <div className="mt-0.5 break-all">{feedback}</div>}
+      </div>
     </LogMessage>
   );
 }
