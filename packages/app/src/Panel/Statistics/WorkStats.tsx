@@ -29,8 +29,6 @@ function OperatorPie() {
     }, initValue);
   }, [operators]);
 
-  console.log(operatorByStatus);
-
   const config: PieConfig = {
     data: [
       { type: '在线客服数', value: operatorByStatus[OperatorStatus.Ready] },
