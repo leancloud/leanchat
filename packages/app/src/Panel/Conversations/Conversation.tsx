@@ -313,7 +313,7 @@ export function Conversation({ conversationId }: ConversationProps) {
               </Button>
             </div>
 
-            {!conversation.operatorId && (
+            {!conversation.operatorId && !closed && (
               <Mask>
                 <JoinConversationMask onJoin={joinConversation} />
               </Mask>
