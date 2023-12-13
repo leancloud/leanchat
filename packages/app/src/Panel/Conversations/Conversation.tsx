@@ -253,7 +253,7 @@ export function Conversation({ conversationId }: ConversationProps) {
                 className="outline-none resize-none w-full placeholder:!text-[#a8a8a8] leading-5 bg-white"
                 rows={1}
                 disabled={closed}
-                placeholder={closed ? '会话已结束' : '输入 / 选择快捷回复'}
+                placeholder={closed ? '会话已结束' : 'Enter 发送, Shift + Enter 换行'}
                 value={closed ? '' : content}
                 onChange={(e) => {
                   setContent(e.target.value);
