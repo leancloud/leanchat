@@ -36,6 +36,7 @@ export function useConversations(options: GetConversationsOptions) {
       }
     },
     staleTime: 1000 * 60,
+    refetchInterval: 1000 * 60,
   });
 }
 
