@@ -23,8 +23,7 @@ export function SocketProvider({ children, fallback, uri, auth }: SocketProvider
   const queryClient = useQueryClient();
 
   const onReconnect = useEffectEvent(() => {
-    // 重新获取消息数据, 防止漏消息
-    queryClient.invalidateQueries(['Messages']);
+    queryClient.invalidateQueries();
 
     if (reconnectToastId.current) {
       // 隐藏重连 toast
