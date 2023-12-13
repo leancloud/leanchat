@@ -89,9 +89,6 @@ export class ConversationController {
   async inviteEvaluation(
     @Param('id', FindConversationPipe) conversation: Conversation,
   ) {
-    if (conversation.evaluation) {
-      return;
-    }
     await this.conversationService.updateConversation(conversation.id, {
       evaluationInvitedAt: new Date(),
     });
