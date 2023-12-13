@@ -257,6 +257,13 @@ export class VisitorGateway implements OnModuleInit, OnGatewayConnection {
       return;
     }
 
+    if (data.feedback === '') {
+      delete data.feedback;
+    }
+    if (data.tags && data.tags.length === 0) {
+      delete data.tags;
+    }
+
     await this.chatService.evaluateConversation(conversation.id, data);
   }
 
