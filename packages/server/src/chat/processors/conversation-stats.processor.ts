@@ -140,20 +140,20 @@ export class ConversationStatsProcessor {
     firstOperatorJoinedAt: Date,
   ) {
     const list: number[] = [];
-
-    let actType = -1;
-    let actTime = firstOperatorJoinedAt;
+    let checkpoint: Date | undefined = firstOperatorJoinedAt;
     for (const message of chatMessages) {
-      if (actType === message.from.type) {
-        continue;
+      switch (message.from.type) {
+        case UserType.Visitor:
+          checkpoint ||= message.createdAt;
+          break;
+        case UserType.Operator:
+          if (checkpoint) {
+            list.push(differenceInMilliseconds(message.createdAt, checkpoint));
+            checkpoint = undefined;
+          }
+          break;
       }
-      if (message.from.type === UserType.Operator) {
-        list.push(differenceInMilliseconds(message.createdAt, actTime));
-      }
-      actType = message.from.type;
-      actTime = message.createdAt;
     }
-
     return list;
   }
 
