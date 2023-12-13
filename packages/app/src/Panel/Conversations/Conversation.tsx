@@ -234,11 +234,7 @@ export function Conversation({ conversationId, reopen, onReopen }: ConversationP
             )}
 
             <div className="p-2 border-b space-x-1">
-              <Button
-                size="small"
-                disabled={!!conversation.evaluation || closed}
-                onClick={() => _inviteEvaluation()}
-              >
+              <Button size="small" disabled={closed} onClick={() => _inviteEvaluation()}>
                 {conversation.evaluationInvitedAt
                   ? '邀请评价(已邀请)'
                   : conversation.evaluation
