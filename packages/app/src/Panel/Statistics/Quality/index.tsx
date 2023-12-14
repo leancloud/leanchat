@@ -35,18 +35,11 @@ export default function Quality() {
   });
 
   const handleSearchFormSubmit = (data: SearchFormData) => {
-    const {
-      date: [from, to],
-      message,
-      categoryId,
-      visitorId,
-      operatorId,
-      closedBy,
-      evaluation,
-    } = data;
+    const { id, date, message, categoryId, visitorId, operatorId, closedBy, evaluation } = data;
     setOptions({
-      from: from.startOf('day').toISOString(),
-      to: to.endOf('day').toISOString(),
+      id,
+      from: date?.[0].startOf('day').toISOString(),
+      to: date?.[1].endOf('day').toISOString(),
       message,
       categoryId: categoryId ? [categoryId] : undefined,
       visitorId: visitorId ? [visitorId] : undefined,

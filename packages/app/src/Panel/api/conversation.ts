@@ -82,8 +82,9 @@ interface QuerySelector<T> {
 }
 
 export interface SearchConversationOptions {
-  from: string;
-  to: string;
+  id?: string;
+  from?: string;
+  to?: string;
 
   channel?: number;
   categoryId?: string[];
