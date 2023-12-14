@@ -27,7 +27,9 @@ export default function Modern() {
       },
     });
 
-  const evaluable = Boolean(conversation && !conversation.evaluation);
+  const evaluable = Boolean(
+    conversation && conversation.operatorJoined && !conversation.evaluation,
+  );
 
   useEffect(() => {
     iframe.style.position = 'fixed';

@@ -6,6 +6,7 @@ export enum ConversationStatus {
 export interface Conversation {
   id: string;
   status: ConversationStatus;
+  operatorJoined: boolean;
   evaluation?: {
     star: number;
     feedback: string;
