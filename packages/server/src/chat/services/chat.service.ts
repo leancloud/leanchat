@@ -106,7 +106,7 @@ export class ChatService {
     const conversation = await this.conversationService.getConversation(
       conversationId,
     );
-    if (!conversation || conversation.evaluation) {
+    if (!conversation) {
       return;
     }
     if (

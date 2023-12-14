@@ -253,7 +253,7 @@ export class VisitorGateway implements OnModuleInit, OnGatewayConnection {
     const conversation = await this.conversationService.getConversation(
       visitor.currentConversationId.toString(),
     );
-    if (!conversation || conversation.evaluation) {
+    if (!conversation) {
       return;
     }
 
