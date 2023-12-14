@@ -1,7 +1,7 @@
 import { cond, constant, defaultTo, eq, get, has, map, over, stubTrue, sum } from 'lodash/fp';
 import dayjs from 'dayjs';
 
-import { flow, formatDate, renderTime } from '@/Panel/Statistics/helpers';
+import { flow, formatDate, toSeconds } from '@/Panel/Statistics/helpers';
 import { ConsultationResult } from '../types';
 import { ConversationData } from '../api/conversation';
 
@@ -43,9 +43,9 @@ export const evaluationInvited = cond([
   [stubTrue, constant('未邀请')],
 ]);
 
-export const receptionTime = flow([get('stats.receptionTime'), renderTime]);
+export const receptionTime = flow([get('stats.receptionTime'), toSeconds]);
 
-export const firstResponseTime = flow([get('stats.firstResponseTime'), renderTime]);
+export const firstResponseTime = flow([get('stats.firstResponseTime'), toSeconds]);
 
 export const firstMessageFromType = (data: ConversationData) => {
   if (data.stats) {

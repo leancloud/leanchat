@@ -384,12 +384,12 @@ export function ConversationRecord() {
     },
     {
       key: 'receptionTime',
-      title: '会话总时长',
+      title: '会话总时长(秒)',
       render: render.receptionTime,
     },
     {
       key: 'firstResponseTime',
-      title: '首次响应时长',
+      title: '首次响应时长(秒)',
       render: render.firstResponseTime,
     },
     {

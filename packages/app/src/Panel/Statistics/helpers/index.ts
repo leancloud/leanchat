@@ -19,6 +19,10 @@ export function renderTime(ms: number) {
   return timeString;
 }
 
+export function toSeconds(ms: number) {
+  return Math.floor(ms / 1000);
+}
+
 export function formatDate(date: string | Date | number) {
   return dayjs(date).format('YYYY-MM-DD HH:mm:ss');
 }

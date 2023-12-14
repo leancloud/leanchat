@@ -12,7 +12,7 @@ import {
   SearchConversationOptions,
   searchConversation,
 } from '@/Panel/api/conversation';
-import { flow, formatDate, renderTime } from '@/Panel/Statistics/helpers';
+import { flow, formatDate, toSeconds } from '@/Panel/Statistics/helpers';
 import { SearchForm, SearchFormData } from './components/SearchForm';
 import { UserType } from '../../types';
 import { ConversationInfo } from '../components/ConversationInfo';
@@ -130,8 +130,8 @@ export default function Quality() {
     },
     {
       key: 'duration',
-      title: '会话持续时长',
-      render: flow([get('stats.duration'), renderTime]),
+      title: '会话持续时长(秒)',
+      render: flow([get('stats.duration'), toSeconds]),
     },
     {
       key: 'closedBy',
@@ -144,6 +144,11 @@ export default function Quality() {
           [eq(UserType.System), _.constant('系统')],
         ]),
       ]),
+    },
+    {
+      key: 'consultationResult',
+      title: '咨询结果',
+      render: render.consultationResult,
     },
     {
       key: 'evaluationInvited',
@@ -162,8 +167,8 @@ export default function Quality() {
     },
     {
       key: 'firstResponseTime',
-      title: '首次响应时间',
-      render: flow([get('stats.firstResponseTime'), renderTime]),
+      title: '首次响应时间(秒)',
+      render: flow([get('stats.firstResponseTime'), toSeconds]),
     },
     {
       key: 'firstMessageFrom',
@@ -187,13 +192,18 @@ export default function Quality() {
     },
     {
       key: 'maxResponseTime',
-      title: '最长响应时间',
-      render: flow([get('stats.maxResponseTime'), renderTime]),
+      title: '最长响应时间(秒)',
+      render: flow([get('stats.maxResponseTime'), toSeconds]),
     },
     {
       key: 'chatDuration',
-      title: '会话聊天时长',
-      render: flow([render.chatDuration, renderTime]),
+      title: '会话聊天时长(秒)',
+      render: flow([render.chatDuration, toSeconds]),
+    },
+    {
+      key: 'receptionTime',
+      title: '会话总时长(秒)',
+      render: render.receptionTime,
     },
     {
       key: 'queuedAtOrfirstOperatorJoinedAt',
@@ -211,8 +221,8 @@ export default function Quality() {
     },
     {
       key: 'queueConnectionTime',
-      title: '排队等待时长',
-      render: flow([get('stats.queueConnectionTime'), renderTime]),
+      title: '排队等待时长(秒)',
+      render: flow([get('stats.queueConnectionTime'), toSeconds]),
     },
   ];
 

@@ -10,7 +10,7 @@ import Papa from 'papaparse';
 import { BasicFilterForm, BasicFilterFormData } from './components/BasicFilterForm';
 import { OperatorStats as OperatorStatsSchema, getOperatorStats } from '../api/statistics';
 import { useGetOperatorName } from './hooks/useGetOperatorName';
-import { divide, sum, subtract, flow, renderTime, toPercent, downloadCSV } from './helpers';
+import { divide, sum, subtract, flow, toSeconds, toPercent, downloadCSV } from './helpers';
 
 export function OperatorStats() {
   const [formData, setFormData] = useState<BasicFilterFormData>({
@@ -80,28 +80,28 @@ export function OperatorStats() {
     },
     {
       key: 'averageFirstResponseTime',
-      title: '平均首次响应时长',
-      render: flow([get('conversation.averageFirstResponseTime'), renderTime]),
+      title: '平均首次响应时长(秒)',
+      render: flow([get('conversation.averageFirstResponseTime'), toSeconds]),
     },
     {
       key: 'averageResponseTime',
-      title: '平均响应时长',
+      title: '平均响应时长(秒)',
       render: flow([
         divide(get('conversation.responseTime'), get('conversation.responseCount')),
-        renderTime,
+        toSeconds,
       ]),
     },
     {
       key: 'maxResponseTime',
-      title: '最长响应时间',
-      render: flow([get('conversation.maxResponseTime'), renderTime]),
+      title: '最长响应时间(秒)',
+      render: flow([get('conversation.maxResponseTime'), toSeconds]),
     },
     {
       key: 'averageValidDuration',
-      title: '平均会话时长',
+      title: '平均会话时长(秒)',
       render: flow([
         divide(get('conversation.validDuration'), get('conversation.validCount')),
-        renderTime,
+        toSeconds,
       ]),
     },
     {
@@ -114,23 +114,23 @@ export function OperatorStats() {
     },
     {
       key: 'onlineTime',
-      title: '登录时长',
-      render: flow([get('online.totalTime'), multiply(1000 * 60), renderTime]),
+      title: '登录时长(秒)',
+      render: flow([get('online.totalTime'), multiply(60)]),
     },
     {
       key: 'readyTime',
-      title: '在线时长',
-      render: flow([get('online.readyTime'), multiply(1000 * 60), renderTime]),
+      title: '在线时长(秒)',
+      render: flow([get('online.readyTime'), multiply(60)]),
     },
     {
       key: 'busyTime',
-      title: '忙碌时长',
-      render: flow([get('online.busyTime'), multiply(1000 * 60), renderTime]),
+      title: '忙碌时长(秒)',
+      render: flow([get('online.busyTime'), multiply(60)]),
     },
     {
       key: 'postprocessingDuration',
-      title: '后处理总时长',
-      render: flow([getOr(0, 'postprocessing.duration'), renderTime]),
+      title: '后处理总时长(秒)',
+      render: flow([getOr(0, 'postprocessing.duration'), toSeconds]),
     },
     {
       key: 'postprocessingCount',
@@ -139,15 +139,15 @@ export function OperatorStats() {
     },
     {
       key: 'leaveTime',
-      title: '离开时长',
-      render: flow([get('online.leaveTime'), multiply(1000 * 60), renderTime]),
+      title: '离开时长(秒)',
+      render: flow([get('online.leaveTime'), multiply(1000 * 60), toSeconds]),
     },
     {
       key: 'averageValidReceptionTime',
-      title: '平均人工接待时长',
+      title: '平均人工接待时长(秒)',
       render: flow([
         divide(get('conversation.validReceptionTime'), get('conversation.validCount')),
-        renderTime,
+        toSeconds,
       ]),
     },
     {
