@@ -13,40 +13,41 @@ function querySchema<T>(schema: z.Schema<T>) {
     .partial();
 }
 
-const SearchConversationSchema = z.object({
-  // date range
-  from: z.coerce.date(),
-  to: z.coerce.date(),
+const SearchConversationSchema = z
+  .object({
+    id: z.union([ObjectIdSchema, z.array(ObjectIdSchema)]),
 
-  // optional filters
-  channel: z.nativeEnum(Channel).optional(),
-  categoryId: z.array(ObjectIdSchema).optional(),
-  visitorId: z.array(ObjectIdSchema).optional(),
-  operatorId: z.array(ObjectIdSchema).optional(),
-  closedBy: z.nativeEnum(UserType).optional(),
-  evaluation: z
-    .object({
-      invited: z.boolean(),
-      star: z.number().int().min(1).max(5),
-    })
-    .partial()
-    .optional(),
-  message: z
-    .object({
-      text: z.string(),
-      from: z.nativeEnum(UserType),
-    })
-    .partial()
-    .optional(),
-  duration: querySchema(z.number()).optional(),
-  averageResponseTime: querySchema(z.number()).optional(),
-  queued: z.boolean().optional(),
-  consultationResult: z.nativeEnum(ConsultationResult).optional(),
+    // date range
+    from: z.coerce.date(),
+    to: z.coerce.date(),
 
-  // pagination
-  page: z.number().int().positive().optional(),
-  pageSize: z.number().int().min(1).max(1000).optional(),
-});
+    channel: z.nativeEnum(Channel),
+    categoryId: z.array(ObjectIdSchema),
+    visitorId: z.array(ObjectIdSchema),
+    operatorId: z.array(ObjectIdSchema),
+    closedBy: z.nativeEnum(UserType),
+    evaluation: z
+      .object({
+        invited: z.boolean(),
+        star: z.number().int().min(1).max(5),
+      })
+      .partial(),
+    message: z
+      .object({
+        text: z.string(),
+        from: z.nativeEnum(UserType),
+      })
+      .partial(),
+    duration: querySchema(z.number()),
+    averageResponseTime: querySchema(z.number()),
+    queued: z.boolean(),
+    consultationResult: z.nativeEnum(ConsultationResult),
+
+    // pagination
+    page: z.number().int().positive(),
+    pageSize: z.number().int().min(1).max(1000),
+  })
+  .partial();
 
 export class SearchConversationDto extends createZodDto(
   SearchConversationSchema,

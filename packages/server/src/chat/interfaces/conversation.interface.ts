@@ -82,8 +82,9 @@ export interface GetConversationMessageStatsOptions {
 }
 
 export interface SearchConversationOptions {
-  from: Date;
-  to: Date;
+  id?: string | string[];
+  from?: Date;
+  to?: Date;
 
   channel?: Channel;
   categoryId?: string[];

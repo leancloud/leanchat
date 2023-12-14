@@ -384,6 +384,7 @@ export class ConversationService {
   }
 
   async searchConversations({
+    id,
     from,
     to,
     channel,
@@ -400,9 +401,22 @@ export class ConversationService {
     skip = 0,
     limit = 10,
   }: SearchConversationOptions) {
-    const $match: FilterQuery<Conversation> = {
-      createdAt: { $gte: from, $lte: to },
-    };
+    const $match: FilterQuery<Conversation> = {};
+
+    if (typeof id === 'string') {
+      $match._id = objectId(id);
+    } else if (Array.isArray(id) && id.length) {
+      $match._id = { $in: objectId(id) };
+    }
+
+    if (from && to) {
+      $match.createdAt = { $gte: from, $lte: to };
+    } else if (from) {
+      $match.createdAt = { $gte: from };
+    } else if (to) {
+      $match.createdAt = { $lte: to };
+    }
+
     if (channel) {
       $match.channel = channel;
     }
