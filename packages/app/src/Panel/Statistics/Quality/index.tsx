@@ -259,6 +259,7 @@ export default function Quality() {
               {
                 key: 'detail',
                 title: '操作',
+                fixed: 'right',
                 render: (conv) => <a onClick={() => setSelectedConvId(conv.id)}>详情</a>,
               },
             ]}
