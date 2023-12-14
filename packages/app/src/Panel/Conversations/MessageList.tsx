@@ -160,7 +160,7 @@ function Bubble({ isVisitor, className, children }: BubbleProps) {
       className={cx(
         'text-sm p-[10px] rounded-lg',
         {
-          'border border-[#ececec]': isVisitor,
+          'bg-green-100': isVisitor,
           'bg-[#e8f3fe]': !isVisitor,
         },
         className,
