@@ -250,7 +250,7 @@ const MessageComponents: Record<number, JSXElementConstructor<MessageComponentPr
 };
 
 function useAtBottom(ref: RefObject<HTMLElement>) {
-  const [atBottom, setAtBottom] = useState(false);
+  const [atBottom, setAtBottom] = useState(true);
 
   useEffect(() => {
     const onScroll = (e: Event) => {
@@ -263,8 +263,6 @@ function useAtBottom(ref: RefObject<HTMLElement>) {
         capture: true,
         passive: true,
       });
-      const { scrollTop, scrollHeight, clientHeight } = ref.current;
-      setAtBottom(scrollTop + clientHeight === scrollHeight);
     }
 
     return () => {
