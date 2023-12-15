@@ -84,7 +84,7 @@ export function Conversation({ conversationId, reopen, onReopen }: ConversationP
     if (
       conversation &&
       conversation.status === ConversationStatus.Open &&
-      conversation.operatorId === user.id
+      conversation.operatorId
     ) {
       // 自动 focus 输入框, 减少客服操作步骤
       textareaRef.current?.focus();
