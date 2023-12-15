@@ -280,7 +280,7 @@ export function Conversation({ conversationId, reopen, onReopen }: ConversationP
                     e.preventDefault();
                     Modal.confirm({
                       title: '发送附件',
-                      content: '检测到您粘贴了一个文件，是否以附件的形式发送？',
+                      content: `检测到您粘贴了一个文件，是否以附件的形式发送？\n文件名：${files[0].name}`,
                       onOk: () => sendFileMessage(files[0]),
                     });
                   }
