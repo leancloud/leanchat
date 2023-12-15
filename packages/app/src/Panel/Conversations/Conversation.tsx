@@ -80,6 +80,17 @@ export function Conversation({ conversationId, reopen, onReopen }: ConversationP
     resize();
   }, [content]);
 
+  useEffect(() => {
+    if (
+      conversation &&
+      conversation.status === ConversationStatus.Open &&
+      conversation.operatorId === user.id
+    ) {
+      // 自动 focus 输入框, 减少客服操作步骤
+      textareaRef.current?.focus();
+    }
+  }, [conversation]);
+
   const handleCreateMessage = async () => {
     const trimedContent = content.trim();
     if (!trimedContent) {
