@@ -115,29 +115,27 @@ export default function Modern() {
             'rounded-xl shadow-lg mb-4': !isMobile,
           })}
         >
-          <div
-            className={cx('h-[42px] bg-primary flex items-center text-text shrink-0', {
-              'pl-2': !isEmbedded,
-            })}
-          >
-            {isEmbedded && isMobile && (
-              <button className="h-10 w-10 flex" onClick={handleClose}>
-                <PiArrowLeftBold className="w-5 h-5 m-auto" />
-              </button>
-            )}
-            <div
-              className={cx('text-sm mr-auto', {
-                'ml-5': !isMobile,
-              })}
-            >
-              在线客服
+          {isEmbedded && (
+            <div className="h-[42px] bg-primary flex items-center text-text shrink-0">
+              {isMobile && (
+                <button className="h-10 w-10 flex" onClick={handleClose}>
+                  <PiArrowLeftBold className="w-5 h-5 m-auto" />
+                </button>
+              )}
+              <div
+                className={cx('text-sm mr-auto', {
+                  'ml-5': !isMobile,
+                })}
+              >
+                在线客服
+              </div>
+              {!isMobile && (
+                <button className="h-10 w-10 flex" onClick={handleClose}>
+                  <PiXBold className="w-5 h-5 m-auto" />
+                </button>
+              )}
             </div>
-            {!isMobile && (
-              <button className="h-10 w-10 flex" onClick={handleClose}>
-                <PiXBold className="w-5 h-5 m-auto" />
-              </button>
-            )}
-          </div>
+          )}
           <div className="grow flex flex-col overflow-hidden relative">
             <div
               ref={messageWrapperRef}
