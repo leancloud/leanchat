@@ -12,6 +12,8 @@ import { Modal } from './components/Modal';
 import { EvaluationDialog } from './components/EvaluationDialog';
 import { EvaluateData } from '../types';
 
+const isEmbedded = !!window.top && window.top !== window;
+
 export default function Modern() {
   const { iframe, emitter } = useAppContext();
 
@@ -34,9 +36,20 @@ export default function Modern() {
   useEffect(() => {
     iframe.style.position = 'fixed';
     iframe.style.inset = 'auto 0px 0px auto';
+    if (!isEmbedded && window.visualViewport) {
+      const vv = window.visualViewport;
+      const onResize = () => {
+        iframe.style.height = vv.height + 'px';
+        scrollToBottom();
+      };
+      vv.addEventListener('resize', onResize);
+      return () => {
+        vv.removeEventListener('resize', onResize);
+      };
+    }
   }, []);
 
-  const isMobile = windowSize.width <= 480;
+  const isMobile = isEmbedded ? windowSize.width <= 480 : true;
 
   const resize = useEffectEvent(() => {
     const { innerHeight } = window.top || window;
@@ -102,8 +115,12 @@ export default function Modern() {
             'rounded-xl shadow-lg mb-4': !isMobile,
           })}
         >
-          <div className="h-[42px] bg-primary flex items-center text-text shrink-0">
-            {isMobile && (
+          <div
+            className={cx('h-[42px] bg-primary flex items-center text-text shrink-0', {
+              'pl-2': !isEmbedded,
+            })}
+          >
+            {isEmbedded && isMobile && (
               <button className="h-10 w-10 flex" onClick={handleClose}>
                 <PiArrowLeftBold className="w-5 h-5 m-auto" />
               </button>

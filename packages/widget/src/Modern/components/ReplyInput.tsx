@@ -64,7 +64,7 @@ export const ReplyInput = forwardRef<HTMLTextAreaElement, ReplyInputProps>(
     const uploadTask = tasks[0];
 
     return (
-      <div className="flex p-[10px] pr-0 relative">
+      <div className="flex pl-[10px] pt-[10px] relative pb-[max(env(safe-area-inset-bottom),10px)] focus-within:pb-[10px]">
         <div className="grow flex border rounded-xl focus-within:border-primary overflow-hidden">
           <button
             className="flex text-[rgb(157,163,174)] disabled:bg-[#f8f8f8] disabled:text-[rgb(210,213,218)] w-8 h-8"
@@ -96,6 +96,8 @@ export const ReplyInput = forwardRef<HTMLTextAreaElement, ReplyInputProps>(
               setContent(e.target.value);
             }}
             onKeyDown={handleTextareaKeyDown}
+            // @ts-ignore
+            enterKeyHint="send"
           />
           {evaluable && (
             <button
