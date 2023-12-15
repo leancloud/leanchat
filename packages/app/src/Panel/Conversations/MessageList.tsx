@@ -17,6 +17,8 @@ import {
 import { AiOutlineFile } from 'react-icons/ai';
 import { FiArrowDown } from 'react-icons/fi';
 import { Divider, Tooltip } from 'antd';
+import Markdown, { Components } from 'react-markdown';
+import remarkGfm from 'remark-gfm';
 import dayjs from 'dayjs';
 import cx from 'classnames';
 import _ from 'lodash';
@@ -30,6 +32,10 @@ import style from './MessageList.module.css';
 import { bytesToSize } from './utils';
 import { useOperatorName } from './hooks/useOperatorName';
 import { EvaluationStar } from './components/EvaluationStar';
+
+const markdownComponents: Components = {
+  a: (props) => <a {...props} target="_blank" rel="noopener noreferrer" />,
+};
 
 interface DateGroup {
   date: dayjs.Dayjs;
@@ -138,7 +144,15 @@ function MessageGroup({ from, isLeft, messages, operatorMap }: MessageGroupProps
           })}
         >
           <Bubble isVisitor={isLeft}>
-            {message.data.text}
+            {message.data.text && (
+              <Markdown
+                className="min-w-[16px] whitespace-pre-line break-all"
+                remarkPlugins={[remarkGfm]}
+                components={markdownComponents}
+              >
+                {message.data.text}
+              </Markdown>
+            )}
             {message.data.file && <FileMessage file={message.data.file} />}
           </Bubble>
           <div className="text-gray-500 text-xs">{dayjs(message.createdAt).format('HH:mm')}</div>
@@ -166,7 +180,7 @@ function Bubble({ isVisitor, className, children }: BubbleProps) {
         className,
       )}
     >
-      <div className="min-w-[16px] whitespace-pre-line break-all">{children}</div>
+      {children}
     </div>
   );
 }
