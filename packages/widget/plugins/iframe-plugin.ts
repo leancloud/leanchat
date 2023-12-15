@@ -43,19 +43,21 @@ export function iframePlugin({ filename, attributes }: IFramePluginOptions): Plu
       if (attributes) {
         const flatAttrs = flattenKeys(attributes);
         Object.entries(flatAttrs).forEach(([key, value]) => {
-          convertCode.push(`iframe.${key} = ${JSON.stringify(value)}`);
+          convertCode.push(`f.${key} = ${JSON.stringify(value)}`);
         });
       }
 
-      const code = [
-        `const html = ${JSON.stringify(indexHtml)};`,
-        `const iframe = document.createElement('iframe');`,
+      const lines = [
+        `var h = ${JSON.stringify(indexHtml)};`,
+        `var f = d.createElement('iframe');`,
         ...convertCode,
-        `document.body.appendChild(iframe);`,
-        `iframe.contentDocument.open();`,
-        `iframe.contentDocument.write(html);`,
-        `iframe.contentDocument.close();`,
-      ].join('\n');
+        `d.body.appendChild(f);`,
+        `f.contentDocument.open();`,
+        `f.contentDocument.write(h);`,
+        `f.contentDocument.close();`,
+      ];
+      const iifeBody = lines.map((line) => '  ' + line).join('\n');
+      const code = `(function(d){\n${iifeBody}\n})(document);`;
 
       this.emitFile({
         type: 'prebuilt-chunk',
