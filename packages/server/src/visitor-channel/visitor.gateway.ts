@@ -105,6 +105,14 @@ export class VisitorGateway implements OnModuleInit, OnGatewayConnection {
     socket.disconnect();
   }
 
+  private detectUserChannel(socket: Socket) {
+    const ua = socket.handshake.headers['user-agent'];
+    if (ua && ua.toLowerCase().includes('micromessenger')) {
+      return Channel.WeChat;
+    }
+    return Channel.LiveChat;
+  }
+
   async handleConnection(socket: Socket) {
     const visitorId = socket.data.id;
     socket.join(visitorId);
@@ -207,7 +215,7 @@ export class VisitorGateway implements OnModuleInit, OnGatewayConnection {
       }
 
       conversation = await this.conversationService.createConversation({
-        channel: Channel.LiveChat,
+        channel: this.detectUserChannel(socket),
         visitorId,
       });
       await this.visitorService.updateVisitor(visitorId, {

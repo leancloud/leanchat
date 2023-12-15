@@ -32,6 +32,7 @@ export enum OperatorStatus {
 
 export enum Channel {
   LiveChat = 1,
+  WeChat = 2,
 }
 
 export enum ConversationStatus {
