@@ -24,6 +24,7 @@ import { uploadFile } from '../leancloud';
 import { ConversationStatus } from '../types';
 import { useAutoSize } from '../hooks/useAutoSize';
 import { CloseConfirm } from './components/CloseConfirm';
+import { useReplyDraft } from './hooks/useReplyDraft';
 
 interface OperatorLabelProps {
   operatorId: string;
@@ -69,7 +70,7 @@ export function Conversation({ conversationId, reopen, onReopen }: ConversationP
 
   const [visitorMessageMode, setVisitorMessageMode] = useState(false);
 
-  const [content, setContent] = useState('');
+  const [content, setContent] = useReplyDraft(conversationId);
   const [showQuickReply, setShowQuickReply] = useState(false);
 
   const textareaRef = useRef<HTMLTextAreaElement>(null);
@@ -87,8 +88,14 @@ export function Conversation({ conversationId, reopen, onReopen }: ConversationP
       conversation.status === ConversationStatus.Open &&
       conversation.operatorId
     ) {
-      // 自动 focus 输入框, 减少客服操作步骤
-      textareaRef.current?.focus();
+      const textarea = textareaRef.current;
+      if (textarea) {
+        const length = textarea.value.length;
+        // 自动 focus 输入框, 减少客服操作步骤
+        textarea.focus();
+        // 移动光标到末尾
+        textarea.setSelectionRange(length, length);
+      }
     }
   }, [conversation]);
 
