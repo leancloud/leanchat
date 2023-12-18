@@ -57,6 +57,10 @@ export const ReplyInput = forwardRef<HTMLTextAreaElement, ReplyInputProps>(
       if (e.target.files?.length) {
         const file = e.target.files[0];
         e.target.value = '';
+        if (file.size > 20 * 1024 * 1024) {
+          alert('附件大小不能超过20MB');
+          return;
+        }
         upload(file);
       }
     };
