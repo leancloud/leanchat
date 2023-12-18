@@ -206,9 +206,7 @@ export function useUpdateConversation() {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: (args: Parameters<typeof updateConversation>) => {
-      return updateConversation(...args);
-    },
+    mutationFn: updateConversation,
     onSuccess: (data) => {
       queryClient.setQueryData(['Conversation', data.id], data);
     },

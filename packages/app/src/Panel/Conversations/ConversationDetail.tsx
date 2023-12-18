@@ -33,7 +33,7 @@ function ConversationInfo() {
           placeholder="-"
           categoryId={conversation.categoryId}
           onCategoryIdChange={(categoryId) => {
-            update([conversation.id, { categoryId }]);
+            update({ id: conversation.id, categoryId });
           }}
           style={{ width: '100%' }}
         />

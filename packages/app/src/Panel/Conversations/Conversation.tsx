@@ -11,7 +11,7 @@ import _ from 'lodash';
 
 import { useSocket } from '@/socket';
 import { useCurrentUser } from '@/Panel/auth';
-import { useConversation } from '@/Panel/hooks/conversation';
+import { useConversation, useUpdateConversation } from '@/Panel/hooks/conversation';
 import { ConversationDetail } from './ConversationDetail';
 import { ConversationContext } from './contexts/ConversationContext';
 import { MessageList, MessageListRef } from './MessageList';
@@ -23,6 +23,7 @@ import { closeConversation, inviteEvaluation, assignconversation } from '../api/
 import { uploadFile } from '../leancloud';
 import { ConversationStatus } from '../types';
 import { useAutoSize } from '../hooks/useAutoSize';
+import { CloseConfirm } from './components/CloseConfirm';
 
 interface OperatorLabelProps {
   operatorId: string;
@@ -141,6 +142,20 @@ export function Conversation({ conversationId, reopen, onReopen }: ConversationP
     },
   });
 
+  const { mutateAsync: update, isLoading: isUpdating } = useUpdateConversation();
+
+  const handleClose = (categoryId?: string) => {
+    if (categoryId) {
+      update({ id: conversationId, categoryId }).then(() => {
+        toggleCloseModal(false);
+        close();
+      });
+    } else {
+      toggleCloseModal(false);
+      close();
+    }
+  };
+
   const { mutate: _inviteEvaluation } = useMutation({
     mutationFn: () => {
       return inviteEvaluation(conversationId);
@@ -150,7 +165,8 @@ export function Conversation({ conversationId, reopen, onReopen }: ConversationP
     },
   });
 
-  const [showReassignModal, toggleReassignModal] = useToggle(false);
+  const [reassignModalOpen, toggleReassignModal] = useToggle(false);
+  const [closeModalOpen, toggleCloseModal] = useToggle(false);
 
   const messageListRef = useRef<MessageListRef>(null);
 
@@ -191,7 +207,13 @@ export function Conversation({ conversationId, reopen, onReopen }: ConversationP
                 <Tooltip title="结束会话" placement="bottom" mouseEnterDelay={0.5}>
                   <button
                     className="text-[#969696] p-1 rounded transition-colors hover:bg-[#f7f7f7]"
-                    onClick={() => close()}
+                    onClick={() => {
+                      if (conversation.categoryId) {
+                        close();
+                      } else {
+                        toggleCloseModal();
+                      }
+                    }}
                   >
                     <FiCheck className="w-5 h-5" />
                   </button>
@@ -353,7 +375,15 @@ export function Conversation({ conversationId, reopen, onReopen }: ConversationP
           </div>
         </div>
 
-        <ReassignModal open={showReassignModal} onClose={toggleReassignModal} />
+        <ReassignModal open={reassignModalOpen} onClose={toggleReassignModal} />
+
+        <CloseConfirm
+          key={conversationId}
+          open={closeModalOpen}
+          onCancel={toggleCloseModal}
+          onClose={handleClose}
+          loading={isUpdating}
+        />
 
         <ConversationDetail className="w-[320px] border-l shrink-0" />
       </div>
