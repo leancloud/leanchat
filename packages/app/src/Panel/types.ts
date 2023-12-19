@@ -13,8 +13,30 @@ export interface Message {
 
 export interface Evaluation {
   star: number;
-  feedback: string;
+  feedback?: string;
   createdAt: string;
+}
+
+export interface ConversationStats {
+  visitorMessageCount?: number;
+  operatorMessageCount?: number;
+  firstResponseTime?: number;
+  maxResponseTime?: number;
+  responseTime?: number;
+  responseCount?: number;
+  averageResponseTime?: number;
+  receptionTime?: number;
+  firstOperatorJoinedAt?: string;
+  reassigned?: boolean;
+  operatorFirstMessageCreatedAt?: string;
+  operatorLastMessageCreatedAt?: string;
+  visitorFirstMessageCreatedAt?: string;
+  visitorLastMessageCreatedAt?: string;
+  queueConnectionTime?: number;
+  queueTimeToLeave?: number;
+  consultationResult?: number;
+  duration?: number;
+  round?: number;
 }
 
 export interface Conversation {
@@ -32,6 +54,14 @@ export interface Conversation {
   evaluationInvitedAt?: string;
   visitorWaitingSince?: string;
   createdAt: string;
+  queuedAt?: string;
+  closedAt?: string;
+  closedBy?: {
+    type: number;
+    id?: string;
+  };
+  stats?: ConversationStats;
+  joinedOperatorIds?: string[];
 }
 
 export enum OperatorRole {

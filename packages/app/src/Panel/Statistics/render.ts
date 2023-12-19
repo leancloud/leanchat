@@ -2,8 +2,7 @@ import { cond, constant, defaultTo, eq, get, has, map, over, stubTrue, sum } fro
 import dayjs from 'dayjs';
 
 import { flow, formatDate, toSeconds } from '@/Panel/Statistics/helpers';
-import { ConsultationResult } from '../types';
-import { ConversationData } from '../api/conversation';
+import { Conversation, ConsultationResult } from '../types';
 
 export const id = get('id');
 
@@ -47,7 +46,7 @@ export const receptionTime = flow([get('stats.receptionTime'), toSeconds]);
 
 export const firstResponseTime = flow([get('stats.firstResponseTime'), toSeconds]);
 
-export const firstMessageFromType = (data: ConversationData) => {
+export const firstMessageFromType = (data: Conversation) => {
   if (data.stats) {
     const { visitorFirstMessageCreatedAt: v, operatorFirstMessageCreatedAt: o } = data.stats;
     if (v && o) {
@@ -62,7 +61,7 @@ export const firstMessageFromType = (data: ConversationData) => {
   }
 };
 
-export const lastMessageFromType = (data: ConversationData) => {
+export const lastMessageFromType = (data: Conversation) => {
   if (data.stats) {
     const { visitorLastMessageCreatedAt: v, operatorLastMessageCreatedAt: o } = data.stats;
     if (v && o) {
@@ -77,7 +76,7 @@ export const lastMessageFromType = (data: ConversationData) => {
   }
 };
 
-const getFirstMessageCreatedAt = (data: ConversationData) => {
+const getFirstMessageCreatedAt = (data: Conversation) => {
   if (data.stats) {
     const { operatorFirstMessageCreatedAt: o, visitorFirstMessageCreatedAt: v } = data.stats;
     if (o && v) {
@@ -87,7 +86,7 @@ const getFirstMessageCreatedAt = (data: ConversationData) => {
   }
 };
 
-const getLastMessageCreatedAt = (data: ConversationData) => {
+const getLastMessageCreatedAt = (data: Conversation) => {
   if (data.stats) {
     const { operatorLastMessageCreatedAt: o, visitorLastMessageCreatedAt: v } = data.stats;
     if (o && v) {
@@ -101,7 +100,7 @@ export const firstMessageCreatedAt = flow([getFirstMessageCreatedAt, formatDate]
 
 export const lastMessageCreatedAt = flow([getLastMessageCreatedAt, formatDate]);
 
-export const chatDuration = (data: ConversationData) => {
+export const chatDuration = (data: Conversation) => {
   const first = getFirstMessageCreatedAt(data);
   const last = getLastMessageCreatedAt(data);
   if (first && last) {

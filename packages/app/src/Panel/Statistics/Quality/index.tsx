@@ -7,14 +7,10 @@ import dayjs from 'dayjs';
 import _ from 'lodash';
 import { eq, find, get } from 'lodash/fp';
 
-import {
-  ConversationData,
-  SearchConversationOptions,
-  searchConversation,
-} from '@/Panel/api/conversation';
+import { SearchConversationOptions, searchConversation } from '@/Panel/api/conversation';
 import { flow, formatDate, toSeconds } from '@/Panel/Statistics/helpers';
 import { SearchForm, SearchFormData } from './components/SearchForm';
-import { UserType } from '../../types';
+import { UserType, Conversation } from '../../types';
 import { ConversationInfo } from '../components/ConversationInfo';
 import * as render from '../render';
 import { ExportDataDialog, ExportDataColumn } from '../components/ExportDataDialog';
@@ -66,7 +62,7 @@ export default function Quality() {
 
   const [selectedConvId, setSelectedConvId] = useState<string>();
 
-  const columns: (ColumnType<ConversationData> & ExportDataColumn)[] = [
+  const columns: (ColumnType<Conversation> & ExportDataColumn)[] = [
     {
       key: 'id',
       title: '会话ID',
