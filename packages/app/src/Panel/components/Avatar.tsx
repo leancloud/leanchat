@@ -3,14 +3,15 @@ import cx from 'classnames';
 import { Operator } from '../types';
 
 interface AvatarProps {
+  className?: string;
   size?: number;
   user: Operator;
 }
 
-export function Avatar({ size = 32, user }: AvatarProps) {
+export function Avatar({ className, size = 32, user }: AvatarProps) {
   return (
     <div
-      className="bg-[#e7e7e7] rounded-full text-[#969696] flex relative"
+      className={cx('bg-[#e7e7e7] rounded-full text-[#969696] flex relative', className)}
       style={{
         width: size,
         height: size,

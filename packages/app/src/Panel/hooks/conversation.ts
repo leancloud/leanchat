@@ -1,16 +1,54 @@
 import { useCallback, useEffect } from 'react';
-import { InfiniteData, Query, useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import {
+  InfiniteData,
+  Query,
+  useInfiniteQuery,
+  useMutation,
+  useQuery,
+  useQueryClient,
+} from '@tanstack/react-query';
 import { Socket } from 'socket.io-client';
 import { produce } from 'immer';
 import _ from 'lodash';
+import dayjs from 'dayjs';
 
 import { Conversation, Message, MessageType } from '@/Panel/types';
 import {
   SearchConversationOptions,
   conversationMatchFilters,
   getConversation,
+  searchConversation,
   updateConversation,
 } from '@/Panel/api/conversation';
+
+type UseConversationsQueryKey = [
+  'Conversations',
+  { options: SearchConversationOptions; live?: boolean },
+];
+
+export function useConversations(options: SearchConversationOptions, live = true) {
+  const pageSize = 10;
+  return useInfiniteQuery({
+    queryKey: ['Conversations', { options, live }] satisfies UseConversationsQueryKey,
+    queryFn: async ({ queryKey: [, { options }], pageParam }) => {
+      const { data } = await searchConversation({
+        ...options,
+        to: pageParam && dayjs(pageParam).subtract(1, 'ms').toISOString(),
+        pageSize,
+        desc: true,
+      });
+      return data;
+    },
+    getNextPageParam: (lastPage) => {
+      if (lastPage.length === pageSize) {
+        return _.last(lastPage)?.createdAt;
+      }
+    },
+    staleTime: live ? 1000 * 60 : 0,
+    cacheTime: live ? undefined : 0,
+    refetchInterval: live ? 1000 * 60 : undefined,
+  });
+}
 
 export function useConversation(id: string) {
   return useQuery({
@@ -128,10 +166,10 @@ export function useSubscribeConversations(socket: Socket) {
     const applyConversation = (conv: Conversation) => {
       const cache = queryClient.getQueryCache();
       const queries = cache.findAll({
-        queryKey: ['Conversations'],
+        queryKey: ['Conversations', { live: true }],
       });
       for (const query of queries) {
-        const filters = query.queryKey[1] as SearchConversationOptions;
+        const [, { options: filters }] = query.queryKey as UseConversationsQueryKey;
         const stayInData = conversationMatchFilters(conv, filters);
         const data = query.state.data as InfiniteData<Conversation[]> | undefined;
         if (data) {

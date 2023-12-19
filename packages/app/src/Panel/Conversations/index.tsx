@@ -1,60 +1,65 @@
 import { useMemo, useState } from 'react';
-import { MdMenuOpen } from 'react-icons/md';
+import { MdMenuOpen, MdFilterAlt } from 'react-icons/md';
 import cx from 'classnames';
 import _ from 'lodash';
 import { useToggle } from 'react-use';
-import { useInfiniteQuery, useMutation } from '@tanstack/react-query';
-import dayjs from 'dayjs';
+import { useMutation } from '@tanstack/react-query';
 
 import { Sider } from './Sider';
-import { useSetConversationQueryData } from '@/Panel/hooks/conversation';
+import { useConversations, useSetConversationQueryData } from '@/Panel/hooks/conversation';
 import { useCurrentUser } from '@/Panel/auth';
 import { Conversation } from './Conversation';
 import { ConversationList } from './ConversationList';
 import { useOperators } from '../hooks/operator';
 import { Avatar } from '../components/Avatar';
-import { reopenConversation, searchConversation } from '../api/conversation';
+import { SearchConversationOptions, reopenConversation } from '../api/conversation';
 import { ConversationStatus } from '../types';
+import { AdvanceFiltersModal } from './components/AdvanceFiltersModal';
+
+interface BasicSearchOptions {
+  status?: SearchConversationOptions['status'];
+  operatorId?: string | null;
+}
 
 export default function Conversations() {
   const user = useCurrentUser();
 
   const [conversationId, setConversationId] = useState<string>();
 
-  const [searchOptions, setSearchOptions] = useState({
+  const [searchOptions, setSearchOptions] = useState<BasicSearchOptions>({
     status: ConversationStatus.Open,
-    operatorId: user.id as string | null | undefined,
+    operatorId: user.id,
   });
+  const [advanceSearchOptions, setAdvanceSearchOptions] = useState<SearchConversationOptions>({});
+
+  const handleChangeSearchOptions = (options: BasicSearchOptions) => {
+    setSearchOptions((v) => ({ ...v, ...options }));
+    setAdvanceSearchOptions({});
+  };
+
+  const advance = !_.isEmpty(advanceSearchOptions);
 
   const {
     data: searchResult,
     isLoading,
     hasNextPage,
     fetchNextPage,
-  } = useInfiniteQuery({
-    queryKey: ['Conversations', searchOptions],
-    queryFn: ({ pageParam }) =>
-      searchConversation({
-        ...searchOptions,
-        to: pageParam && dayjs(pageParam).subtract(1, 'ms').toISOString(),
-        pageSize: 10,
-        desc: true,
-      }),
-    getNextPageParam: (lastPage) => {
-      return _.last(lastPage.data)?.createdAt;
-    },
-    staleTime: 1000 * 60,
-    refetchInterval: 1000 * 60,
-  });
-
-  const conversations = useMemo(
-    () => searchResult?.pages.flatMap((page) => page.data),
-    [searchResult],
+  } = useConversations(
+    advance
+      ? {
+          ...advanceSearchOptions,
+          operatorId: searchOptions.operatorId,
+        }
+      : searchOptions,
+    !advance,
   );
+
+  const conversations = useMemo(() => searchResult?.pages.flat(), [searchResult]);
 
   const setConvQueryData = useSetConversationQueryData();
 
   const [showSider, toggleSider] = useToggle(true);
+  const [filtersModalOpen, toggleFiltersModal] = useToggle(false);
 
   const { data: operators } = useOperators();
 
@@ -70,9 +75,9 @@ export default function Conversations() {
         const operator = operators?.find((t) => t.id === searchOptions.operatorId);
         if (operator) {
           return (
-            <div className="flex items-center">
-              <Avatar size={24} user={operator} />
-              <div className="ml-3">{operator.internalName}</div>
+            <div className="flex items-center overflow-hidden">
+              <Avatar className="shrink-0" size={24} user={operator} />
+              <div className="ml-3 truncate">{operator.internalName}</div>
             </div>
           );
         }
@@ -88,7 +93,7 @@ export default function Conversations() {
       <Sider
         show={showSider}
         operatorId={searchOptions.operatorId}
-        onChangeOperatorId={(operatorId) => setSearchOptions((v) => ({ ...v, operatorId }))}
+        onChangeOperatorId={(operatorId) => handleChangeSearchOptions({ operatorId })}
       />
 
       <div
@@ -110,59 +115,68 @@ export default function Conversations() {
               />
             </button>
             {streamLabel}
+            <button
+              className={cx(
+                'ml-auto text-[#969696] p-1 rounded transition-colors hover:bg-[#f7f7f7]',
+                {
+                  'text-primary': advance,
+                },
+              )}
+              onClick={toggleFiltersModal}
+            >
+              <MdFilterAlt className="w-[22px] h-[22px]" />
+            </button>
           </div>
         </div>
         <div className="grow flex flex-col overflow-hidden">
           <div className="h-10 flex items-center border-b divide-x text-sm shrink-0">
             <button
               className={cx('flex-1 h-full', {
-                'text-primary-600': searchOptions.status === ConversationStatus.Open,
+                'text-primary-600': !advance && searchOptions.status === ConversationStatus.Open,
               })}
-              onClick={() => setSearchOptions((v) => ({ ...v, status: ConversationStatus.Open }))}
+              onClick={() => handleChangeSearchOptions({ status: ConversationStatus.Open })}
             >
               进行中
             </button>
             <button
               className={cx('flex-1 h-full', {
-                'text-primary-600': searchOptions.status === ConversationStatus.Closed,
+                'text-primary-600': !advance && searchOptions.status === ConversationStatus.Closed,
               })}
-              onClick={() => setSearchOptions((v) => ({ ...v, status: ConversationStatus.Closed }))}
+              onClick={() => handleChangeSearchOptions({ status: ConversationStatus.Closed })}
             >
               已完成
             </button>
           </div>
           <div className="grow flex flex-col overflow-y-auto">
-            {conversations && (
-              <ConversationList
-                loading={isLoading}
-                conversations={conversations}
-                hasNextPage={hasNextPage}
-                onFetchNextPage={fetchNextPage}
-                onClick={(conv) => {
-                  setConversationId(conv.id);
-                  setConvQueryData(conv);
-                }}
-                activeConversation={conversationId}
-                unreadAlert={
-                  searchOptions.operatorId === user.id &&
-                  searchOptions.status === ConversationStatus.Open
-                }
-                menu={
-                  searchOptions.operatorId === user.id &&
-                  searchOptions.status === ConversationStatus.Closed
-                    ? {
-                        items: [
-                          {
-                            key: 'reopen',
-                            label: '重新打开',
-                          },
-                        ],
-                        onClick: ({ conversation }) => reopen(conversation.id),
-                      }
-                    : undefined
-                }
-              />
-            )}
+            <ConversationList
+              loading={isLoading}
+              conversations={conversations}
+              hasNextPage={hasNextPage}
+              onFetchNextPage={fetchNextPage}
+              onClick={(conv) => {
+                setConversationId(conv.id);
+                setConvQueryData(conv);
+              }}
+              activeConversation={conversationId}
+              unreadAlert={
+                searchOptions.operatorId === user.id &&
+                searchOptions.status === ConversationStatus.Open
+              }
+              menu={
+                searchOptions.operatorId === user.id &&
+                searchOptions.status === ConversationStatus.Closed
+                  ? {
+                      items: [
+                        {
+                          key: 'reopen',
+                          label: '重新打开',
+                        },
+                      ],
+                      onClick: ({ conversation }) => reopen(conversation.id),
+                    }
+                  : undefined
+              }
+            />
           </div>
         </div>
       </div>
@@ -177,6 +191,15 @@ export default function Conversations() {
           />
         )}
       </div>
+
+      <AdvanceFiltersModal
+        open={filtersModalOpen}
+        onSearch={(options) => {
+          setAdvanceSearchOptions(options);
+          toggleFiltersModal(false);
+        }}
+        onCancel={toggleFiltersModal}
+      />
     </div>
   );
 }

@@ -8,6 +8,7 @@ import { useNow } from '../contexts/NowContext';
 import { diffTime } from './utils';
 import { EvaluationStar } from './components/EvaluationStar';
 import { BaseConversation } from './ConversationList';
+import { ConversationStatus } from '../types';
 
 interface UnreadAlertProps {
   waitedAt: string;
@@ -115,9 +116,11 @@ export function ConversationItem<T extends BaseConversation>({
         >
           {message}
         </div>
-        {unreadAlert && conversation.visitorWaitingSince && (
-          <UnreadAlert waitedAt={conversation.visitorWaitingSince} />
-        )}
+        {unreadAlert &&
+          conversation.status !== ConversationStatus.Closed &&
+          conversation.visitorWaitingSince && (
+            <UnreadAlert waitedAt={conversation.visitorWaitingSince} />
+          )}
       </div>
     </div>
   );

@@ -2,9 +2,11 @@ import { Avatar, Empty, Spin } from 'antd';
 
 import { ConversationItem, ConversationItemProps } from './ConversationItem';
 import { NowProvider } from '../contexts/NowContext';
+import { ConversationStatus } from '../types';
 
 export interface BaseConversation {
   id: string;
+  status: ConversationStatus;
   visitorId: string;
   visitor?: {
     name?: string;

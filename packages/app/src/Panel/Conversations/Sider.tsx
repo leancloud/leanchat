@@ -1,5 +1,5 @@
 import { ComponentProps, ReactNode, useMemo } from 'react';
-import { FaUserCheck, FaUser, FaUserGroup, FaMagnifyingGlass } from 'react-icons/fa6';
+import { FaUserCheck, FaUser, FaUserGroup } from 'react-icons/fa6';
 import { Transition } from '@headlessui/react';
 import { Popover } from 'antd';
 import cx from 'classnames';
@@ -101,9 +101,6 @@ export function Sider({ operatorId, onChangeOperatorId, show = true }: SiderProp
             })}
           >
             <div className="text-[20px] font-medium mr-auto">收件箱</div>
-            <button className="text-[#969696]">
-              <FaMagnifyingGlass />
-            </button>
           </div>
           <div ref={ref} className="overflow-y-auto">
             <Section title="会话">

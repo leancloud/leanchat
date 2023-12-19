@@ -54,6 +54,7 @@ function VisitorInfo() {
   return (
     <div className="pt-2">
       <Form layout="vertical" initialValues={data} onFinish={update}>
+        <div className="mb-5">ID: {conversation.visitorId}</div>
         <Form.Item label="昵称" name="name">
           <Input />
         </Form.Item>
