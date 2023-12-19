@@ -1,4 +1,4 @@
-import { Conversation, Evaluation } from '../types';
+import { Evaluation } from '../types';
 import { client } from './client';
 
 export interface GetConversationStatisticsFilters {
@@ -54,49 +54,6 @@ export async function getConversationMessageStatistics(options: GetConversationS
       channel: options.channel,
       operatorId: options.operatorId?.join(',') || undefined,
     },
-  });
-  return res.data;
-}
-
-export interface ConversationRecord {
-  id: string;
-  createdAt: string;
-  closedAt: string;
-  visitorId: string;
-  visitorName?: string;
-  categoryId?: string;
-  evaluation?: Conversation['evaluation'];
-  evaluationInvitedAt?: string;
-  stats: Record<string, any>;
-  operatorId?: string;
-}
-
-interface ConversationRecordResult {
-  items: ConversationRecord[];
-  totalCount: number;
-}
-
-export interface GetConversationRecordStatsOptions {
-  from: string;
-  to: string;
-  channel?: string;
-  operatorId?: string;
-  messageKeyword?: string;
-  messageFrom?: number;
-  duration?: string;
-  averageResponseTime?: string;
-  evaluationStar?: number;
-  queued?: boolean;
-  closedBy?: number;
-  consultationResult?: number;
-  categoryId?: string;
-  page?: number;
-  pageSize?: number;
-}
-
-export async function getConversationRecordStats(options: GetConversationRecordStatsOptions) {
-  const res = await client.get<ConversationRecordResult>('/statistics/conversation-record', {
-    params: options,
   });
   return res.data;
 }
