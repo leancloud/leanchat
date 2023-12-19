@@ -26,13 +26,26 @@ export class ConversationDto {
 
   updatedAt: string;
 
+  queuedAt?: string;
+
+  closedAt?: string;
+
+  closedBy?: {
+    type: number;
+    id?: string;
+  };
+
   lastMessage?: any;
 
   visitor?: VisitorDto;
 
+  joinedOperatorIds?: string[];
+
+  stats?: Record<string, any>;
+
   static fromDocument(conv: Conversation) {
     const dto = new ConversationDto();
-    dto.id = conv.id;
+    dto.id = conv.id ?? conv._id.toHexString();
     dto.status = conv.status;
     dto.visitorId = conv.visitorId.toString();
     dto.operatorId = conv.operatorId?.toString();
@@ -42,6 +55,13 @@ export class ConversationDto {
     dto.visitorWaitingSince = conv.visitorWaitingSince?.toISOString();
     dto.createdAt = conv.createdAt.toISOString();
     dto.updatedAt = conv.updatedAt.toISOString();
+    dto.queuedAt = conv.queuedAt?.toISOString();
+    dto.closedAt = conv.closedAt?.toISOString();
+    dto.closedBy = conv.closedBy && {
+      type: conv.closedBy.type,
+      id: conv.closedBy.id?.toHexString(),
+    };
+    dto.stats = conv.stats;
     return dto;
   }
 }

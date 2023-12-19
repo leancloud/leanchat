@@ -13,7 +13,7 @@ export class VisitorDto {
 
   static fromDocument(visitor: Visitor) {
     const dto = new VisitorDto();
-    dto.id = visitor.id;
+    dto.id = visitor.id ?? visitor._id.toHexString();
     dto.name = visitor.name;
     dto.comment = visitor.comment;
     dto.createdAt = visitor.createdAt.toISOString();

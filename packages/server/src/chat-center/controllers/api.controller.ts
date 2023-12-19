@@ -13,7 +13,7 @@ import { Operator } from 'src/chat/models';
 import { ChatService, ConversationService } from 'src/chat/services';
 import { UserType } from 'src/chat/constants';
 import { AuthGuard } from '../guards';
-import { ListConversationDto } from '../dtos/conversation';
+import { ConversationDto, ListConversationDto } from '../dtos/conversation';
 import { ConversationTransformService } from '../services';
 import {
   ReopenConversationDto,
@@ -83,13 +83,23 @@ export class APIController {
       skip: (page - 1) * pageSize,
       limit: pageSize,
     });
+
+    const data = result.data.map((doc) => {
+      const dto = ConversationDto.fromDocument(doc);
+      if (doc.visitor) {
+        dto.visitor = VisitorDto.fromDocument(doc.visitor);
+      }
+      if (doc.lastMessage) {
+        dto.lastMessage = MessageDto.fromDocument(doc.lastMessage);
+      }
+      dto.joinedOperatorIds = doc.joinedOperatorIds?.map((id) =>
+        id.toHexString(),
+      );
+      return dto;
+    });
+
     return {
-      data: result.data.map((item) => ({
-        ...item,
-        visitor: item.visitor && VisitorDto.fromDocument(item.visitor),
-        lastMessage:
-          item.lastMessage && MessageDto.fromDocument(item.lastMessage),
-      })),
+      data,
       totalCount: result.totalCount,
     };
   }

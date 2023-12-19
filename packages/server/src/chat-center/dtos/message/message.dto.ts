@@ -25,7 +25,7 @@ export class MessageDto {
 
   static fromDocument(message: Message) {
     const dto = new MessageDto();
-    dto.id = message.id;
+    dto.id = message.id ?? message._id.toHexString();
     dto.visitorId = message.visitorId.toString();
     dto.conversationId = message.conversationId.toString();
     dto.type = message.type;
