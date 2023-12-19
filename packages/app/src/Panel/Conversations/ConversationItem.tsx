@@ -4,10 +4,10 @@ import dayjs from 'dayjs';
 import { BsThreeDotsVertical } from 'react-icons/bs';
 import { Dropdown } from 'antd';
 
-import { Conversation } from '../types';
 import { useNow } from '../contexts/NowContext';
 import { diffTime } from './utils';
 import { EvaluationStar } from './components/EvaluationStar';
+import { BaseConversation } from './ConversationList';
 
 interface UnreadAlertProps {
   waitedAt: string;
@@ -32,8 +32,8 @@ function UnreadAlert({ waitedAt }: UnreadAlertProps) {
   );
 }
 
-export interface ConversationItemProps {
-  conversation: Conversation;
+export interface ConversationItemProps<T> {
+  conversation: T;
   active?: boolean;
   avatar: ReactNode;
   title: string;
@@ -44,11 +44,11 @@ export interface ConversationItemProps {
       key: string;
       label: string;
     }[];
-    onClick: (e: { conversation: Conversation; key: string }) => void;
+    onClick: (e: { conversation: T; key: string }) => void;
   };
 }
 
-export function ConversationItem({
+export function ConversationItem<T extends BaseConversation>({
   conversation,
   active,
   avatar,
@@ -56,7 +56,7 @@ export function ConversationItem({
   message,
   unreadAlert,
   menu,
-}: ConversationItemProps) {
+}: ConversationItemProps<T>) {
   const now = useNow();
 
   return (

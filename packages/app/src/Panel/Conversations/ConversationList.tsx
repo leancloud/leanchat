@@ -1,21 +1,36 @@
 import { Avatar, Empty, Spin } from 'antd';
 
-import { Conversation } from '@/Panel/types';
 import { ConversationItem, ConversationItemProps } from './ConversationItem';
 import { NowProvider } from '../contexts/NowContext';
 
-interface ConversationListProps {
-  loading?: boolean;
-  conversations?: Conversation[];
-  hasNextPage?: boolean;
-  onFetchNextPage?: () => void;
-  onClick: (conv: Conversation) => void;
-  activeConversation?: string;
-  unreadAlert?: boolean;
-  menu?: ConversationItemProps['menu'];
+export interface BaseConversation {
+  id: string;
+  visitorId: string;
+  visitor?: {
+    name?: string;
+  };
+  lastMessage?: {
+    data: Record<string, any>;
+    createdAt: string;
+  };
+  evaluation?: {
+    star: number;
+  };
+  visitorWaitingSince?: string;
 }
 
-export function ConversationList({
+interface ConversationListProps<T> {
+  loading?: boolean;
+  conversations?: T[];
+  hasNextPage?: boolean;
+  onFetchNextPage?: () => void;
+  onClick: (conv: T) => void;
+  activeConversation?: string;
+  unreadAlert?: boolean;
+  menu?: ConversationItemProps<T>['menu'];
+}
+
+export function ConversationList<T extends BaseConversation>({
   loading,
   conversations,
   hasNextPage,
@@ -24,7 +39,7 @@ export function ConversationList({
   activeConversation,
   unreadAlert,
   menu,
-}: ConversationListProps) {
+}: ConversationListProps<T>) {
   if (loading) {
     return (
       <div className="h-full flex justify-center items-center">
