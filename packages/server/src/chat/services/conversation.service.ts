@@ -432,6 +432,8 @@ export class ConversationService {
     }
     if (operatorId?.length) {
       $match.operatorId = { $in: objectId(operatorId) };
+    } else if (operatorId === null) {
+      $match.operatorId = { $exists: false };
     }
     if (closedBy) {
       $match['closedBy.type'] = closedBy;

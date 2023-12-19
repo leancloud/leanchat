@@ -89,7 +89,7 @@ export interface SearchConversationOptions {
   channel?: Channel;
   categoryId?: string[];
   visitorId?: string[];
-  operatorId?: string[];
+  operatorId?: string[] | null;
   closedBy?: UserType;
   evaluation?: {
     invited?: boolean;

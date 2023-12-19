@@ -1,13 +1,5 @@
-import {
-  BadRequestException,
-  Body,
-  Controller,
-  Post,
-  UseGuards,
-  UsePipes,
-} from '@nestjs/common';
+import { Body, Controller, Post, UseGuards, UsePipes } from '@nestjs/common';
 import { ZodValidationPipe } from 'nestjs-zod';
-import _ from 'lodash';
 
 import { Operator } from 'src/chat/models';
 import { ChatService, ConversationService } from 'src/chat/services';
@@ -72,11 +64,6 @@ export class APIController {
 
   @Post('conversation.search')
   async conversation_search(@Body() body: SearchConversationDto) {
-    if (_.isEmpty(body.id) && !body.from && !body.to) {
-      // avoid full collection scan
-      throw new BadRequestException('缺少必要的筛选条件');
-    }
-
     const { page = 1, pageSize = 10, ...options } = body;
     const result = await this.conversationService.searchConversations({
       ...options,

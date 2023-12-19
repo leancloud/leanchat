@@ -27,7 +27,10 @@ const SearchConversationSchema = z
     channel: z.nativeEnum(Channel),
     categoryId: z.array(ObjectIdSchema),
     visitorId: z.array(ObjectIdSchema),
-    operatorId: z.array(ObjectIdSchema),
+    operatorId: z
+      .union([ObjectIdSchema, z.array(ObjectIdSchema)])
+      .transform((value) => (typeof value === 'string' ? [value] : value))
+      .nullable(),
     closedBy: z.nativeEnum(UserType),
     evaluation: z
       .object({
