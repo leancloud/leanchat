@@ -1,4 +1,4 @@
-import { ReactNode, useMemo, useState } from 'react';
+import { useMemo, useState } from 'react';
 import { MdMenuOpen } from 'react-icons/md';
 import cx from 'classnames';
 import _ from 'lodash';
@@ -15,52 +15,13 @@ import { Avatar } from '../components/Avatar';
 import { GetConversationsOptions, reopenConversation } from '../api/conversation';
 import { ConversationStatus } from '../types';
 
-const STREAM_LABELS: Record<string, ReactNode> = {
-  unassigned: (
-    <>
-      <span>未分配</span>
-    </>
-  ),
-  myOpen: (
-    <>
-      <span>我的</span>
-    </>
-  ),
-  allOpen: <span>全部</span>,
-};
-
 export default function Conversations() {
   const user = useCurrentUser();
-  const [stream, setStream] = useState('myOpen');
-  const [status, setStatus] = useState(ConversationStatus.Open);
 
-  const getConvOptions = useMemo<GetConversationsOptions>(() => {
-    if (stream === 'unassigned') {
-      return {
-        status,
-        operatorId: null,
-        desc: true,
-      };
-    } else if (stream === 'myOpen') {
-      return {
-        status,
-        operatorId: user.id,
-        desc: true,
-      };
-    } else if (stream === 'allOpen') {
-      return {
-        status,
-        desc: true,
-      };
-    } else if (stream.startsWith('operator/')) {
-      return {
-        status,
-        operatorId: stream.slice('operator/'.length),
-        desc: true,
-      };
-    }
-    throw 'unreachable';
-  }, [stream, user, status]);
+  const [convOptions, setConvOptions] = useState<GetConversationsOptions>({
+    status: ConversationStatus.Open,
+    operatorId: user.id,
+  });
 
   const [conversationId, setConversationId] = useState<string>();
 
@@ -69,7 +30,7 @@ export default function Conversations() {
     isLoading,
     hasNextPage,
     fetchNextPage,
-  } = useConversations(getConvOptions);
+  } = useConversations({ ...convOptions, desc: true });
 
   const conversations = useMemo(() => conversationsData?.pages.flat(), [conversationsData]);
 
@@ -80,22 +41,25 @@ export default function Conversations() {
   const { data: operators } = useOperators();
 
   const streamLabel = useMemo(() => {
-    if (stream in STREAM_LABELS) {
-      return STREAM_LABELS[stream];
+    switch (convOptions.operatorId) {
+      case user.id:
+        return <span>我的</span>;
+      case undefined:
+        return <span>全部</span>;
+      case null:
+        return <span>未分配</span>;
+      default:
+        const operator = operators?.find((t) => t.id === convOptions.operatorId);
+        if (operator) {
+          return (
+            <div className="flex items-center">
+              <Avatar size={24} user={operator} />
+              <div className="ml-3">{operator.internalName}</div>
+            </div>
+          );
+        }
     }
-    if (stream.startsWith('operator/')) {
-      const operatorId = stream.slice('operator/'.length);
-      const operator = operators?.find((t) => t.id === operatorId);
-      if (operator) {
-        return (
-          <div className="flex items-center">
-            <Avatar size={24} user={operator} />
-            <div className="ml-3">{operator.internalName}</div>
-          </div>
-        );
-      }
-    }
-  }, [stream, operators]);
+  }, [operators, convOptions.operatorId]);
 
   const { mutate: reopen } = useMutation({
     mutationFn: reopenConversation,
@@ -103,7 +67,11 @@ export default function Conversations() {
 
   return (
     <div className="h-full flex">
-      <Sider show={showSider} stream={stream} onChangeStream={setStream} />
+      <Sider
+        show={showSider}
+        operatorId={convOptions.operatorId}
+        onChangeOperatorId={(operatorId) => setConvOptions((v) => ({ ...v, operatorId }))}
+      />
 
       <div
         className={cx('w-[300px] border-x flex flex-col bg-white shrink-0 z-10', {
@@ -130,17 +98,17 @@ export default function Conversations() {
           <div className="h-10 flex items-center border-b divide-x text-sm shrink-0">
             <button
               className={cx('flex-1 h-full', {
-                'text-primary-600': status === ConversationStatus.Open,
+                'text-primary-600': convOptions.status === ConversationStatus.Open,
               })}
-              onClick={() => setStatus(ConversationStatus.Open)}
+              onClick={() => setConvOptions((v) => ({ ...v, status: ConversationStatus.Open }))}
             >
               进行中
             </button>
             <button
               className={cx('flex-1 h-full', {
-                'text-primary-600': status === ConversationStatus.Closed,
+                'text-primary-600': convOptions.status === ConversationStatus.Closed,
               })}
-              onClick={() => setStatus(ConversationStatus.Closed)}
+              onClick={() => setConvOptions((v) => ({ ...v, status: ConversationStatus.Closed }))}
             >
               已完成
             </button>
@@ -157,9 +125,13 @@ export default function Conversations() {
                   setConvQueryData(conv);
                 }}
                 activeConversation={conversationId}
-                unreadAlert={stream === 'myOpen' && status === ConversationStatus.Open}
+                unreadAlert={
+                  convOptions.operatorId === user.id &&
+                  convOptions.status === ConversationStatus.Open
+                }
                 menu={
-                  stream === 'myOpen' && status === ConversationStatus.Closed
+                  convOptions.operatorId === user.id &&
+                  convOptions.status === ConversationStatus.Closed
                     ? {
                         items: [
                           {
@@ -182,7 +154,7 @@ export default function Conversations() {
           <Conversation
             key={conversationId}
             conversationId={conversationId}
-            reopen={stream === 'myOpen'}
+            reopen={convOptions.operatorId === user.id}
             onReopen={() => reopen(conversationId)}
           />
         )}

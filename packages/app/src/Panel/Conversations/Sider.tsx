@@ -1,4 +1,4 @@
-import { ComponentProps, ReactNode } from 'react';
+import { ComponentProps, ReactNode, useMemo } from 'react';
 import { FaUserCheck, FaUser, FaUserGroup, FaMagnifyingGlass } from 'react-icons/fa6';
 import { Transition } from '@headlessui/react';
 import { Popover } from 'antd';
@@ -44,10 +44,13 @@ interface TeamSectionProps {
 
 function TeamSection({ activeOperatorId, onClick }: TeamSectionProps) {
   const { data: operators } = useOperators();
+  const user = useCurrentUser();
+
+  const members = useMemo(() => operators?.filter((o) => o.id !== user.id), [operators, user]);
 
   return (
     <Section title="团队">
-      {operators?.map((operator) => (
+      {members?.map((operator) => (
         <Popover
           key={operator.id}
           placement="rightTop"
@@ -70,12 +73,12 @@ function TeamSection({ activeOperatorId, onClick }: TeamSectionProps) {
 }
 
 interface SiderProps {
-  stream: string;
-  onChangeStream: (stream: string) => void;
+  operatorId?: string | null;
+  onChangeOperatorId: (id?: string | null) => void;
   show?: boolean;
 }
 
-export function Sider({ stream, onChangeStream, show = true }: SiderProps) {
+export function Sider({ operatorId, onChangeOperatorId, show = true }: SiderProps) {
   const { ref, scrolled } = useScrolled();
   const user = useCurrentUser();
 
@@ -106,7 +109,8 @@ export function Sider({ stream, onChangeStream, show = true }: SiderProps) {
             <Section title="会话">
               {[
                 {
-                  key: 'myOpen',
+                  key: 'mine',
+                  operatorId: user.id,
                   label: (
                     <div className="flex items-center">
                       <FaUserCheck className="w-4 h-4 mr-3" />
@@ -115,7 +119,8 @@ export function Sider({ stream, onChangeStream, show = true }: SiderProps) {
                   ),
                 },
                 {
-                  key: 'allOpen',
+                  key: 'all',
+                  operatorId: undefined,
                   label: (
                     <div className="flex items-center">
                       <FaUserGroup className="w-4 h-4 mr-3" />
@@ -125,6 +130,7 @@ export function Sider({ stream, onChangeStream, show = true }: SiderProps) {
                 },
                 {
                   key: 'unassigned',
+                  operatorId: null,
                   label: (
                     <div className="flex items-center">
                       <FaUser className="w-4 h-4 mr-3" />
@@ -132,8 +138,12 @@ export function Sider({ stream, onChangeStream, show = true }: SiderProps) {
                     </div>
                   ),
                 },
-              ].map(({ key, label }) => (
-                <SiderButton key={key} active={stream === key} onClick={() => onChangeStream(key)}>
+              ].map(({ key, operatorId: opId, label }) => (
+                <SiderButton
+                  key={key}
+                  active={opId === operatorId}
+                  onClick={() => onChangeOperatorId(opId)}
+                >
                   {label}
                 </SiderButton>
               ))}
@@ -141,10 +151,8 @@ export function Sider({ stream, onChangeStream, show = true }: SiderProps) {
 
             {user.role === OperatorRole.Admin && (
               <TeamSection
-                activeOperatorId={
-                  stream.startsWith('operator/') ? stream.slice('operator/'.length) : undefined
-                }
-                onClick={(operatorId) => onChangeStream(`operator/${operatorId}`)}
+                activeOperatorId={operatorId || undefined}
+                onClick={onChangeOperatorId}
               />
             )}
           </div>
