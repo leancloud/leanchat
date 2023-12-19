@@ -12,7 +12,7 @@ import {
 import _ from 'lodash';
 
 import { objectId } from 'src/helpers';
-import { Conversation, Message } from '../models';
+import { Conversation, Message, Visitor } from '../models';
 import {
   ConversationFilters,
   CreateConversationData,
@@ -529,43 +529,81 @@ export class ConversationService {
     });
 
     pipeline.push({
+      $lookup: {
+        from: 'message',
+        let: { cid: '$_id' },
+        pipeline: [
+          {
+            $match: {
+              $expr: { $eq: ['$conversationId', '$$cid'] },
+              type: MessageType.Message,
+            },
+          },
+          {
+            $sort: { createdAt: -1 },
+          },
+          {
+            $limit: 1,
+          },
+        ],
+        as: 'lastMessage',
+      },
+    });
+
+    pipeline.push({
       $project: {
         _id: 0,
         id: '$_id',
+        status: 1,
         createdAt: 1,
+        updatedAt: 1,
         queuedAt: 1,
         closedAt: 1,
         closedBy: 1,
         categoryId: 1,
         visitorId: 1,
-        visitorName: { $arrayElemAt: ['$visitors.name', 0] },
+        visitor: { $arrayElemAt: ['$visitors', 0] },
         operatorId: 1,
         evaluation: 1,
         evaluationInvitedAt: 1,
+        visitorWaitingSince: 1,
         joinedOperatorIds: '$transferMessages.data.operatorId',
+        lastMessage: { $arrayElemAt: ['$lastMessage', 0] },
         stats: 1,
       },
     });
 
-    pipeline.push(
-      {
-        $facet: {
-          data: [{ $skip: skip }, { $limit: limit }],
-          totalCount: [{ $count: 'value' }],
-        },
+    pipeline.push({
+      $facet: {
+        data: [{ $skip: skip }, { $limit: limit }],
+        totalCount: [{ $count: 'v' }],
       },
-      {
-        $project: {
-          data: 1,
-          totalCount: { $arrayElemAt: ['$totalCount.value', 0] },
-        },
-      },
-    );
+    });
 
     const [result] = await this.conversationModel.aggregate(pipeline);
     return {
       data: result.data,
-      totalCount: result.totalCount || 0,
+      totalCount: result.totalCount[0]?.v ?? 0,
+    } as {
+      data: {
+        id: Conversation['_id'];
+        status: Conversation['status'];
+        createdAt: Conversation['createdAt'];
+        updatedAt: Conversation['updatedAt'];
+        queuedAt: Conversation['queuedAt'];
+        closedAt: Conversation['closedAt'];
+        categoryId: Conversation['categoryId'];
+        visitorId: Conversation['visitorId'];
+        visitor?: Visitor;
+        operatorId: Conversation['operatorId'];
+        evaluation: Conversation['evaluation'];
+        evaluationInvitedAt: Conversation['evaluationInvitedAt'];
+        visitorWaitingSince: Conversation['visitorWaitingSince'];
+        joinedOperatorIds?: Types.ObjectId[];
+        lastMessage?: Message;
+        stats: Conversation['stats'];
+      }[];
+      totalCount: number;
     };
   }
 }

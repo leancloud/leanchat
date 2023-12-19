@@ -20,6 +20,8 @@ import {
   SearchConversationDto,
 } from '../dtos/conversation';
 import { CurrentOperator } from '../decorators';
+import { VisitorDto } from '../dtos/visitor';
+import { MessageDto } from '../dtos/message';
 
 @Controller()
 @UseGuards(AuthGuard)
@@ -69,17 +71,26 @@ export class APIController {
   }
 
   @Post('conversation.search')
-  conversation_search(@Body() body: SearchConversationDto) {
+  async conversation_search(@Body() body: SearchConversationDto) {
     if (_.isEmpty(body.id) && !body.from && !body.to) {
       // avoid full collection scan
       throw new BadRequestException('缺少必要的筛选条件');
     }
 
     const { page = 1, pageSize = 10, ...options } = body;
-    return this.conversationService.searchConversations({
+    const result = await this.conversationService.searchConversations({
       ...options,
       skip: (page - 1) * pageSize,
       limit: pageSize,
     });
+    return {
+      data: result.data.map((item) => ({
+        ...item,
+        visitor: item.visitor && VisitorDto.fromDocument(item.visitor),
+        lastMessage:
+          item.lastMessage && MessageDto.fromDocument(item.lastMessage),
+      })),
+      totalCount: result.totalCount,
+    };
   }
 }
