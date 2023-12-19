@@ -1,33 +1,6 @@
 import { Conversation, ConversationStatus, Message } from '@/Panel/types';
 import { client } from './client';
 
-export interface GetConversationsOptions {
-  status?: ConversationStatus;
-  operatorId?: string | null;
-  desc?: boolean;
-  after?: string;
-  page?: number;
-  pageSize?: number;
-}
-
-export async function getConversations(options?: GetConversationsOptions) {
-  const res = await client.post<Conversation[]>('/conversation.list', options);
-  return res.data;
-}
-
-export function conversationMatchFilters(conv: Conversation, filters: GetConversationsOptions) {
-  if (filters.status !== undefined && conv.status !== filters.status) {
-    return false;
-  }
-  if (filters.operatorId && conv.operatorId !== filters.operatorId) {
-    return false;
-  }
-  if (filters.operatorId === null && conv.operatorId) {
-    return false;
-  }
-  return true;
-}
-
 export async function getConversation(id: string) {
   const res = await client.get<Conversation>(`/conversations/${id}`);
   return res.data;
@@ -86,11 +59,11 @@ export interface SearchConversationOptions {
   id?: string;
   from?: string;
   to?: string;
-
+  status?: ConversationStatus;
   channel?: number;
   categoryId?: string[];
   visitorId?: string[];
-  operatorId?: string[];
+  operatorId?: string | string[] | null;
   closedBy?: number;
   evaluation?: {
     invited?: boolean;
@@ -107,6 +80,7 @@ export interface SearchConversationOptions {
 
   page?: number;
   pageSize?: number;
+  desc?: boolean;
 }
 
 export interface SearchConversationResult {
@@ -117,4 +91,17 @@ export interface SearchConversationResult {
 export async function searchConversation(options: SearchConversationOptions) {
   const res = await client.post<SearchConversationResult>('/conversation.search', options);
   return res.data;
+}
+
+export function conversationMatchFilters(conv: Conversation, filters: SearchConversationOptions) {
+  if (filters.status !== undefined && conv.status !== filters.status) {
+    return false;
+  }
+  if (filters.operatorId && conv.operatorId !== filters.operatorId) {
+    return false;
+  }
+  if (filters.operatorId === null && conv.operatorId) {
+    return false;
+  }
+  return true;
 }

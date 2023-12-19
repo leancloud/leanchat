@@ -1,44 +1,16 @@
 import { useCallback, useEffect } from 'react';
-import {
-  InfiniteData,
-  Query,
-  useInfiniteQuery,
-  useMutation,
-  useQuery,
-  useQueryClient,
-} from '@tanstack/react-query';
+import { InfiniteData, Query, useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { Socket } from 'socket.io-client';
 import { produce } from 'immer';
 import _ from 'lodash';
 
 import { Conversation, Message, MessageType } from '@/Panel/types';
 import {
-  GetConversationsOptions,
+  SearchConversationOptions,
   conversationMatchFilters,
   getConversation,
-  getConversations,
   updateConversation,
 } from '@/Panel/api/conversation';
-
-export function useConversations(options: GetConversationsOptions) {
-  const pageSize = 10;
-  return useInfiniteQuery({
-    queryKey: ['Conversations', options] as const,
-    queryFn: ({ queryKey: [, options], pageParam }) =>
-      getConversations({
-        ...options,
-        pageSize,
-        [options.desc ? 'before' : 'after']: pageParam,
-      }),
-    getNextPageParam: (lastPage) => {
-      if (lastPage.length === pageSize) {
-        return lastPage[lastPage.length - 1].createdAt;
-      }
-    },
-    staleTime: 1000 * 60,
-    refetchInterval: 1000 * 60,
-  });
-}
 
 export function useConversation(id: string) {
   return useQuery({
@@ -159,7 +131,7 @@ export function useSubscribeConversations(socket: Socket) {
         queryKey: ['Conversations'],
       });
       for (const query of queries) {
-        const filters = query.queryKey[1] as GetConversationsOptions;
+        const filters = query.queryKey[1] as SearchConversationOptions;
         const stayInData = conversationMatchFilters(conv, filters);
         const data = query.state.data as InfiniteData<Conversation[]> | undefined;
         if (data) {
