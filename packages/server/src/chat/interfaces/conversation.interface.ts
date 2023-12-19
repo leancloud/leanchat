@@ -85,7 +85,7 @@ export interface SearchConversationOptions {
   id?: string | string[];
   from?: Date;
   to?: Date;
-
+  status?: ConversationStatus;
   channel?: Channel;
   categoryId?: string[];
   visitorId?: string[];
@@ -106,4 +106,5 @@ export interface SearchConversationOptions {
 
   skip?: number;
   limit?: number;
+  desc?: boolean;
 }

@@ -387,6 +387,7 @@ export class ConversationService {
     id,
     from,
     to,
+    status,
     channel,
     categoryId,
     visitorId,
@@ -400,6 +401,7 @@ export class ConversationService {
     consultationResult,
     skip = 0,
     limit = 10,
+    desc,
   }: SearchConversationOptions) {
     const $match: FilterQuery<Conversation> = {};
 
@@ -416,7 +418,9 @@ export class ConversationService {
     } else if (to) {
       $match.createdAt = { $lte: to };
     }
-
+    if (status) {
+      $match.status = status;
+    }
     if (channel) {
       $match.channel = channel;
     }
@@ -470,7 +474,10 @@ export class ConversationService {
       addNumberQuery('stats.averageResponseTime', averageResponseTime);
     }
 
-    const pipeline: PipelineStage[] = [{ $match }, { $sort: { createdAt: 1 } }];
+    const pipeline: PipelineStage[] = [
+      { $match },
+      { $sort: { createdAt: desc ? -1 : 1 } },
+    ];
 
     if (message?.text) {
       const $match: FilterQuery<Message> = {

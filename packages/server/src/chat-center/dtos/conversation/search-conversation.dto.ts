@@ -1,7 +1,12 @@
 import { z } from 'zod';
 import { createZodDto } from 'nestjs-zod';
 
-import { Channel, ConsultationResult, UserType } from 'src/chat/constants';
+import {
+  Channel,
+  ConsultationResult,
+  ConversationStatus,
+  UserType,
+} from 'src/chat/constants';
 import { ObjectIdSchema } from 'src/common/schemas';
 
 function querySchema<T>(schema: z.Schema<T>) {
@@ -16,11 +21,9 @@ function querySchema<T>(schema: z.Schema<T>) {
 const SearchConversationSchema = z
   .object({
     id: z.union([ObjectIdSchema, z.array(ObjectIdSchema)]),
-
-    // date range
     from: z.coerce.date(),
     to: z.coerce.date(),
-
+    status: z.nativeEnum(ConversationStatus),
     channel: z.nativeEnum(Channel),
     categoryId: z.array(ObjectIdSchema),
     visitorId: z.array(ObjectIdSchema),
@@ -46,6 +49,8 @@ const SearchConversationSchema = z
     // pagination
     page: z.number().int().positive(),
     pageSize: z.number().int().min(1).max(1000),
+
+    desc: z.boolean(),
   })
   .partial();
 
