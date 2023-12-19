@@ -345,7 +345,7 @@ export function ConversationRecord() {
     {
       key: 'visitorName',
       title: '用户名称',
-      render: get('visitorName'),
+      render: get('visitor.name'),
     },
     {
       key: 'categoryId',

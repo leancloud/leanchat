@@ -120,7 +120,9 @@ export interface ConversationData {
   };
   categoryId?: string;
   visitorId?: string;
-  visitorName?: string;
+  visitor?: {
+    name?: string;
+  };
   operatorId?: string;
   evaluation?: {
     star: number;
