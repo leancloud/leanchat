@@ -54,6 +54,7 @@ const SearchConversationSchema = z
     pageSize: z.number().int().min(1).max(1000),
 
     desc: z.boolean(),
+    lastMessage: z.boolean(),
   })
   .partial();
 

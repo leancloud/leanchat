@@ -402,6 +402,7 @@ export class ConversationService {
     skip = 0,
     limit = 10,
     desc,
+    lastMessage,
   }: SearchConversationOptions) {
     const $match: FilterQuery<Conversation> = {};
 
@@ -542,34 +543,38 @@ export class ConversationService {
       },
     });
 
-    dataPipeline.push({
-      $lookup: {
-        from: 'message',
-        let: { cid: '$_id' },
-        pipeline: [
-          {
-            $match: {
-              $expr: { $eq: ['$conversationId', '$$cid'] },
-              type: MessageType.Message,
+    if (lastMessage) {
+      dataPipeline.push({
+        $lookup: {
+          from: 'message',
+          let: { cid: '$_id' },
+          pipeline: [
+            {
+              $match: {
+                $expr: { $eq: ['$conversationId', '$$cid'] },
+                type: MessageType.Message,
+              },
             },
-          },
-          {
-            $sort: { createdAt: -1 },
-          },
-          {
-            $limit: 1,
-          },
-        ],
-        as: 'lastMessage',
-      },
-    });
+            {
+              $sort: { createdAt: -1 },
+            },
+            {
+              $limit: 1,
+            },
+          ],
+          as: 'lastMessage',
+        },
+      });
+    }
 
     dataPipeline.push(
       {
         $addFields: {
           visitor: { $arrayElemAt: ['$visitors', 0] },
           joinedOperatorIds: '$transferMessages.data.operatorId',
-          lastMessage: { $arrayElemAt: ['$lastMessage', 0] },
+          lastMessage: lastMessage
+            ? { $arrayElemAt: ['$lastMessage', 0] }
+            : undefined,
         },
       },
       {

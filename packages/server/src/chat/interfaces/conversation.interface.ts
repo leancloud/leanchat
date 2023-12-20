@@ -107,4 +107,6 @@ export interface SearchConversationOptions {
   skip?: number;
   limit?: number;
   desc?: boolean;
+
+  lastMessage?: boolean;
 }
