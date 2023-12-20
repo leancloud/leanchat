@@ -36,6 +36,7 @@ export function useConversations(options: SearchConversationOptions, live = true
         to: pageParam && dayjs(pageParam).subtract(1, 'ms').toISOString(),
         pageSize,
         desc: true,
+        lastMessage: true,
       });
       return data;
     },
