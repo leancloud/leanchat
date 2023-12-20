@@ -511,7 +511,12 @@ export class ConversationService {
       );
     }
 
-    pipeline.push({
+    const dataPipeline: PipelineStage.FacetPipelineStage[] = [
+      { $skip: skip },
+      { $limit: limit },
+    ];
+
+    dataPipeline.push({
       $lookup: {
         from: 'visitor',
         localField: 'visitorId',
@@ -520,7 +525,7 @@ export class ConversationService {
       },
     });
 
-    pipeline.push({
+    dataPipeline.push({
       $lookup: {
         from: 'message',
         let: { cid: '$_id' },
@@ -537,7 +542,7 @@ export class ConversationService {
       },
     });
 
-    pipeline.push({
+    dataPipeline.push({
       $lookup: {
         from: 'message',
         let: { cid: '$_id' },
@@ -559,7 +564,7 @@ export class ConversationService {
       },
     });
 
-    pipeline.push(
+    dataPipeline.push(
       {
         $addFields: {
           visitor: { $arrayElemAt: ['$visitors', 0] },
@@ -578,7 +583,7 @@ export class ConversationService {
 
     pipeline.push({
       $facet: {
-        data: [{ $skip: skip }, { $limit: limit }],
+        data: dataPipeline,
         totalCount: [{ $count: 'v' }],
       },
     });
