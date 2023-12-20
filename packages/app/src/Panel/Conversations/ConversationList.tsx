@@ -26,6 +26,7 @@ interface ConversationListProps<T> {
   conversations?: T[];
   hasNextPage?: boolean;
   onFetchNextPage?: () => void;
+  fetchingNextPage?: boolean;
   onClick: (conv: T) => void;
   activeConversation?: string;
   unreadAlert?: boolean;
@@ -37,6 +38,7 @@ export function ConversationList<T extends BaseConversation>({
   conversations,
   hasNextPage,
   onFetchNextPage,
+  fetchingNextPage,
   onClick,
   activeConversation,
   unreadAlert,
@@ -87,10 +89,10 @@ export function ConversationList<T extends BaseConversation>({
 
       <button
         className="h-12 text-sm shrink-0 disabled:text-[#a8a8a8]"
-        disabled={!hasNextPage}
+        disabled={!hasNextPage || fetchingNextPage}
         onClick={() => onFetchNextPage?.()}
       >
-        {hasNextPage ? '加载更多' : '没有更多'}
+        {fetchingNextPage ? '加载中' : hasNextPage ? '加载更多' : '没有更多'}
       </button>
     </>
   );

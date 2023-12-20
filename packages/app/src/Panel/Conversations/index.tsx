@@ -42,6 +42,7 @@ export default function Conversations() {
   const {
     data: searchResult,
     isLoading,
+    isFetchingNextPage,
     hasNextPage,
     fetchNextPage,
   } = useConversations(
@@ -153,6 +154,7 @@ export default function Conversations() {
               conversations={conversations}
               hasNextPage={hasNextPage}
               onFetchNextPage={fetchNextPage}
+              fetchingNextPage={isFetchingNextPage}
               onClick={(conv) => {
                 setConversationId(conv.id);
                 setConvQueryData(conv);
