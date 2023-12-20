@@ -24,6 +24,9 @@ export function useConversationMessages(conversationId: string, options: UseMess
       });
     },
     getNextPageParam: (lastPage) => {
+      if (lastPage.length < pageSize) {
+        return;
+      }
       return lastPage[lastPage.length - 1]?.createdAt;
     },
     staleTime: 1000 * 60 * 5,
@@ -36,16 +39,9 @@ export function useConversationMessages(conversationId: string, options: UseMess
     return data.pages.flat().reverse();
   }, [data]);
 
-  const isLastPageFull = useMemo(() => {
-    if (!data || data.pages.length === 0) {
-      return;
-    }
-    return data.pages[data.pages.length - 1].length === pageSize;
-  }, [data, pageSize]);
-
   return {
     messages,
-    hasMore: hasNextPage && isLastPageFull === true,
+    hasMore: hasNextPage,
     loadMore: fetchNextPage,
   };
 }
@@ -65,6 +61,9 @@ export function useVisitorMessages(visitorId: string, options: UseMessagesOption
       });
     },
     getNextPageParam: (lastPage) => {
+      if (lastPage.length < pageSize) {
+        return;
+      }
       return lastPage[lastPage.length - 1]?.createdAt;
     },
     staleTime: 1000 * 60 * 5,
@@ -77,16 +76,9 @@ export function useVisitorMessages(visitorId: string, options: UseMessagesOption
     return data.pages.flat().reverse();
   }, [data]);
 
-  const isLastPageFull = useMemo(() => {
-    if (!data || data.pages.length === 0) {
-      return;
-    }
-    return data.pages[data.pages.length - 1].length === pageSize;
-  }, [data, pageSize]);
-
   return {
     messages,
-    hasMore: hasNextPage && isLastPageFull === true,
+    hasMore: hasNextPage,
     loadMore: fetchNextPage,
   };
 }
