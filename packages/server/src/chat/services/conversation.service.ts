@@ -583,7 +583,10 @@ export class ConversationService {
       },
     });
 
-    const [result] = await this.conversationModel.aggregate(pipeline);
+    const [result] = await this.conversationModel.aggregate(pipeline, {
+      maxTimeMS: 1000 * 10,
+    });
+
     return {
       data: result.data,
       totalCount: result.totalCount[0]?.v ?? 0,

@@ -1,6 +1,14 @@
-import { Body, Controller, Post, UseGuards, UsePipes } from '@nestjs/common';
+import {
+  Body,
+  Controller,
+  Post,
+  UseFilters,
+  UseGuards,
+  UsePipes,
+} from '@nestjs/common';
 import { ZodValidationPipe } from 'nestjs-zod';
 
+import { MongoServerErrorFilter } from 'src/common/filters';
 import { Operator } from 'src/chat/models';
 import { ChatService, ConversationService } from 'src/chat/services';
 import { UserType } from 'src/chat/constants';
@@ -63,6 +71,7 @@ export class APIController {
   }
 
   @Post('conversation.search')
+  @UseFilters(MongoServerErrorFilter)
   async conversation_search(@Body() body: SearchConversationDto) {
     const { page = 1, pageSize = 10, ...options } = body;
     const result = await this.conversationService.searchConversations({
