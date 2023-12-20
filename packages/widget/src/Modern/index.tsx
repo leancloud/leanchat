@@ -12,7 +12,7 @@ import { Modal } from './components/Modal';
 import { EvaluationDialog } from './components/EvaluationDialog';
 import { EvaluateData } from '../types';
 
-const isEmbedded = !!window.top && window.top !== window;
+const isEmbedded = !!(window.top && window.top !== window);
 
 export default function Modern() {
   const { iframe, emitter } = useAppContext();
