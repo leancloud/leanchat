@@ -74,7 +74,8 @@ export function ConversationList<T extends BaseConversation>({
               active={conv.id === activeConversation}
               avatar={
                 <div
-                  className={cx('w-8 h-8 bg-gray-200 rounded-full shrink-0 flex', {
+                  className={cx('w-8 h-8 rounded-full shrink-0 flex', {
+                    'bg-gray-200': conv.channel === Channel.LiveChat,
                     'bg-[#00c250]': conv.channel === Channel.WeChat,
                   })}
                 >
