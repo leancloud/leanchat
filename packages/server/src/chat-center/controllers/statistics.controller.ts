@@ -1,4 +1,11 @@
-import { Controller, Get, Query, UseGuards, UsePipes } from '@nestjs/common';
+import {
+  Controller,
+  Get,
+  Param,
+  Query,
+  UseGuards,
+  UsePipes,
+} from '@nestjs/common';
 import { ZodValidationPipe } from 'nestjs-zod';
 import _ from 'lodash';
 
@@ -9,8 +16,12 @@ import {
 } from 'src/chat/services';
 import { GetConversationStatsDto } from '../dtos/conversation';
 import { AuthGuard } from '../guards/auth.guard';
-import { GetEvaluationStatsDto, GetOperatorStatsDto } from '../dtos/stats';
-import { OperatorOnlineService } from '../services';
+import {
+  GetEvaluationStatsDto,
+  GetOperatorStatsDto,
+  GetOperatorWorkingTimeDto,
+} from '../dtos/stats';
+import { OperatorOnlineService, OperatorWorkingTimeService } from '../services';
 
 @Controller('statistics')
 @UseGuards(AuthGuard)
@@ -20,6 +31,7 @@ export class StatisticsController {
     private conversationService: ConversationService,
     private statsService: StatsService,
     private operatorOnlineService: OperatorOnlineService,
+    private operatorWorkingTimeService: OperatorWorkingTimeService,
     private chatService: ChatService,
   ) {}
 
@@ -74,6 +86,32 @@ export class StatisticsController {
       .mapValues(mergeObjectArray)
       .values()
       .value();
+  }
+
+  @Get('operators/:id/working-time')
+  async getOperatorWorkingTime(
+    @Param('id') id: string,
+    @Query() query: GetOperatorWorkingTimeDto,
+  ) {
+    const { from, to, page = 1, pageSize = 10 } = query;
+    const { data: rawData, totalCount } =
+      await this.operatorWorkingTimeService.list({
+        operatorId: id,
+        from,
+        to,
+        skip: (page - 1) * pageSize,
+        limit: pageSize,
+      });
+    const data = rawData.map((item) => ({
+      id: item.id,
+      operatorId: item.operatorId.toHexString(),
+      startTime: item.startTime.toISOString(),
+      endTime: item.endTime.toISOString(),
+      duration: item.duration,
+      ip: item.ip,
+      status: item.status,
+    }));
+    return { data, totalCount };
   }
 
   @Get('evaluation')

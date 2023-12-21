@@ -4,7 +4,10 @@ import { ReturnModelType } from '@typegoose/typegoose';
 import { differenceInMilliseconds } from 'date-fns';
 
 import { objectId } from 'src/helpers';
-import { CreateOperatorWorkingTimeData } from '../interfaces';
+import {
+  CreateOperatorWorkingTimeData,
+  ListOperatorWorkingTimeOptions,
+} from '../interfaces';
 import { OperatorWorkingTime } from '../models/operator-working-time.model';
 
 @Injectable()
@@ -21,5 +24,24 @@ export class OperatorWorkingTimeService {
     wt.status = data.status;
     wt.ip = data.ip;
     return await wt.save();
+  }
+
+  async list({
+    operatorId,
+    from,
+    to,
+    skip = 0,
+    limit = 10,
+  }: ListOperatorWorkingTimeOptions) {
+    const query = this.workingTimeModel.find({
+      operatorId,
+      startTime: { $gte: from, $lte: to },
+    });
+    const totalCount = await query.clone().countDocuments();
+    const data = await query.skip(skip).limit(limit).exec();
+    return {
+      totalCount,
+      data,
+    };
   }
 }

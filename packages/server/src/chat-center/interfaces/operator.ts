@@ -9,3 +9,11 @@ export interface CreateOperatorWorkingTimeData {
   status: OperatorStatus;
   ip?: string;
 }
+
+export interface ListOperatorWorkingTimeOptions {
+  operatorId: string | Types.ObjectId;
+  from: Date;
+  to: Date;
+  skip?: number;
+  limit?: number;
+}
