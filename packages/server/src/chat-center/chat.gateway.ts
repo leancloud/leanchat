@@ -3,6 +3,7 @@ import {
   ConnectedSocket,
   MessageBody,
   OnGatewayConnection,
+  OnGatewayDisconnect,
   SubscribeMessage,
   WebSocketGateway,
   WebSocketServer,
@@ -12,6 +13,7 @@ import { Namespace, Socket } from 'socket.io';
 import { OnEvent } from '@nestjs/event-emitter';
 import { ZodValidationPipe } from 'nestjs-zod';
 import { Cron } from '@nestjs/schedule';
+import { max } from 'date-fns';
 import _ from 'lodash';
 
 import {
@@ -23,6 +25,8 @@ import {
   MessageCreatedEvent,
   MessageData,
   UserType,
+  OperatorService,
+  OperatorStatus,
 } from 'src/chat';
 import { LeanCloudService } from 'src/leancloud';
 import { WsInterceptor } from 'src/common/interceptors';
@@ -31,12 +35,15 @@ import { CreateMessageDto, MessageDto } from './dtos/message';
 import {
   ConversationTransformService,
   OperatorOnlineService,
+  OperatorWorkingTimeService,
 } from './services';
 
 @WebSocketGateway({ namespace: 'o', transports: ['websocket'] })
 @UsePipes(ZodValidationPipe)
 @UseInterceptors(WsInterceptor)
-export class ChatGateway implements OnModuleInit, OnGatewayConnection {
+export class ChatGateway
+  implements OnModuleInit, OnGatewayConnection, OnGatewayDisconnect
+{
   @WebSocketServer()
   private server: Namespace;
 
@@ -46,7 +53,9 @@ export class ChatGateway implements OnModuleInit, OnGatewayConnection {
     private conversationService: ConversationService,
     private chatService: ChatService,
     private leancloudService: LeanCloudService,
+    private operatorService: OperatorService,
     private operatorOnlineService: OperatorOnlineService,
+    private operatorWorkingTimeService: OperatorWorkingTimeService,
     private convTransformService: ConversationTransformService,
   ) {}
 
@@ -76,6 +85,30 @@ export class ChatGateway implements OnModuleInit, OnGatewayConnection {
     socket.join(operatorId);
     socket.emit('welcome', {
       version: this.version,
+    });
+  }
+
+  private getSocketIp(handshake: Socket['handshake']) {
+    const xRealIp = handshake.headers['x-real-ip'];
+    if (typeof xRealIp === 'string') {
+      return xRealIp;
+    }
+    return handshake.address;
+  }
+
+  async handleDisconnect(socket: Socket) {
+    const operator = await this.operatorService.getOperator(socket.data.id);
+    if (!operator) return;
+    const onlineTime = new Date(socket.data.onlineTime);
+    const startTime = operator.statusUpdatedAt
+      ? max([operator.statusUpdatedAt, onlineTime])
+      : onlineTime;
+    await this.operatorWorkingTimeService.create({
+      operatorId: socket.data.id,
+      startTime,
+      endTime: new Date(),
+      status: operator.status ?? OperatorStatus.Leave,
+      ip: this.getSocketIp(socket.handshake),
     });
   }
 
@@ -166,9 +199,26 @@ export class ChatGateway implements OnModuleInit, OnGatewayConnection {
 
   @OnEvent('operator.statusChanged', { async: true })
   dispatchOperatorStatusChanged(payload: OperatorStatusChangedEvent) {
-    this.server.emit('operatorStatusChanged', {
-      operatorId: payload.operatorId,
-      status: payload.status,
-    });
+    const { operatorId, status, previous } = payload;
+
+    this.server.emit('operatorStatusChanged', { operatorId, status });
+
+    if (previous) {
+      // Write working time log
+      this.server
+        .in(operatorId)
+        .fetchSockets()
+        .then(([socket]) => {
+          // Cause we only allow single device login, use the first socket is enough
+          if (!socket) return;
+          return this.operatorWorkingTimeService.create({
+            operatorId,
+            startTime: max([previous.from, socket.data.onlineTime]),
+            endTime: previous.to,
+            status: previous.status,
+            ip: this.getSocketIp(socket.handshake),
+          });
+        });
+    }
   }
 }

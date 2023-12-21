@@ -19,3 +19,9 @@ export interface UpdateOperatorData {
   status?: OperatorStatus;
   statusUpdatedAt?: Date;
 }
+
+export interface PreviousStatus {
+  status: OperatorStatus;
+  from: Date;
+  to: Date;
+}

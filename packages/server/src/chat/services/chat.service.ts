@@ -21,7 +21,11 @@ import {
 import { CreateMessageData } from '../interfaces/chat.interface';
 import { ConversationService } from './conversation.service';
 import { MessageService } from './message.service';
-import { AssignQueuedJobData, AutoAssignJobData } from '../interfaces';
+import {
+  AssignQueuedJobData,
+  AutoAssignJobData,
+  PreviousStatus,
+} from '../interfaces';
 import {
   ConversationCreatedEvent,
   OperatorStatusChangedEvent,
@@ -237,10 +241,20 @@ export class ChatService {
       });
     }
 
+    const previous: PreviousStatus | undefined = operator.status &&
+      operator.statusUpdatedAt && {
+        status: operator.status,
+        from: operator.statusUpdatedAt,
+        to: statusUpdatedAt,
+      };
+
     this.events.emit('operator.statusChanged', {
       operatorId,
       status,
+      previous,
     } satisfies OperatorStatusChangedEvent);
+
+    return previous;
   }
 
   async hasReadyOperator() {

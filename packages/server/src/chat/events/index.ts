@@ -1,5 +1,5 @@
 import type { OperatorStatus } from '../constants';
-import { UpdateConversationData } from '../interfaces';
+import { PreviousStatus, UpdateConversationData } from '../interfaces';
 import type { Conversation, Message } from '../models';
 
 export interface ConversationCreatedEvent {
@@ -18,4 +18,5 @@ export interface MessageCreatedEvent {
 export interface OperatorStatusChangedEvent {
   operatorId: string;
   status: OperatorStatus;
+  previous?: PreviousStatus;
 }
