@@ -1,11 +1,15 @@
-import { Avatar, Empty, Spin } from 'antd';
+import { Empty, Spin } from 'antd';
+import { AiFillWechat } from 'react-icons/ai';
+import { MdMonitor } from 'react-icons/md';
+import cx from 'classnames';
 
 import { ConversationItem, ConversationItemProps } from './ConversationItem';
 import { NowProvider } from '../contexts/NowContext';
-import { ConversationStatus } from '../types';
+import { Channel, ConversationStatus } from '../types';
 
 export interface BaseConversation {
   id: string;
+  channel: Channel;
   status: ConversationStatus;
   visitorId: string;
   visitor?: {
@@ -63,17 +67,24 @@ export function ConversationList<T extends BaseConversation>({
   const list = (
     <>
       {conversations.map((conv) => {
-        const avatarColor = '#' + conv.visitorId.slice(-6);
-
         return (
           <button key={conv.id} onClick={() => onClick(conv)}>
             <ConversationItem
               conversation={conv}
               active={conv.id === activeConversation}
               avatar={
-                <Avatar className="shrink-0" style={{ backgroundColor: avatarColor }}>
-                  {conv.id.slice(0, 1)}
-                </Avatar>
+                <div
+                  className={cx('w-8 h-8 bg-gray-200 rounded-full shrink-0 flex', {
+                    'bg-[#00c250]': conv.channel === Channel.WeChat,
+                  })}
+                >
+                  {conv.channel === Channel.LiveChat && (
+                    <MdMonitor className="w-5 h-5 m-auto text-gray-500" />
+                  )}
+                  {conv.channel === Channel.WeChat && (
+                    <AiFillWechat className="w-5 h-5 m-auto text-white" />
+                  )}
+                </div>
               }
               title={conv.visitor?.name || `用户${conv.visitorId.slice(-6)}`}
               message={

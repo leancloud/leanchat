@@ -41,6 +41,7 @@ export interface ConversationStats {
 
 export interface Conversation {
   id: string;
+  channel: Channel;
   status: ConversationStatus;
   visitorId: string;
   visitor?: {
@@ -62,6 +63,11 @@ export interface Conversation {
   };
   stats?: ConversationStats;
   joinedOperatorIds?: string[];
+}
+
+export enum Channel {
+  LiveChat = 1,
+  WeChat = 2,
 }
 
 export enum OperatorRole {
