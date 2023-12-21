@@ -40,7 +40,7 @@ export class ChatGateway implements OnModuleInit, OnGatewayConnection {
   @WebSocketServer()
   private server: Namespace;
 
-  private version = process.env.LEANCHAT_VERSION;
+  private version = process.env.LEANCLOUD_VERSION_TAG;
 
   constructor(
     private conversationService: ConversationService,
