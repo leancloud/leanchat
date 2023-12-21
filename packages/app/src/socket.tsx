@@ -7,6 +7,24 @@ import { useEffectEvent } from './Panel/hooks/useEffectEvent';
 
 const SocketContext = createContext<Socket | undefined>(undefined);
 
+let version: string | undefined;
+
+function onWelcome(data: { version?: string }) {
+  if (version && version !== data.version) {
+    toast(
+      <div>
+        检测到新版本，请
+        <button className="text-primary" onClick={() => location.reload()}>
+          刷新页面
+        </button>
+      </div>,
+      { duration: Infinity },
+    );
+  } else {
+    version = data.version;
+  }
+}
+
 interface SocketProviderProps {
   children?: ReactNode;
   fallback?: ReactNode;
@@ -53,6 +71,7 @@ export function SocketProvider({ children, fallback, uri, auth }: SocketProvider
     };
 
     socket.on('connect', onConnect);
+    socket.on('welcome', onWelcome);
     socket.on('evict', onEvict);
     socket.io.on('reconnect_attempt', onDisconnect);
     socket.io.on('reconnect', onReconnect);
