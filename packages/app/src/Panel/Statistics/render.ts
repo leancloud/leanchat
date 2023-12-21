@@ -2,7 +2,7 @@ import { cond, constant, defaultTo, eq, get, has, map, over, stubTrue, sum } fro
 import dayjs from 'dayjs';
 
 import { flow, formatDate, toSeconds } from '@/Panel/Statistics/helpers';
-import { Conversation, ConsultationResult } from '../types';
+import { Conversation, ConsultationResult, OperatorStatus } from '../types';
 
 export const id = get('id');
 
@@ -124,3 +124,16 @@ export const operatorFirstMessageCreatedAt = flow([
   get('stats.operatorFirstMessageCreatedAt'),
   formatDate,
 ]);
+
+export function status(value: number) {
+  switch (value) {
+    case OperatorStatus.Ready:
+      return '在线';
+    case OperatorStatus.Busy:
+      return '忙碌';
+    case OperatorStatus.Leave:
+      return '离开';
+    default:
+      return '未知';
+  }
+}

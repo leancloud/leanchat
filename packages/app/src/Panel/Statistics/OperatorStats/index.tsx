@@ -1,16 +1,17 @@
 import { useMemo, useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
-import { Button, Table } from 'antd';
+import { Button, Modal, Table } from 'antd';
 import { ColumnType } from 'antd/es/table';
 import dayjs from 'dayjs';
 import _ from 'lodash';
 import { get, getOr, multiply } from 'lodash/fp';
 import Papa from 'papaparse';
 
-import { BasicFilterForm, BasicFilterFormData } from './components/BasicFilterForm';
-import { OperatorStats as OperatorStatsSchema, getOperatorStats } from '../api/statistics';
-import { useGetOperatorName } from './hooks/useGetOperatorName';
-import { divide, sum, subtract, flow, toSeconds, toPercent, downloadCSV } from './helpers';
+import { OperatorStats as OperatorStatsSchema, getOperatorStats } from '@/Panel/api/statistics';
+import { BasicFilterForm, BasicFilterFormData } from '../components/BasicFilterForm';
+import { useGetOperatorName } from '../hooks/useGetOperatorName';
+import { divide, sum, subtract, flow, toSeconds, toPercent, downloadCSV } from '../helpers';
+import { WorkingTime } from './WorkingTime';
 
 export function OperatorStats() {
   const [formData, setFormData] = useState<BasicFilterFormData>({
@@ -233,6 +234,8 @@ export function OperatorStats() {
     downloadCSV(content, '客服工作量统计.csv');
   };
 
+  const [workingTimeOperatorId, setWorkingTimeOperatorId] = useState<string>();
+
   return (
     <>
       <div className="flex">
@@ -248,8 +251,26 @@ export function OperatorStats() {
         rowKey={(row) => row.id}
         loading={isFetching}
         scroll={{ x: 'max-content' }}
-        columns={columns}
+        columns={[
+          ...columns,
+          {
+            key: 'workingTime',
+            title: '工作时长',
+            fixed: 'right',
+            render: (operator) => <a onClick={() => setWorkingTimeOperatorId(operator.id)}>查看</a>,
+          },
+        ]}
       />
+
+      <Modal
+        title={`工作时长 - ${workingTimeOperatorId && getOperatorName(workingTimeOperatorId)}`}
+        open={!!workingTimeOperatorId}
+        onCancel={() => setWorkingTimeOperatorId(undefined)}
+        width={800}
+        footer={null}
+      >
+        <WorkingTime from={options.from} to={options.to} operatorId={workingTimeOperatorId} />
+      </Modal>
     </>
   );
 }

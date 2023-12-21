@@ -146,3 +146,39 @@ export async function getWorkStats() {
   const res = await client.get<WorkStats>('/statistics/work');
   return res.data;
 }
+
+export interface OperatorWorkingTime {
+  id: string;
+  operatorId: string;
+  startTime: string;
+  endTime: string;
+  duration: number;
+  ip?: string;
+  status: number;
+}
+
+export interface GetOperatorWorkingTimeOptions {
+  operatorId: string;
+  from: string;
+  to: string;
+  page?: number;
+  pageSize?: number;
+}
+
+export interface GetOperatorWorkingTimeResponse {
+  data: OperatorWorkingTime[];
+  totalCount: number;
+}
+
+export async function getOperatorWorkingTime({
+  operatorId,
+  ...options
+}: GetOperatorWorkingTimeOptions) {
+  const res = await client.get<GetOperatorWorkingTimeResponse>(
+    `/statistics/operators/${operatorId}/working-time`,
+    {
+      params: options,
+    },
+  );
+  return res.data;
+}
