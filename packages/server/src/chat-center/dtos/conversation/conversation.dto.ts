@@ -4,6 +4,8 @@ import type { VisitorDto } from '../visitor';
 export class ConversationDto {
   id: string;
 
+  channel: number;
+
   status: number;
 
   visitorId: string;
@@ -46,6 +48,7 @@ export class ConversationDto {
   static fromDocument(conv: Conversation) {
     const dto = new ConversationDto();
     dto.id = conv.id ?? conv._id.toHexString();
+    dto.channel = conv.channel;
     dto.status = conv.status;
     dto.visitorId = conv.visitorId.toString();
     dto.operatorId = conv.operatorId?.toString();
