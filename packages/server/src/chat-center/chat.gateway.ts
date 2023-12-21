@@ -40,6 +40,8 @@ export class ChatGateway implements OnModuleInit, OnGatewayConnection {
   @WebSocketServer()
   private server: Namespace;
 
+  private version = process.env.LEANCHAT_VERSION;
+
   constructor(
     private conversationService: ConversationService,
     private chatService: ChatService,
@@ -72,6 +74,9 @@ export class ChatGateway implements OnModuleInit, OnGatewayConnection {
 
     socket.data.onlineTime = Date.now();
     socket.join(operatorId);
+    socket.emit('welcome', {
+      version: this.version,
+    });
   }
 
   @Cron('0 * * * * *')
