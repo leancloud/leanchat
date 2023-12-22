@@ -62,6 +62,7 @@ export class ChatManager {
       transports: ['websocket'],
       auth: {
         token: ChatManager.getToken(),
+        url: topWindow.location.href,
       },
       autoConnect: false,
     });
