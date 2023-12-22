@@ -16,7 +16,7 @@ import {
 } from 'react';
 import { AiOutlineFile } from 'react-icons/ai';
 import { FiArrowDown } from 'react-icons/fi';
-import { Divider, Tooltip } from 'antd';
+import { Divider, Image, Tooltip } from 'antd';
 import Markdown, { Components } from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 import dayjs from 'dayjs';
@@ -81,11 +81,7 @@ interface FileMessageProps {
 
 function FileMessage({ file }: FileMessageProps) {
   if (file.mime && file.mime.startsWith('image/')) {
-    return (
-      <a href={file.url} target="_blank">
-        <img className="w-[100px] h-[100px] object-contain" src={file.url} />
-      </a>
-    );
+    return <Image className="object-contain" width={100} height={100} src={file.url} />;
   }
   return (
     <div className="flex items-center bg-white w-[200px] h-[50px] pl-1 pr-2">
@@ -453,30 +449,32 @@ export const MessageList = forwardRef<MessageListRef, MessageListProps>((props, 
           )}
         </div>
 
-        {messageItems.map(({ date, messages }) => (
-          <Fragment key={date.unix()}>
-            <DateDivider date={date} />
-            {messages.map((item) => {
-              if (item.type === 'messageGroup') {
-                return (
-                  <MessageGroup
-                    key={item.messages[0].id}
-                    isLeft={item.from.type === UserType.Visitor}
-                    from={item.from}
-                    messages={item.messages}
-                    operatorMap={operatorMap}
-                  />
-                );
-              }
-              const Component = MessageComponents[item.message.type];
-              if (Component) {
-                return <Component key={item.message.id} message={item.message} />;
-              } else {
-                return null;
-              }
-            })}
-          </Fragment>
-        ))}
+        <Image.PreviewGroup>
+          {messageItems.map(({ date, messages }) => (
+            <Fragment key={date.unix()}>
+              <DateDivider date={date} />
+              {messages.map((item) => {
+                if (item.type === 'messageGroup') {
+                  return (
+                    <MessageGroup
+                      key={item.messages[0].id}
+                      isLeft={item.from.type === UserType.Visitor}
+                      from={item.from}
+                      messages={item.messages}
+                      operatorMap={operatorMap}
+                    />
+                  );
+                }
+                const Component = MessageComponents[item.message.type];
+                if (Component) {
+                  return <Component key={item.message.id} message={item.message} />;
+                } else {
+                  return null;
+                }
+              })}
+            </Fragment>
+          ))}
+        </Image.PreviewGroup>
 
         {unreadMessageCount > 0 && (
           <button
