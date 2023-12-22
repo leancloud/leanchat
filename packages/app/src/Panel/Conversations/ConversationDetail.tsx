@@ -37,6 +37,12 @@ function ConversationInfo() {
           }}
           style={{ width: '100%' }}
         />
+        {conversation.source && (
+          <>
+            <div className="font-medium mt-4 mb-1">来源</div>
+            <div>{conversation.source.url}</div>
+          </>
+        )}
       </div>
     </div>
   );

@@ -42,6 +42,9 @@ export interface ConversationStats {
 export interface Conversation {
   id: string;
   channel: Channel;
+  source?: {
+    url?: string;
+  };
   status: ConversationStatus;
   visitorId: string;
   visitor?: {
