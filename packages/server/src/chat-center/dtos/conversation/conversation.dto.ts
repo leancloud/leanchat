@@ -6,6 +6,10 @@ export class ConversationDto {
 
   channel: number;
 
+  source?: {
+    url?: string;
+  };
+
   status: number;
 
   visitorId: string;
@@ -49,6 +53,7 @@ export class ConversationDto {
     const dto = new ConversationDto();
     dto.id = conv.id ?? conv._id.toHexString();
     dto.channel = conv.channel;
+    dto.source = conv.source;
     dto.status = conv.status;
     dto.visitorId = conv.visitorId.toString();
     dto.operatorId = conv.operatorId?.toString();

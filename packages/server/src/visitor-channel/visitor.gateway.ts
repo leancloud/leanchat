@@ -113,6 +113,13 @@ export class VisitorGateway implements OnModuleInit, OnGatewayConnection {
     return Channel.LiveChat;
   }
 
+  private getSocketSource(socket: Socket) {
+    const { url } = socket.handshake.auth;
+    if (typeof url === 'string') {
+      return { url };
+    }
+  }
+
   async handleConnection(socket: Socket) {
     const visitorId = socket.data.id;
     socket.join(visitorId);
@@ -216,6 +223,7 @@ export class VisitorGateway implements OnModuleInit, OnGatewayConnection {
 
       conversation = await this.conversationService.createConversation({
         channel: this.detectUserChannel(socket),
+        source: this.getSocketSource(socket),
         visitorId,
       });
       await this.visitorService.updateVisitor(visitorId, {

@@ -89,6 +89,17 @@ class Stats {
   round?: number;
 }
 
+@ModelOptions({
+  schemaOptions: {
+    _id: false,
+    timestamps: false,
+  },
+})
+class Source {
+  @Prop()
+  url?: string;
+}
+
 @Index({ visitorId: 1 })
 @Index({ operatorId: 1 })
 @Index({ closedAt: 1 })
@@ -106,6 +117,9 @@ export class Conversation {
 
   @Prop({ enum: Channel })
   channel: Channel;
+
+  @Prop()
+  source?: Source;
 
   @Prop({ enum: ConversationStatus })
   status: ConversationStatus;

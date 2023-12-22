@@ -47,6 +47,7 @@ export class ConversationService {
     const conversation = new this.conversationModel({
       status: ConversationStatus.Open,
       channel: data.channel,
+      source: data.source,
       visitorId: data.visitorId,
     });
     await conversation.save();

@@ -11,6 +11,9 @@ import {
 
 export interface CreateConversationData {
   channel: Channel;
+  source?: {
+    url?: string;
+  };
   visitorId: string;
 }
 
