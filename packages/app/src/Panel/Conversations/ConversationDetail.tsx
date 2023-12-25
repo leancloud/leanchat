@@ -39,7 +39,9 @@ function ConversationInfo() {
         />
         {conversation.source && (
           <>
-            <div className="font-medium mt-4 mb-1">来源</div>
+            <div className="font-medium mt-4 mb-1 truncate" title={conversation.source.url}>
+              来源
+            </div>
             <div>{conversation.source.url}</div>
           </>
         )}
