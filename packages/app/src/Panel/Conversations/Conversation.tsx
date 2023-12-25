@@ -249,7 +249,7 @@ export function Conversation({ conversationId, reopen, onReopen }: ConversationP
             </div>
           </div>
 
-          <MessageList ref={messageListRef} history={visitorMessageMode} />
+          <MessageList ref={messageListRef} className="grow" history={visitorMessageMode} />
 
           <div className="border-t border-[#ececec] relative">
             {showQuickReply && (

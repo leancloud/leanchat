@@ -83,6 +83,9 @@ importers:
       socket.io-client:
         specifier: ^4.7.1
         version: 4.7.1
+      use-resize-observer:
+        specifier: ^9.1.0
+        version: 9.1.0(react-dom@18.2.0)(react@18.2.0)
       xlsx:
         specifier: https://cdn.sheetjs.com/xlsx-0.20.1/xlsx-0.20.1.tgz
         version: '@cdn.sheetjs.com/xlsx-0.20.1/xlsx-0.20.1.tgz'
@@ -2778,6 +2781,10 @@ packages:
       '@jridgewell/resolve-uri': 3.1.0
       '@jridgewell/sourcemap-codec': 1.4.15
     dev: true
+
+  /@juggle/resize-observer@3.4.0:
+    resolution: {integrity: sha512-dfLbk+PwWvFzSxwk3n5ySL0hfBog779o8h68wK/7/APo/7cgyWp5jcXockbxdk5kFRkbeXWm4Fbi9FrdN381sA==}
+    dev: false
 
   /@leancloud/adapter-types@3.0.0:
     resolution: {integrity: sha512-/1l2PWJ6pXizHphBorMN7B0d2YjmxZJf1s+bitvLALt7wBid5qbGpHqGGKE/yRdNlCKwl9FbXG1x5wUFZfQwHQ==}
@@ -11756,6 +11763,17 @@ packages:
       '@types/react': 18.2.18
       react: 18.2.0
       use-isomorphic-layout-effect: 1.1.2(@types/react@18.2.18)(react@18.2.0)
+    dev: false
+
+  /use-resize-observer@9.1.0(react-dom@18.2.0)(react@18.2.0):
+    resolution: {integrity: sha512-R25VqO9Wb3asSD4eqtcxk8sJalvIOYBqS8MNZlpDSQ4l4xMQxC/J7Id9HoTqPq8FwULIn0PVW+OAqF2dyYbjow==}
+    peerDependencies:
+      react: 16.8.0 - 18
+      react-dom: 16.8.0 - 18
+    dependencies:
+      '@juggle/resize-observer': 3.4.0
+      react: 18.2.0
+      react-dom: 18.2.0(react@18.2.0)
     dev: false
 
   /use-sync-external-store@1.2.0(react@18.2.0):

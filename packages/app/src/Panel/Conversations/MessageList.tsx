@@ -9,7 +9,6 @@ import {
   useCallback,
   useEffect,
   useImperativeHandle,
-  useLayoutEffect,
   useMemo,
   useRef,
   useState,
@@ -19,6 +18,7 @@ import { FiArrowDown } from 'react-icons/fi';
 import { Divider, Image, Tooltip } from 'antd';
 import Markdown, { Components } from 'react-markdown';
 import remarkGfm from 'remark-gfm';
+import useResizeObserver from 'use-resize-observer';
 import dayjs from 'dayjs';
 import cx from 'classnames';
 import _ from 'lodash';
@@ -81,10 +81,10 @@ interface FileMessageProps {
 
 function FileMessage({ file }: FileMessageProps) {
   if (file.mime && file.mime.startsWith('image/')) {
-    return <Image className="object-contain" width={100} height={100} src={file.url} />;
+    return <Image className="object-contain" width={150} src={file.url} />;
   }
   return (
-    <div className="flex items-center bg-white w-[200px] h-[50px] pl-1 pr-2">
+    <div className="flex items-center border rounded h-[64px] pl-1 pr-2 overflow-hidden">
       <AiOutlineFile className="w-8 h-8 shrink-0" />
       <div className="ml-1 grow overflow-hidden">
         <div className="text-sm truncate">{file.name}</div>
@@ -135,12 +135,12 @@ function MessageGroup({ from, isLeft, messages, operatorMap }: MessageGroupProps
       {messages.map((message) => (
         <div
           key={message.id}
-          className={cx('flex items-end gap-2 mb-1', {
+          className={cx('flex items-end gap-2 mb-1 max-w-full', {
             'flex-row-reverse': !isLeft,
           })}
         >
-          <Bubble isVisitor={isLeft}>
-            {message.data.text && (
+          {message.data.text && (
+            <Bubble isVisitor={isLeft}>
               <Markdown
                 className="min-w-[16px] whitespace-pre-line break-all"
                 remarkPlugins={[remarkGfm]}
@@ -148,9 +148,9 @@ function MessageGroup({ from, isLeft, messages, operatorMap }: MessageGroupProps
               >
                 {message.data.text}
               </Markdown>
-            )}
-            {message.data.file && <FileMessage file={message.data.file} />}
-          </Bubble>
+            </Bubble>
+          )}
+          {message.data.file && <FileMessage file={message.data.file} />}
           <div className="text-gray-500 text-xs">{dayjs(message.createdAt).format('HH:mm')}</div>
         </div>
       ))}
@@ -290,11 +290,12 @@ export interface MessageListRef {
 }
 
 interface MessageListProps {
+  className?: string;
   history?: boolean;
 }
 
 export const MessageList = forwardRef<MessageListRef, MessageListProps>((props, ref) => {
-  const { history } = props;
+  const { className, history } = props;
 
   const { conversation } = useConversationContext();
 
@@ -367,23 +368,27 @@ export const MessageList = forwardRef<MessageListRef, MessageListProps>((props, 
   }, [messages]);
 
   const containerRef = useRef<HTMLDivElement>(null!);
+  const contentRef = useRef<HTMLDivElement>(null!);
   const containerScrollHeight = useRef(0);
-
   const scrollBehavior = useRef<ScrollBehavior>('attachBottom');
 
-  useLayoutEffect(() => {
-    const containerElement = containerRef.current;
-    const { scrollHeight, clientHeight } = containerElement;
-    if (scrollBehavior.current === 'keep') {
-      containerElement.scrollTop += scrollHeight - containerScrollHeight.current;
-    } else if (scrollBehavior.current === 'attachBottom') {
-      containerElement.scrollTop = scrollHeight - clientHeight;
-    }
-    containerScrollHeight.current = containerElement.scrollHeight;
-    if (scrollBehavior.current === 'keep') {
-      scrollBehavior.current = 'auto';
-    }
-  }, [messages]);
+  useResizeObserver({
+    ref: contentRef,
+    onResize: () => {
+      console.log('resize', scrollBehavior.current);
+      const containerElement = containerRef.current;
+      const { scrollHeight, clientHeight } = containerElement;
+      if (scrollBehavior.current === 'keep') {
+        containerElement.scrollTop += scrollHeight - containerScrollHeight.current;
+      } else if (scrollBehavior.current === 'attachBottom') {
+        containerElement.scrollTop = scrollHeight - clientHeight;
+      }
+      containerScrollHeight.current = containerElement.scrollHeight;
+      if (scrollBehavior.current === 'keep') {
+        scrollBehavior.current = 'auto';
+      }
+    },
+  });
 
   const atBottom = useAtBottom(containerRef);
 
@@ -431,8 +436,8 @@ export const MessageList = forwardRef<MessageListRef, MessageListProps>((props, 
   const operatorMap = useMemo(() => _.keyBy(operators, (o) => o.id), []);
 
   return (
-    <div className="grow relative overflow-hidden">
-      <div ref={containerRef} className={cx('h-full overflow-y-auto', style.messageList)}>
+    <div ref={containerRef} className={cx('overflow-y-auto', style.messageList, className)}>
+      <div ref={contentRef}>
         <div className="flex justify-center items-center h-12">
           {hasMoreMessages ? (
             <button
@@ -475,17 +480,17 @@ export const MessageList = forwardRef<MessageListRef, MessageListProps>((props, 
             </Fragment>
           ))}
         </Image.PreviewGroup>
-
-        {unreadMessageCount > 0 && (
-          <button
-            className="absolute bottom-2 left-[50%] -translate-x-[50%] bg-[#3884F7] text-white text-sm pl-2 pr-3 py-1 rounded-full flex items-center"
-            onClick={scrollToBottom}
-          >
-            <FiArrowDown className="w-4 h-4 mr-1" />
-            未读消息
-          </button>
-        )}
       </div>
+
+      {unreadMessageCount > 0 && (
+        <button
+          className="sticky bottom-2 left-[50%] -translate-x-[50%] bg-[#3884F7] text-white text-sm pl-2 pr-3 py-1 rounded-full flex items-center"
+          onClick={scrollToBottom}
+        >
+          <FiArrowDown className="w-4 h-4 mr-1" />
+          未读消息
+        </button>
+      )}
     </div>
   );
 });
