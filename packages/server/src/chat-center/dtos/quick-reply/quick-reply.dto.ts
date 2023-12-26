@@ -7,6 +7,8 @@ export class QuickReplyDto {
 
   tags?: string[];
 
+  operatorId?: string;
+
   createdAt: string;
 
   updatedAt: string;
@@ -16,6 +18,7 @@ export class QuickReplyDto {
     dto.id = quickReply.id;
     dto.content = quickReply.content;
     dto.tags = quickReply.tags;
+    dto.operatorId = quickReply.operatorId?.toHexString();
     dto.createdAt = quickReply.createdAt.toISOString();
     dto.updatedAt = quickReply.updatedAt.toISOString();
     return dto;

@@ -1,6 +1,7 @@
-import { DocumentType, ModelOptions, Prop } from '@typegoose/typegoose';
+import { DocumentType, Index, ModelOptions, Prop } from '@typegoose/typegoose';
 import { Types } from 'mongoose';
 
+@Index({ operatorId: 1 })
 @ModelOptions({
   schemaOptions: {
     collection: 'quick_reply',
@@ -17,6 +18,9 @@ export class QuickReply {
 
   @Prop({ type: String })
   tags?: string[];
+
+  @Prop()
+  operatorId?: Types.ObjectId;
 
   createdAt: Date;
 

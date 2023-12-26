@@ -12,6 +12,7 @@ import {
 } from '@nestjs/common';
 import { ZodValidationPipe } from 'nestjs-zod';
 
+import { Operator } from 'src/chat/models';
 import { QuickReplyService } from 'src/quick-reply';
 import { AuthGuard } from '../guards/auth.guard';
 import {
@@ -19,6 +20,7 @@ import {
   QuickReplyDto,
   UpdateQuickReplyDto,
 } from '../dtos/quick-reply';
+import { CurrentOperator } from '../decorators';
 
 @Controller('quick-replies')
 @UseGuards(AuthGuard)
@@ -33,8 +35,9 @@ export class QuickReplyController {
   }
 
   @Get()
-  async getQuickReplies() {
-    const quickReplies = await this.quickReplyService.getQuickReplies();
+  async getQuickReplies(@CurrentOperator() operator: Operator) {
+    const quickReplies =
+      await this.quickReplyService.getQuickRepliesForOperator(operator._id);
     return quickReplies.map(QuickReplyDto.fromDocument);
   }
 
