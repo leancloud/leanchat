@@ -157,6 +157,7 @@ export default function Panel() {
               }
             >
               <Route path="conversations" element={<Conversations />} />
+              <Route path="conversations/:id" element={<Conversations />} />
               <Route
                 path="quality/*"
                 element={

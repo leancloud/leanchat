@@ -7,12 +7,14 @@ import {
   useQuery,
   useQueryClient,
 } from '@tanstack/react-query';
+import { useNavigate } from 'react-router-dom';
 import { Socket } from 'socket.io-client';
 import { produce } from 'immer';
+import toast from 'react-hot-toast';
 import _ from 'lodash';
 import dayjs from 'dayjs';
 
-import { Conversation, Message, MessageType } from '@/Panel/types';
+import { Conversation, ConversationStatus, Message, MessageType, UserType } from '@/Panel/types';
 import {
   SearchConversationOptions,
   conversationMatchFilters,
@@ -20,6 +22,9 @@ import {
   searchConversation,
   updateConversation,
 } from '@/Panel/api/conversation';
+import { Toast } from '@/Panel/components/Toast';
+import { useCurrentUser } from '../auth';
+import { useEffectEvent } from './useEffectEvent';
 
 type UseConversationsQueryKey = [
   'Conversations',
@@ -141,6 +146,37 @@ function findConversation(pages: Conversation[][], id: string) {
 
 export function useSubscribeConversations(socket: Socket) {
   const queryClient = useQueryClient();
+  const navigate = useNavigate();
+  const user = useCurrentUser();
+
+  const checkCategory = useEffectEvent(({ fields, conversation }: ConversationUpdatedEvent) => {
+    if (
+      conversation.operatorId === user.id &&
+      fields.includes('status') &&
+      conversation.status === ConversationStatus.Closed &&
+      conversation.closedBy?.type === UserType.Visitor &&
+      !conversation.categoryId
+    ) {
+      toast.custom(
+        (t) =>
+          (t.visible || null) && (
+            <Toast
+              title="用户关闭了未分类的会话"
+              content={conversation.lastMessage?.data.text || '(暂无消息)'}
+              onClick={() => {
+                toast.dismiss(t.id);
+                navigate(`/conversations/${conversation.id}`);
+              }}
+              onClose={() => toast.dismiss(t.id)}
+            />
+          ),
+        {
+          position: 'top-right',
+          duration: 1000 * 60,
+        },
+      );
+    }
+  });
 
   useEffect(() => {
     let timeoutId: number | undefined;
@@ -202,6 +238,7 @@ export function useSubscribeConversations(socket: Socket) {
     const onConversationCreated = applyConversation;
     const onConversationUpdated = (e: ConversationUpdatedEvent) => {
       applyConversation(e.conversation);
+      checkCategory(e);
     };
 
     socket.on('conversationCreated', applyConversation);

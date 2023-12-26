@@ -1,5 +1,6 @@
 import { useMemo, useState } from 'react';
 import { MdMenuOpen, MdFilterAlt } from 'react-icons/md';
+import { useNavigate, useParams } from 'react-router-dom';
 import cx from 'classnames';
 import _ from 'lodash';
 import { useToggle } from 'react-use';
@@ -24,7 +25,9 @@ interface BasicSearchOptions {
 export default function Conversations() {
   const user = useCurrentUser();
 
-  const [conversationId, setConversationId] = useState<string>();
+  const { id: conversationId } = useParams<'id'>();
+  const navigage = useNavigate();
+  const setConversationId = (id: string) => navigage(`/conversations/${id}`);
 
   const [searchOptions, setSearchOptions] = useState<BasicSearchOptions>({
     status: ConversationStatus.Open,
