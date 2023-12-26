@@ -81,10 +81,21 @@ interface FileMessageProps {
 
 function FileMessage({ file }: FileMessageProps) {
   if (file.mime && file.mime.startsWith('image/')) {
-    return <Image className="object-contain" width={150} src={file.url} />;
+    return (
+      <Image
+        className="object-contain"
+        width={150}
+        src={file.url}
+        onLoad={(e) => {
+          const img = e.target as HTMLImageElement;
+          // 避免高度出现小数影响触底判断
+          img.style.height = Math.ceil(img.height) + 'px';
+        }}
+      />
+    );
   }
   return (
-    <div className="flex items-center border rounded h-[64px] pl-1 pr-2 overflow-hidden">
+    <div className="flex items-center border rounded h-[64px] px-2 overflow-hidden">
       <AiOutlineFile className="w-8 h-8 shrink-0" />
       <div className="ml-1 grow overflow-hidden">
         <div className="text-sm truncate">{file.name}</div>
@@ -383,7 +394,7 @@ export const MessageList = forwardRef<MessageListRef, MessageListProps>((props, 
       } else if (scrollBehavior.current === 'attachBottom') {
         containerElement.scrollTop = scrollHeight - clientHeight;
       }
-      containerScrollHeight.current = containerElement.scrollHeight;
+      containerScrollHeight.current = scrollHeight;
       if (scrollBehavior.current === 'keep') {
         scrollBehavior.current = 'auto';
       }
@@ -436,55 +447,57 @@ export const MessageList = forwardRef<MessageListRef, MessageListProps>((props, 
   const operatorMap = useMemo(() => _.keyBy(operators, (o) => o.id), []);
 
   return (
-    <div ref={containerRef} className={cx('overflow-y-auto', style.messageList, className)}>
-      <div ref={contentRef}>
-        <div className="flex justify-center items-center h-12">
-          {hasMoreMessages ? (
-            <button
-              className="text-xs bg-primary-100 px-2 py-1 rounded flex items-center"
-              onClick={() => {
-                scrollBehavior.current = 'keep';
-                fetchMoreMessages();
-              }}
-            >
-              加载更多
-            </button>
-          ) : (
-            <div className="text-sm text-[#969696]">没有更多</div>
-          )}
-        </div>
+    <div className={cx('relative overflow-hidden', className)}>
+      <div ref={containerRef} className={cx('h-full overflow-y-auto', style.messageList)}>
+        <div ref={contentRef}>
+          <div className="flex justify-center items-center h-12">
+            {hasMoreMessages ? (
+              <button
+                className="text-xs bg-primary-100 px-2 py-1 rounded flex items-center"
+                onClick={() => {
+                  scrollBehavior.current = 'keep';
+                  fetchMoreMessages();
+                }}
+              >
+                加载更多
+              </button>
+            ) : (
+              <div className="text-sm text-[#969696]">没有更多</div>
+            )}
+          </div>
 
-        <Image.PreviewGroup>
-          {messageItems.map(({ date, messages }) => (
-            <Fragment key={date.unix()}>
-              <DateDivider date={date} />
-              {messages.map((item) => {
-                if (item.type === 'messageGroup') {
-                  return (
-                    <MessageGroup
-                      key={item.messages[0].id}
-                      isLeft={item.from.type === UserType.Visitor}
-                      from={item.from}
-                      messages={item.messages}
-                      operatorMap={operatorMap}
-                    />
-                  );
-                }
-                const Component = MessageComponents[item.message.type];
-                if (Component) {
-                  return <Component key={item.message.id} message={item.message} />;
-                } else {
-                  return null;
-                }
-              })}
-            </Fragment>
-          ))}
-        </Image.PreviewGroup>
+          <Image.PreviewGroup>
+            {messageItems.map(({ date, messages }) => (
+              <Fragment key={date.unix()}>
+                <DateDivider date={date} />
+                {messages.map((item) => {
+                  if (item.type === 'messageGroup') {
+                    return (
+                      <MessageGroup
+                        key={item.messages[0].id}
+                        isLeft={item.from.type === UserType.Visitor}
+                        from={item.from}
+                        messages={item.messages}
+                        operatorMap={operatorMap}
+                      />
+                    );
+                  }
+                  const Component = MessageComponents[item.message.type];
+                  if (Component) {
+                    return <Component key={item.message.id} message={item.message} />;
+                  } else {
+                    return null;
+                  }
+                })}
+              </Fragment>
+            ))}
+          </Image.PreviewGroup>
+        </div>
       </div>
 
       {unreadMessageCount > 0 && (
         <button
-          className="sticky bottom-2 left-[50%] -translate-x-[50%] bg-[#3884F7] text-white text-sm pl-2 pr-3 py-1 rounded-full flex items-center"
+          className="absolute bottom-2 left-[50%] -translate-x-[50%] bg-[#3884F7] text-white text-sm pl-2 pr-3 py-1 rounded-full flex items-center"
           onClick={scrollToBottom}
         >
           <FiArrowDown className="w-4 h-4 mr-1" />

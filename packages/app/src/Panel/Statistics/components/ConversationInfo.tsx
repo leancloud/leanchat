@@ -26,7 +26,7 @@ export function ConversationInfo({ conversationId, onClose }: ConversationInfoPr
           <ConversationProvider conversationId={conversationId}>
             <div className="h-full grid grid-cols-3">
               <div className="col-span-2 overflow-hidden">
-                <MessageList className="max-h-full" />
+                <MessageList className="h-full" />
               </div>
               <div className="col-span-1 border-l">
                 <ConversationDetail />
