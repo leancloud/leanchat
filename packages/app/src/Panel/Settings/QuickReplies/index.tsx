@@ -3,18 +3,19 @@ import { IoFlashOutline } from 'react-icons/io5';
 import { MdOutlineModeEditOutline, MdDeleteOutline } from 'react-icons/md';
 import { useMutation, useQuery } from '@tanstack/react-query';
 import { useToggle } from 'react-use';
+import { useSearchParams } from 'react-router-dom';
 import { Button, Form, FormInstance, Input, Modal, Select, Tooltip } from 'antd';
 import cx from 'classnames';
 import _ from 'lodash';
 
-import { QuickReply } from '@/Panel/types';
+import { OperatorRole, QuickReply } from '@/Panel/types';
 import {
-  CreateQuickReplyData,
   createQuickReply,
   deleteQuickReply,
   getQuickReplies,
   updateQuickReply,
 } from '@/Panel/api/quick-reply';
+import { useCurrentUser } from '@/Panel/auth';
 import { Container } from '../components/Container';
 
 interface TagButtonProps extends ComponentProps<'button'> {
@@ -41,12 +42,18 @@ function TagButton({ active, children, count = 0, ...props }: TagButtonProps) {
   );
 }
 
+interface QuickReplyModalData {
+  public: boolean;
+  content: string;
+  tags?: string[];
+}
+
 interface QuickReplyModalProps {
   open: boolean;
   onClose: () => void;
-  onSave: (data: CreateQuickReplyData) => void;
+  onSave: (data: QuickReplyModalData) => void;
   loading?: boolean;
-  initData?: Partial<CreateQuickReplyData>;
+  initData?: Partial<QuickReplyModalData>;
 }
 
 export function QuickReplyModal({
@@ -83,6 +90,14 @@ export function QuickReplyModal({
       okText="保存"
     >
       <Form ref={formRef} initialValues={initData} onFinish={onSave}>
+        <Form.Item name="public" initialValue={true}>
+          <Select
+            options={[
+              { label: '公开', value: true },
+              { label: '个人', value: false },
+            ]}
+          />
+        </Form.Item>
         <Form.Item name="content" rules={[{ required: true }]}>
           <Input.TextArea rows={5} placeholder="回复内容" style={{ resize: 'none' }} />
         </Form.Item>
@@ -119,8 +134,12 @@ export function QuickReplies() {
   const tags = Object.keys(quickRepliesByTag);
   const currentReplies = currentTag ? quickRepliesByTag[currentTag] : quickReplies;
 
-  const [createModalOpen, toggleCreateModal] = useToggle(false);
-  const [editingReply, setEditingReply] = useState<QuickReply>();
+  const [searchParams] = useSearchParams();
+  const [createModalOpen, toggleCreateModal] = useToggle(searchParams.has('create'));
+  const [editingReply, setEditingReply] = useState<{
+    id: string;
+    data: QuickReplyModalData;
+  }>();
 
   const { mutate: create, isLoading: isCreating } = useMutation({
     mutationFn: createQuickReply,
@@ -131,9 +150,7 @@ export function QuickReplies() {
   });
 
   const { mutate: update, isLoading: isUpdating } = useMutation({
-    mutationFn: (args: Parameters<typeof updateQuickReply>) => {
-      return updateQuickReply(...args);
-    },
+    mutationFn: updateQuickReply,
     onSuccess: () => {
       refetch();
       setEditingReply(undefined);
@@ -146,6 +163,39 @@ export function QuickReplies() {
       refetch();
     },
   });
+
+  const user = useCurrentUser();
+
+  const handleCreate = (data: QuickReplyModalData) => {
+    create({
+      content: data.content,
+      tags: data.tags,
+      operatorId: data.public ? undefined : user.id,
+    });
+  };
+
+  const handleEdit = (quickReply: QuickReply) => {
+    setEditingReply({
+      id: quickReply.id,
+      data: {
+        public: !quickReply.operatorId,
+        content: quickReply.content,
+        tags: quickReply.tags,
+      },
+    });
+  };
+
+  const handleUpdate = (data: QuickReplyModalData) => {
+    if (!editingReply) return;
+    update({
+      id: editingReply.id,
+      content: data.content,
+      tags: data.tags,
+      operatorId: data.public ? null : user.id,
+    });
+  };
+
+  const managePublic = user.role === OperatorRole.Admin;
 
   return (
     <Container
@@ -197,24 +247,26 @@ export function QuickReplies() {
                     </button>
                   ))}
                 </div>
-                <div className="space-x-2 shrink-0">
-                  <Tooltip title="编辑" placement="bottom" mouseEnterDelay={0.5}>
-                    <button
-                      className="p-1 hover:bg-[#f7f7f7] rounded"
-                      onClick={() => setEditingReply(quickReply)}
-                    >
-                      <MdOutlineModeEditOutline className="w-5 h-5" />
-                    </button>
-                  </Tooltip>
-                  <Tooltip title="删除" placement="bottom" mouseEnterDelay={0.5}>
-                    <button
-                      className="p-1 hover:bg-[#f7f7f7] rounded"
-                      onClick={() => remove(quickReply.id)}
-                    >
-                      <MdDeleteOutline className="w-5 h-5" />
-                    </button>
-                  </Tooltip>
-                </div>
+                {(quickReply.operatorId === user.id || managePublic) && (
+                  <div className="space-x-2 shrink-0">
+                    <Tooltip title="编辑" placement="bottom" mouseEnterDelay={0.5}>
+                      <button
+                        className="p-1 hover:bg-[#f7f7f7] rounded"
+                        onClick={() => handleEdit(quickReply)}
+                      >
+                        <MdOutlineModeEditOutline className="w-5 h-5" />
+                      </button>
+                    </Tooltip>
+                    <Tooltip title="删除" placement="bottom" mouseEnterDelay={0.5}>
+                      <button
+                        className="p-1 hover:bg-[#f7f7f7] rounded"
+                        onClick={() => remove(quickReply.id)}
+                      >
+                        <MdDeleteOutline className="w-5 h-5" />
+                      </button>
+                    </Tooltip>
+                  </div>
+                )}
               </div>
             </div>
           ))}
@@ -224,15 +276,15 @@ export function QuickReplies() {
       <QuickReplyModal
         open={createModalOpen}
         onClose={toggleCreateModal}
-        onSave={create}
+        onSave={handleCreate}
         loading={isCreating}
       />
 
       <QuickReplyModal
         open={!!editingReply}
-        initData={editingReply}
+        initData={editingReply?.data}
         onClose={() => setEditingReply(undefined)}
-        onSave={(data) => update([editingReply!.id, data])}
+        onSave={handleUpdate}
         loading={isUpdating}
       />
     </Container>

@@ -106,6 +106,7 @@ export interface QuickReply {
   id: string;
   content: string;
   tags?: string[];
+  operatorId?: string;
 }
 
 export interface Visitor {

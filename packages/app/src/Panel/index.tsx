@@ -1,7 +1,7 @@
 import { PropsWithChildren, Suspense, lazy, useState } from 'react';
 import { BrowserRouter, Navigate, Outlet, Route, Routes, useNavigate } from 'react-router-dom';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
-import { ConfigProvider, Result, Spin, message } from 'antd';
+import { ConfigProvider, Spin, message } from 'antd';
 import zhCN from 'antd/locale/zh_CN';
 import { StyleProvider } from '@ant-design/cssinjs';
 import { MdSettings } from 'react-icons/md';
@@ -19,6 +19,7 @@ import { useAuthContext } from './auth';
 import { useSubscribeOperatorsStatus } from './hooks/operator';
 import { NowProvider } from './contexts/NowContext';
 import { OperatorRole } from './types';
+import { RequireRole } from './components/RequireRole';
 
 const Login = lazy(() => import('./Login'));
 const Quality = lazy(() => import('./Statistics/Quality'));
@@ -43,7 +44,7 @@ const navs: (Nav & { roles?: OperatorRole[] })[] = [
   {
     to: 'settings',
     icon: MdSettings,
-    roles: [OperatorRole.Admin],
+    roles: [OperatorRole.Admin, OperatorRole.Operator],
   },
 ];
 
@@ -74,14 +75,6 @@ function RequireAuth({ children }: PropsWithChildren) {
     return <Navigate to="login" />;
   }
 
-  return children;
-}
-
-function RequireRole({ roles, children }: PropsWithChildren<{ roles: OperatorRole[] }>) {
-  const user = useCurrentUser();
-  if (!roles.includes(user.role)) {
-    return <Result status="403" title="未经授权的访问" subTitle="对不起，您没有权限访问此页面。" />;
-  }
   return children;
 }
 
@@ -177,7 +170,7 @@ export default function Panel() {
               <Route
                 path="settings/*"
                 element={
-                  <RequireRole roles={[OperatorRole.Admin]}>
+                  <RequireRole roles={[OperatorRole.Admin, OperatorRole.Operator]}>
                     <Settings />
                   </RequireRole>
                 }

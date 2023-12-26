@@ -4,6 +4,7 @@ import { client } from './client';
 export interface CreateQuickReplyData {
   content: string;
   tags?: string[];
+  operatorId?: string;
 }
 
 export async function createQuickReply(data: CreateQuickReplyData) {
@@ -17,11 +18,13 @@ export async function getQuickReplies() {
 }
 
 export interface UpdateQuickReplyData {
+  id: string;
   content?: string;
   tags?: string[];
+  operatorId?: string | null;
 }
 
-export async function updateQuickReply(id: string, data: UpdateQuickReplyData) {
+export async function updateQuickReply({ id, ...data }: UpdateQuickReplyData) {
   await client.patch(`/quick-replies/${id}`, data);
 }
 

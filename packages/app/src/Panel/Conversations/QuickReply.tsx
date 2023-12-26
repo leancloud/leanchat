@@ -1,14 +1,13 @@
 import { useState } from 'react';
 import { MdAdd, MdClose } from 'react-icons/md';
 import { IoFlashOutline } from 'react-icons/io5';
-import { useToggle } from 'react-use';
-import { useMutation, useQuery } from '@tanstack/react-query';
+import { useQuery } from '@tanstack/react-query';
+import { Link } from 'react-router-dom';
 import { Empty, Select } from 'antd';
 import cx from 'classnames';
 import _ from 'lodash';
 
-import { QuickReplyModal } from '@/Panel/Settings/QuickReplies';
-import { createQuickReply, getQuickReplies } from '../api/quick-reply';
+import { getQuickReplies } from '../api/quick-reply';
 
 interface QuickReplyProps {
   onSelect: (content: string) => void;
@@ -17,7 +16,7 @@ interface QuickReplyProps {
 }
 
 export function QuickReply({ onSelect, onClose, keyword }: QuickReplyProps) {
-  const { data: quickReplies, refetch } = useQuery({
+  const { data: quickReplies } = useQuery({
     queryKey: ['QuickReplies'],
     queryFn: getQuickReplies,
     staleTime: 1000 * 60 * 5,
@@ -46,16 +45,6 @@ export function QuickReply({ onSelect, onClose, keyword }: QuickReplyProps) {
     return _.uniq(tags).map((tag) => ({ label: tag, value: tag }));
   };
 
-  const [showCreateModal, toggleCreateModal] = useToggle(false);
-
-  const { mutate: create, isLoading: isCreating } = useMutation({
-    mutationFn: createQuickReply,
-    onSuccess: () => {
-      refetch();
-      toggleCreateModal();
-    },
-  });
-
   const filteredQuickReplies = filterQuickReplies(tagPath, keyword);
 
   return (
@@ -68,13 +57,13 @@ export function QuickReply({ onSelect, onClose, keyword }: QuickReplyProps) {
               快捷回复
             </div>
             <div className="flex items-center">
-              <button
+              <Link
                 className="flex items-center px-1 text-[#3884f7] hover:underline"
-                onClick={toggleCreateModal}
+                to="/settings/quick-replies?create=1"
               >
                 <MdAdd className="w-4 h-4" />
                 <span className="ml-1 text-xs">新回复</span>
-              </button>
+              </Link>
               <hr className="mx-2 border-l h-4" />
               <button
                 className="w-5 h-5 flex transition-colors hover:bg-[#f7f7f7] rounded text-[#969696]"
@@ -136,13 +125,6 @@ export function QuickReply({ onSelect, onClose, keyword }: QuickReplyProps) {
           </div>
         </div>
       </div>
-
-      <QuickReplyModal
-        open={showCreateModal}
-        onClose={toggleCreateModal}
-        onSave={create}
-        loading={isCreating}
-      />
     </div>
   );
 }

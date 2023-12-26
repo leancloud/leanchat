@@ -21,6 +21,9 @@ import { Operators, NewOperator, EditOperator } from './Team/Operators';
 import { Categories } from './Categories';
 import { QuickReplies } from './QuickReplies';
 import { ChatConfig } from './ChatConfig';
+import { OperatorRole } from '../types';
+import { useCurrentUser } from '../auth';
+import { RequireRole } from '../components/RequireRole';
 
 interface NavSection {
   name: string;
@@ -32,8 +35,9 @@ type IconConstructor = JSXElementConstructor<{ className?: string }>;
 interface NavGroup {
   icon: IconConstructor;
   name: string;
-  path?: string;
-  children?: Omit<Required<NavGroup>, 'children'>[];
+  path: string;
+  children?: Omit<NavGroup, 'children'>[];
+  roles?: OperatorRole[];
 }
 
 const navs: NavSection[] = [
@@ -44,15 +48,18 @@ const navs: NavSection[] = [
         icon: BsFillChatLeftDotsFill,
         name: '聊天设置',
         path: 'chat',
+        roles: [OperatorRole.Admin],
       },
       {
         icon: HiUserGroup,
         name: '团队',
+        path: 'team',
+        roles: [OperatorRole.Admin],
         children: [
           {
             icon: FaUserCheck,
             name: '客服',
-            path: 'team/operators',
+            path: 'operators',
           },
         ],
       },
@@ -60,6 +67,7 @@ const navs: NavSection[] = [
         icon: HiTag,
         name: '分类',
         path: 'categories',
+        roles: [OperatorRole.Admin],
       },
       {
         icon: IoFlashOutline,
@@ -70,26 +78,20 @@ const navs: NavSection[] = [
   },
 ];
 
-function Navs() {
+function Navs({ navs }: { navs: NavSection[] }) {
   const { pathname } = useLocation();
   const { pathname: fromPathname } = useResolvedPath('.');
 
   const activePath = useMemo(() => {
     for (const item of navs.flatMap((nav) => nav.items)) {
-      if (item.path) {
-        const resolved = resolvePath(item.path, fromPathname);
+      const paths = item.children
+        ? item.children.map((child) => `${item.path}/${child.path}`)
+        : [item.path];
+      for (const path of paths) {
+        const resolved = resolvePath(path, fromPathname);
         const match = matchPath({ path: pathname, end: false }, resolved.pathname);
         if (match) {
-          return item.path;
-        }
-      }
-      if (item.children) {
-        for (const child of item.children) {
-          const resolved = resolvePath(child.path, fromPathname);
-          const match = matchPath({ path: pathname, end: false }, resolved.pathname);
-          if (match) {
-            return child.path;
-          }
+          return path;
         }
       }
     }
@@ -110,22 +112,14 @@ function Navs() {
             {name}
           </div>
           {items.map(({ name, path, children, icon }) => {
-            if (path) {
-              const active = path === activePath;
-              return (
-                <NavButton key={name} icon={icon} active={active} onClick={() => navigate(path)}>
-                  {name}
-                </NavButton>
-              );
-            }
             if (children) {
               return (
                 <NavMenu
                   key={name}
                   icon={icon}
                   label={name}
-                  items={children.map(({ icon, name, path }) => ({
-                    key: path,
+                  items={children.map(({ icon, name, path: childPath }) => ({
+                    key: `${path}/${childPath}`,
                     icon: icon,
                     label: name,
                   }))}
@@ -134,6 +128,16 @@ function Navs() {
                 />
               );
             }
+            return (
+              <NavButton
+                key={name}
+                icon={icon}
+                active={path === activePath}
+                onClick={() => navigate(path)}
+              >
+                {name}
+              </NavButton>
+            );
           })}
         </Fragment>
       ))}
@@ -141,11 +145,11 @@ function Navs() {
   );
 }
 
-function Layout() {
+function Layout({ navs }: { navs: NavSection[] }) {
   return (
     <div className="h-full grid grid-cols-[232px_1fr]">
       <div className="bg-[#f5f7f9] p-2 shadow-[rgba(0,27,71,0.12)_0px_2px_6px] max-h-full overflow-y-auto">
-        <Navs />
+        <Navs navs={navs} />
       </div>
       <div className="p-[20px] max-h-full overflow-auto">
         <Outlet />
@@ -155,19 +159,84 @@ function Layout() {
 }
 
 export default function Settings() {
+  const user = useCurrentUser();
+
+  const availableNavs = useMemo(() => {
+    const allow = (nav: Pick<NavGroup, 'roles'>) => !nav.roles || nav.roles.includes(user.role);
+    return navs
+      .map((nav) => ({
+        ...nav,
+        items: nav.items
+          .filter(allow)
+          .map<NavGroup>((item) => ({
+            ...item,
+            children: item.children?.filter(allow),
+          }))
+          .filter((item) => !item.children || item.children.length),
+      }))
+      .filter((nav) => nav.items.length);
+  }, [user]);
+
+  const defaultPath = useMemo(() => {
+    const items = availableNavs.flatMap((nav) => nav.items);
+    while (items.length) {
+      const item = items.shift()!;
+      if (item.children) {
+        items.push(...item.children);
+        continue;
+      }
+      return item.path;
+    }
+  }, [availableNavs]);
+
   return (
     <Routes>
-      <Route element={<Layout />}>
-        <Route path="chat" element={<ChatConfig />} />
+      <Route element={<Layout navs={availableNavs} />}>
+        <Route
+          path="chat"
+          element={
+            <RequireRole roles={[OperatorRole.Admin]}>
+              <ChatConfig />
+            </RequireRole>
+          }
+        />
         <Route path="team/operators">
-          <Route index element={<Operators />} />
-          <Route path="new" element={<NewOperator />} />
-          <Route path=":id" element={<EditOperator />} />
+          <Route
+            index
+            element={
+              <RequireRole roles={[OperatorRole.Admin]}>
+                <Operators />
+              </RequireRole>
+            }
+          />
+          <Route
+            path="new"
+            element={
+              <RequireRole roles={[OperatorRole.Admin]}>
+                <NewOperator />
+              </RequireRole>
+            }
+          />
+          <Route
+            path=":id"
+            element={
+              <RequireRole roles={[OperatorRole.Admin]}>
+                <EditOperator />
+              </RequireRole>
+            }
+          />
         </Route>
-        <Route path="categories" element={<Categories />} />
+        <Route
+          path="categories"
+          element={
+            <RequireRole roles={[OperatorRole.Admin]}>
+              <Categories />
+            </RequireRole>
+          }
+        />
         <Route path="quick-replies" element={<QuickReplies />} />
       </Route>
-      <Route path="*" element={<Navigate to="chat" replace />} />
+      {defaultPath && <Route path="*" element={<Navigate to={defaultPath} replace />} />}
     </Routes>
   );
 }
