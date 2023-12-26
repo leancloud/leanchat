@@ -386,7 +386,6 @@ export const MessageList = forwardRef<MessageListRef, MessageListProps>((props, 
   useResizeObserver({
     ref: contentRef,
     onResize: () => {
-      console.log('resize', scrollBehavior.current);
       const containerElement = containerRef.current;
       const { scrollHeight, clientHeight } = containerElement;
       if (scrollBehavior.current === 'keep') {
