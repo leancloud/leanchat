@@ -5,12 +5,16 @@ import { TypegooseModule } from '@m8a/nestjs-typegoose';
 import { ChatModule } from 'src/chat';
 import { CategoryModule } from 'src/category';
 import { QuickReplyModule } from 'src/quick-reply';
-import { OperatorOnlineRecord } from './models/operator-online-record.model';
-import { OperatorWorkingTime } from './models/operator-working-time.model';
+import {
+  OperatorGroup,
+  OperatorOnlineRecord,
+  OperatorWorkingTime,
+} from './models';
 import { ChatGateway } from './chat.gateway';
 import {
   AutoCloseConversationService,
   ConversationTransformService,
+  OperatorGroupService,
   OperatorOnlineService,
   OperatorWorkingTimeService,
   SessionService,
@@ -21,6 +25,7 @@ import {
   ConfigController,
   ConversationController,
   OperatorController,
+  OperatorGroupController,
   QuickReplyController,
   SessionController,
   StatisticsController,
@@ -30,7 +35,11 @@ import { MessageDto } from './dtos/message';
 
 @Module({
   imports: [
-    TypegooseModule.forFeature([OperatorOnlineRecord, OperatorWorkingTime]),
+    TypegooseModule.forFeature([
+      OperatorOnlineRecord,
+      OperatorWorkingTime,
+      OperatorGroup,
+    ]),
     ChatModule,
     CategoryModule,
     QuickReplyModule,
@@ -38,6 +47,7 @@ import { MessageDto } from './dtos/message';
   providers: [
     ChatGateway,
     AutoCloseConversationService,
+    OperatorGroupService,
     OperatorOnlineService,
     OperatorWorkingTimeService,
     ConversationTransformService,
@@ -53,6 +63,7 @@ import { MessageDto } from './dtos/message';
     QuickReplyController,
     ConfigController,
     StatisticsController,
+    OperatorGroupController,
   ],
 })
 export class ChatCenterModule implements OnModuleInit {

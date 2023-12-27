@@ -2,6 +2,7 @@ export * from './api.controller';
 export * from './category.controller';
 export * from './config.controller';
 export * from './conversation.controller';
+export * from './operator-group.controller';
 export * from './operator.controller';
 export * from './quick-reply.controller';
 export * from './session.controller';
