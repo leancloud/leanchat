@@ -50,7 +50,7 @@ export default function Conversations() {
     isFetchingNextPage,
     hasNextPage,
     fetchNextPage,
-    dataUpdatedAt,
+    fetchedAt,
     isRefetching,
     refetch,
   } = useConversations(
@@ -103,13 +103,13 @@ export default function Conversations() {
   }, [searchOptions, advanceSearchOptions]);
   useEffect(() => {
     setFetchLog((logs) => {
-      const log = dayjs(dataUpdatedAt).format('YYYY-MM-DD HH:mm:ss');
+      const log = dayjs(fetchedAt).format('YYYY-MM-DD HH:mm:ss');
       if (log === logs[logs.length - 1]) {
         return logs;
       }
       return [...logs.slice(0, 100), log];
     });
-  }, [dataUpdatedAt]);
+  }, [fetchedAt]);
   const [debugModelOpen, toggleDebugModal] = useToggle(false);
 
   return (
@@ -179,7 +179,9 @@ export default function Conversations() {
           </div>
           <div className="grow flex flex-col overflow-y-auto">
             <div className="text-xs text-gray-400 text-center py-1 space-x-1">
-              <span>获取时间: {dayjs(dataUpdatedAt).format('YYYY-MM-DD HH:mm:ss')}</span>
+              <span>
+                获取时间: {fetchedAt ? dayjs(fetchedAt).format('YYYY-MM-DD HH:mm:ss') : 'none'}
+              </span>
               <button
                 className="text-primary disabled:text-gray-300"
                 disabled={isRefetching}
