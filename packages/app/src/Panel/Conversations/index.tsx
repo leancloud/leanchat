@@ -1,10 +1,12 @@
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { MdMenuOpen, MdFilterAlt } from 'react-icons/md';
 import { useNavigate, useParams } from 'react-router-dom';
 import cx from 'classnames';
 import _ from 'lodash';
 import { useToggle } from 'react-use';
 import { useMutation } from '@tanstack/react-query';
+import dayjs from 'dayjs';
+import { Modal } from 'antd';
 
 import { Sider } from './Sider';
 import { useConversations, useSetConversationQueryData } from '@/Panel/hooks/conversation';
@@ -48,6 +50,9 @@ export default function Conversations() {
     isFetchingNextPage,
     hasNextPage,
     fetchNextPage,
+    dataUpdatedAt,
+    isRefetching,
+    refetch,
   } = useConversations(
     advance
       ? {
@@ -92,8 +97,29 @@ export default function Conversations() {
     mutationFn: reopenConversation,
   });
 
+  const [fetchLog, setFetchLog] = useState<string[]>([]);
+  useEffect(() => {
+    setFetchLog([]);
+  }, [searchOptions, advanceSearchOptions]);
+  useEffect(() => {
+    setFetchLog((logs) => {
+      const log = dayjs(dataUpdatedAt).format('YYYY-MM-DD HH:mm:ss');
+      if (log === logs[logs.length - 1]) {
+        return logs;
+      }
+      return [...logs.slice(0, 100), log];
+    });
+  }, [dataUpdatedAt]);
+  const [debugModelOpen, toggleDebugModal] = useToggle(false);
+
   return (
     <div className="h-full flex">
+      <Modal open={debugModelOpen} onCancel={toggleDebugModal} footer={null} title="获取记录">
+        {fetchLog.map((log) => (
+          <div key={log}>{log}</div>
+        ))}
+      </Modal>
+
       <Sider
         show={showSider}
         operatorId={searchOptions.operatorId}
@@ -152,6 +178,19 @@ export default function Conversations() {
             </button>
           </div>
           <div className="grow flex flex-col overflow-y-auto">
+            <div className="text-xs text-gray-400 text-center py-1 space-x-1">
+              <span>获取时间: {dayjs(dataUpdatedAt).format('YYYY-MM-DD HH:mm:ss')}</span>
+              <button
+                className="text-primary disabled:text-gray-300"
+                disabled={isRefetching}
+                onClick={() => refetch()}
+              >
+                刷新
+              </button>
+              <button className="text-primary" onClick={toggleDebugModal}>
+                历史
+              </button>
+            </div>
             <ConversationList
               loading={isLoading}
               conversations={conversations}
