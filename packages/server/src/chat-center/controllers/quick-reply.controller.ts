@@ -2,6 +2,7 @@ import {
   Body,
   Controller,
   Delete,
+  ForbiddenException,
   Get,
   NotFoundException,
   Param,
@@ -12,6 +13,7 @@ import {
 } from '@nestjs/common';
 import { ZodValidationPipe } from 'nestjs-zod';
 
+import { OperatorRole } from 'src/chat/constants';
 import { Operator } from 'src/chat/models';
 import { QuickReplyService } from 'src/quick-reply';
 import { AuthGuard } from '../guards/auth.guard';
@@ -29,7 +31,17 @@ export class QuickReplyController {
   constructor(private quickReplyService: QuickReplyService) {}
 
   @Post()
-  async createQuickReply(@Body() data: CreateQuickReplyDto) {
+  async createQuickReply(
+    @CurrentOperator() operator: Operator,
+    @Body() data: CreateQuickReplyDto,
+  ) {
+    if (operator.role !== OperatorRole.Admin) {
+      if (!data.operatorId) {
+        throw new ForbiddenException('仅管理员可创建公开快捷回复');
+      } else if (data.operatorId !== operator.id) {
+        throw new ForbiddenException('仅管理员可为其他客服创建快捷回复');
+      }
+    }
     const quickReply = await this.quickReplyService.createQuickReply(data);
     return QuickReplyDto.fromDocument(quickReply);
   }
