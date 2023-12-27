@@ -11,13 +11,14 @@ import {
   useResolvedPath,
 } from 'react-router-dom';
 import { HiUserGroup, HiTag } from 'react-icons/hi2';
-import { FaUserCheck } from 'react-icons/fa';
+import { FaUserCheck, FaUserFriends } from 'react-icons/fa';
 import { IoFlashOutline } from 'react-icons/io5';
 import { BsFillChatLeftDotsFill } from 'react-icons/bs';
 import cx from 'classnames';
 
 import { NavButton, NavMenu } from '../components/NavMenu';
 import { Operators, NewOperator, EditOperator } from './Team/Operators';
+import { OperatorGroups } from './Team/OperatorGroups';
 import { Categories } from './Categories';
 import { QuickReplies } from './QuickReplies';
 import { ChatConfig } from './ChatConfig';
@@ -60,6 +61,11 @@ const navs: NavSection[] = [
             icon: FaUserCheck,
             name: '客服',
             path: 'operators',
+          },
+          {
+            icon: FaUserFriends,
+            name: '客服组',
+            path: 'operator-groups',
           },
         ],
       },
@@ -200,9 +206,9 @@ export default function Settings() {
             </RequireRole>
           }
         />
-        <Route path="team/operators">
+        <Route path="team">
           <Route
-            index
+            path="operators"
             element={
               <RequireRole roles={[OperatorRole.Admin]}>
                 <Operators />
@@ -210,7 +216,7 @@ export default function Settings() {
             }
           />
           <Route
-            path="new"
+            path="operators/new"
             element={
               <RequireRole roles={[OperatorRole.Admin]}>
                 <NewOperator />
@@ -218,10 +224,18 @@ export default function Settings() {
             }
           />
           <Route
-            path=":id"
+            path="operators/:id"
             element={
               <RequireRole roles={[OperatorRole.Admin]}>
                 <EditOperator />
+              </RequireRole>
+            }
+          />
+          <Route
+            path="operator-groups"
+            element={
+              <RequireRole roles={[OperatorRole.Admin]}>
+                <OperatorGroups />
               </RequireRole>
             }
           />

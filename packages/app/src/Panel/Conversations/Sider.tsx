@@ -1,14 +1,17 @@
-import { ComponentProps, ReactNode, useMemo } from 'react';
+import { ComponentProps, ReactNode, useMemo, useState } from 'react';
 import { FaUserCheck, FaUser, FaUserGroup } from 'react-icons/fa6';
+import { BiChevronRight, BiChevronDown } from 'react-icons/bi';
 import { Transition } from '@headlessui/react';
 import { Popover } from 'antd';
 import cx from 'classnames';
+import _ from 'lodash';
 
 import { useOperators } from '../hooks/operator';
+import { useOperatorGroups } from '../hooks/operator-group';
 import { Avatar } from '../components/Avatar';
 import { useScrolled } from '../hooks/useScrolled';
 import { useCurrentUser } from '../auth';
-import { OperatorRole } from '../types';
+import { Operator, OperatorRole } from '../types';
 import { OperatorProfile } from './components/OperatorProfile';
 
 function SiderButton({ active, ...props }: ComponentProps<'button'> & { active?: boolean }) {
@@ -23,17 +26,60 @@ function SiderButton({ active, ...props }: ComponentProps<'button'> & { active?:
   );
 }
 
+interface OperatorButtonProps {
+  operator: Operator;
+  active?: boolean;
+  onClick?: () => void;
+}
+
+function OperatorButton({ operator, active, onClick }: OperatorButtonProps) {
+  return (
+    <Popover
+      placement="rightTop"
+      arrow={false}
+      mouseEnterDelay={1}
+      destroyTooltipOnHide
+      content={() => <OperatorProfile operatorId={operator.id} />}
+    >
+      <SiderButton active={active} onClick={onClick}>
+        <Avatar size={20} user={operator} />
+        <div className="ml-3"> {operator.internalName}</div>
+      </SiderButton>
+    </Popover>
+  );
+}
+
 interface SectionProps {
   title: string;
   children?: ReactNode;
+  collapsable?: boolean;
 }
 
-function Section({ title, children }: SectionProps) {
+function Section({ title, children, collapsable }: SectionProps) {
+  const [expanded, setExpanded] = useState(true);
   return (
-    <>
-      <div className="text-xs text-[#a8a8a8] mb-3 px-5">{title}</div>
-      <div className="flex flex-col mb-5 px-2">{children}</div>
-    </>
+    <div>
+      {collapsable ? (
+        <button
+          className={cx(
+            'w-full text-left flex items-center text-xs text-[#a8a8a8] px-5',
+            expanded ? 'mb-3' : 'mb-2',
+          )}
+          onClick={() => setExpanded(!expanded)}
+          title={title}
+        >
+          <div className="truncate">{title}</div>
+          {expanded ? (
+            <BiChevronDown className="w-4 h-4 shrink-0" />
+          ) : (
+            <BiChevronRight className="w-4 h-4 shrink-0" />
+          )}
+        </button>
+      ) : (
+        <div className="text-xs text-[#a8a8a8] mb-3 px-5">{title}</div>
+      )}
+      {expanded && <div className="flex flex-col mb-5 px-2">{children}</div>}
+    </div>
   );
 }
 
@@ -44,31 +90,56 @@ interface TeamSectionProps {
 
 function TeamSection({ activeOperatorId, onClick }: TeamSectionProps) {
   const { data: operators } = useOperators();
-  const user = useCurrentUser();
+  const { data: groups } = useOperatorGroups();
 
-  const members = useMemo(() => operators?.filter((o) => o.id !== user.id), [operators, user]);
+  const operatorMap = useMemo(() => _.keyBy(operators, (o) => o.id), [operators]);
+  const groupList = useMemo(() => {
+    return groups
+      ?.map((group) => ({
+        key: group.id,
+        name: group.name,
+        members: group.operatorIds.map((id) => operatorMap[id]).filter(Boolean),
+      }))
+      .filter((group) => group.members.length > 0);
+  }, [groups, operatorMap]);
+
+  const isolatedOperators = useMemo(() => {
+    if (groups && operators) {
+      const memberIdSet = new Set(groups.flatMap((g) => g.operatorIds));
+      const isolatedOperators = operators.filter((o) => !memberIdSet.has(o.id));
+      if (isolatedOperators.length) {
+        return isolatedOperators;
+      }
+    }
+  }, [groups, operators]);
 
   return (
-    <Section title="团队">
-      {members?.map((operator) => (
-        <Popover
-          key={operator.id}
-          placement="rightTop"
-          arrow={false}
-          mouseEnterDelay={1}
-          destroyTooltipOnHide
-          content={() => <OperatorProfile operatorId={operator.id} />}
-        >
-          <SiderButton
-            active={operator.id === activeOperatorId}
-            onClick={() => onClick(operator.id)}
-          >
-            <Avatar size={20} user={operator} />
-            <div className="ml-3"> {operator.internalName}</div>
-          </SiderButton>
-        </Popover>
+    <>
+      {groupList?.map(({ key, name, members }) => (
+        <Section key={key} title={name} collapsable>
+          {members.map((operator) => (
+            <OperatorButton
+              key={operator.id}
+              operator={operator}
+              active={operator.id === activeOperatorId}
+              onClick={() => onClick(operator.id)}
+            />
+          ))}
+        </Section>
       ))}
-    </Section>
+      {isolatedOperators && (
+        <Section title="未分组" collapsable>
+          {isolatedOperators.map((operator) => (
+            <OperatorButton
+              key={operator.id}
+              operator={operator}
+              active={operator.id === activeOperatorId}
+              onClick={() => onClick(operator.id)}
+            />
+          ))}
+        </Section>
+      )}
+    </>
   );
 }
 

@@ -139,3 +139,11 @@ export enum ConversationStatus {
   Open = 1,
   Closed = 2,
 }
+
+export interface OperatorGroup {
+  id: string;
+  name: string;
+  operatorIds: string[];
+  createdAt: string;
+  updatedAt: string;
+}
