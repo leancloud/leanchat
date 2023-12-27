@@ -3,7 +3,7 @@ import { MdMenuOpen, MdFilterAlt } from 'react-icons/md';
 import { useNavigate, useParams } from 'react-router-dom';
 import cx from 'classnames';
 import _ from 'lodash';
-import { useToggle } from 'react-use';
+import { useInterval, useToggle } from 'react-use';
 import { useMutation } from '@tanstack/react-query';
 import dayjs from 'dayjs';
 import { Modal } from 'antd';
@@ -62,6 +62,7 @@ export default function Conversations() {
       : searchOptions,
     !advance,
   );
+  useInterval(refetch, 1000 * 60);
 
   const conversations = useMemo(() => searchResult?.pages.flat(), [searchResult]);
 

@@ -56,7 +56,6 @@ export function useConversations(options: SearchConversationOptions, live = true
     },
     staleTime: live ? 1000 * 60 : 0,
     cacheTime: live ? undefined : 0,
-    refetchInterval: live ? 1000 * 60 : undefined,
   });
   return { ...query, fetchedAt };
 }
