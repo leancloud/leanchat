@@ -20,7 +20,7 @@ export class MessageDto {
   static fileDomain = '';
 
   static getFileURL(key: string) {
-    return `${MessageDto.fileDomain}/${key}`;
+    return `${MessageDto.fileDomain}/${escape(key)}`;
   }
 
   static fromDocument(message: Message) {
