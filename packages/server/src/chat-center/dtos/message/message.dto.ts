@@ -1,3 +1,4 @@
+import { encodeRFC3986URIComponent } from 'src/common/helpers/uri';
 import { Message } from 'src/chat';
 
 export class MessageDto {
@@ -20,7 +21,7 @@ export class MessageDto {
   static fileDomain = '';
 
   static getFileURL(key: string) {
-    return `${MessageDto.fileDomain}/${escape(key)}`;
+    return `${MessageDto.fileDomain}/${encodeRFC3986URIComponent(key)}`;
   }
 
   static fromDocument(message: Message) {
