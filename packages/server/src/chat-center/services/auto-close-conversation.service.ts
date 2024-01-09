@@ -1,15 +1,14 @@
-import { Inject, Injectable } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
 import { Cron } from '@nestjs/schedule';
-import { Redis } from 'ioredis';
 import { subSeconds } from 'date-fns';
 
 import { ChatService, ConversationService, UserType } from 'src/chat';
 import { ConfigService } from 'src/config';
-import { REDIS } from 'src/redis';
+import { InjectRedis, Redis } from 'src/redis';
 
 @Injectable()
 export class AutoCloseConversationService {
-  @Inject(REDIS)
+  @InjectRedis()
   private redis: Redis;
 
   constructor(

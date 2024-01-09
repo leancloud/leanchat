@@ -1,15 +1,14 @@
-import { BadRequestException, Inject, Injectable } from '@nestjs/common';
+import { BadRequestException, Injectable } from '@nestjs/common';
 import { EventEmitter2, OnEvent } from '@nestjs/event-emitter';
 import { InjectQueue } from '@nestjs/bull';
 import { Queue } from 'bull';
-import { Redis } from 'ioredis';
 import _ from 'lodash';
 import Handlebars from 'handlebars';
 import { differenceInDays } from 'date-fns';
 import { InjectModel } from '@m8a/nestjs-typegoose';
 import { ReturnModelType } from '@typegoose/typegoose';
 
-import { REDIS } from 'src/redis';
+import { InjectRedis, Redis } from 'src/redis';
 import { ConfigService } from 'src/config';
 import {
   CloseConversationOptions,
@@ -44,7 +43,7 @@ import { VisitorService } from './visitor.service';
 
 @Injectable()
 export class ChatService {
-  @Inject(REDIS)
+  @InjectRedis()
   private redis: Redis;
 
   @InjectModel(Operator)

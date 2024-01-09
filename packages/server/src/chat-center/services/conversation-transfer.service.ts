@@ -1,7 +1,6 @@
-import { Inject, Injectable } from '@nestjs/common';
-import { Redis } from 'ioredis';
+import { Injectable } from '@nestjs/common';
 
-import { REDIS } from 'src/redis';
+import { InjectRedis, Redis } from 'src/redis';
 import { Conversation, Operator } from 'src/chat/models';
 import { ChatService } from 'src/chat/services';
 import { UserType } from 'src/chat/constants';
@@ -10,7 +9,7 @@ import { PushService } from './push.service';
 
 @Injectable()
 export class ConversationTransferService {
-  @Inject(REDIS)
+  @InjectRedis()
   private redis: Redis;
 
   constructor(
