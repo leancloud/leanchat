@@ -143,7 +143,7 @@ export function Conversation({ conversationId, reopen, onReopen }: ConversationP
     },
   });
 
-  const { mutate: close } = useMutation({
+  const { mutate: close, isLoading: isClosing } = useMutation({
     mutationFn: () => {
       return closeConversation(conversationId);
     },
@@ -216,7 +216,9 @@ export function Conversation({ conversationId, reopen, onReopen }: ConversationP
                     className="text-[#969696] p-1 rounded transition-colors hover:bg-[#f7f7f7]"
                     onClick={() => {
                       if (conversation.categoryId) {
-                        close();
+                        if (!isClosing) {
+                          close();
+                        }
                       } else {
                         toggleCloseModal();
                       }
@@ -389,7 +391,7 @@ export function Conversation({ conversationId, reopen, onReopen }: ConversationP
           open={closeModalOpen}
           onCancel={toggleCloseModal}
           onClose={handleClose}
-          loading={isUpdating}
+          loading={isUpdating || isClosing}
         />
 
         <ConversationDetail className="w-[320px] border-l shrink-0" />
