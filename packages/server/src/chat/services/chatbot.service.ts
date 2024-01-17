@@ -2,7 +2,7 @@ import { Injectable } from '@nestjs/common';
 import { OnEvent } from '@nestjs/event-emitter';
 import { InjectModel } from '@m8a/nestjs-typegoose';
 import { ReturnModelType } from '@typegoose/typegoose';
-import { AnyKeys, Types } from 'mongoose';
+import { AnyKeys } from 'mongoose';
 import { InjectQueue } from '@nestjs/bull';
 import { Queue } from 'bull';
 
@@ -77,10 +77,6 @@ export class ChatbotService {
 
   getChatbots() {
     return this.Chatbot.find().exec();
-  }
-
-  getQuestions(questionBaseId: string | Types.ObjectId) {
-    return this.ChatbotQuestion.find({ questionBaseId }).exec();
   }
 
   async getContext(

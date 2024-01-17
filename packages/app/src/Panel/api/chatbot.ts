@@ -102,6 +102,10 @@ export async function getQuestions(questionBaseId: string) {
   return res.data;
 }
 
+export async function reorderQuestions(ids: string[]) {
+  await client.post('/chatbot-question-bases/reorder-questions', { ids });
+}
+
 export async function createChatbot(data: CreateChatbotData) {
   const res = await client.post<Chatbot>('/chatbots', data);
   return res.data;

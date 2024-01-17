@@ -6,7 +6,12 @@ import { Link, useParams } from 'react-router-dom';
 import { Button, Divider, Modal, Table } from 'antd';
 import dayjs from 'dayjs';
 
-import { createQuestion, createQuestionBase, updateQuestion } from '@/Panel/api/chatbot';
+import {
+  createQuestion,
+  createQuestionBase,
+  reorderQuestions,
+  updateQuestion,
+} from '@/Panel/api/chatbot';
 import {
   useChatbotQuestionBase,
   useChatbotQuestionBases,
@@ -18,8 +23,9 @@ import { ChatbotQuestion, ChatbotQuestionBase } from '@/Panel/types';
 import { Container } from '../components/Container';
 import { QuestionFormModal } from './QuestionFormModal';
 import { QuestionFormData } from './QuestionForm';
-import { QuestionBaseFormModal } from './QuestionBaseFormModel';
+import { QuestionBaseFormModal } from './QuestionBaseFormModal';
 import { QuestionBaseForm } from './QuestionBaseForm';
+import { ReorderModal } from './ReorderModal';
 
 export function QuestionBases() {
   const [createModalOpen, toggleCreateModal] = useToggle(false);
@@ -80,6 +86,7 @@ export function QuestionBases() {
 export function QuestionBase() {
   const { id } = useParams();
   const [questionModalOpen, toggleQuestionModal] = useToggle(false);
+  const [reorderModalOpen, toggleReorderModal] = useToggle(false);
 
   const { data: questionBase } = useChatbotQuestionBase(id!);
 
@@ -104,6 +111,14 @@ export function QuestionBase() {
   });
 
   const { mutateAsync: deleteQuestion } = useDeleteQuestion();
+
+  const { mutate: reorder } = useMutation({
+    mutationFn: reorderQuestions,
+    onSuccess: () => {
+      refetch();
+      toggleReorderModal(false);
+    },
+  });
 
   const [editingQuestion, setEditingQuestion] = useState<{
     id: string;
@@ -174,11 +189,19 @@ export function QuestionBase() {
 
       <Divider>问题列表</Divider>
 
-      <div className="flex items-center mb-4">
-        <Button className="ml-auto" type="primary" onClick={toggleQuestionModal}>
+      <div className="flex flex-row-reverse gap-2 items-center mb-4">
+        <Button type="primary" onClick={toggleQuestionModal}>
           创建新问题
         </Button>
+        <Button onClick={toggleReorderModal}>调整顺序</Button>
       </div>
+
+      <ReorderModal
+        open={reorderModalOpen}
+        onCancel={toggleReorderModal}
+        questions={questions}
+        onSave={reorder}
+      />
 
       <Table
         dataSource={questions}
@@ -187,6 +210,7 @@ export function QuestionBase() {
           {
             dataIndex: 'question',
             title: '标准问法',
+            render: (q?: string) => q || <span className="italic text-gray-400">匹配所有</span>,
           },
           {
             dataIndex: 'matcher',

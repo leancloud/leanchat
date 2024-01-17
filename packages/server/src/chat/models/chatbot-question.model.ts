@@ -4,7 +4,7 @@ import { Types } from 'mongoose';
 import { ChatbotQuestionMatcher } from '../constants';
 import { ChatbotMessage } from './chatbot-message.model';
 
-@Index({ questionBaseId: 1 })
+@Index({ questionBaseId: 1, position: 1 })
 @ModelOptions({
   schemaOptions: {
     collection: 'chatbot_question',
@@ -36,6 +36,9 @@ export class ChatbotQuestion {
 
   @Prop()
   assignOperator?: boolean;
+
+  @Prop()
+  position: number;
 
   createdAt: Date;
 

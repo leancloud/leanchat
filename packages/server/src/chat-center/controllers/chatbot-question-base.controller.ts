@@ -23,6 +23,7 @@ import {
   ChatbotQuestionDto,
   CreateChatbotQuestionBaseDto,
   CreateChatbotQuestionDto,
+  ReorderChatbotQuestionsDto,
   UpdateChatbotQuestionBaseDto,
 } from '../dtos/chatbot';
 import { UpdateChatbotQuestionDto } from '../dtos/chatbot/update-chatbot-question.dto';
@@ -99,9 +100,7 @@ export class ChatbotQuestionBaseController {
 
   @Get(':id/questions')
   async getQuestions(@Param('id', ParseObjectIdPipe) id: Types.ObjectId) {
-    const questions = await this.chatbotQuestionService.getQuestions({
-      questionBaseId: id,
-    });
+    const questions = await this.chatbotQuestionService.getQuestions(id);
     return questions.map(ChatbotQuestionDto.fromDocument);
   }
 
@@ -114,5 +113,10 @@ export class ChatbotQuestionBaseController {
       _id: qid,
       questionBaseId: bid,
     });
+  }
+
+  @Post('reorder-questions')
+  async reorderQuestions(@Body() data: ReorderChatbotQuestionsDto) {
+    await this.chatbotQuestionService.reorderQuestions(data.ids);
   }
 }

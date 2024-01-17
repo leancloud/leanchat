@@ -37,8 +37,8 @@ export const QuestionForm = forwardRef<FormInstance, QuestionFormProps>(
           />
         </Form.Item>
 
-        <Form.Item name="question" label="标准问法" rules={[{ required: true }]}>
-          <Input />
+        <Form.Item name="question" label="标准问法" initialValue="">
+          <Input placeholder="包含匹配 + 留空 = 匹配任何内容" />
         </Form.Item>
 
         <Form.Item label="相似问法">
@@ -66,7 +66,7 @@ export const QuestionForm = forwardRef<FormInstance, QuestionFormProps>(
           </Form.List>
         </Form.Item>
 
-        <Form.Item name={['answer', 'text']} label="回答">
+        <Form.Item name={['answer', 'text']} label="回答" rules={[{ required: true }]}>
           <Input.TextArea autoSize={{ minRows: 2 }} />
         </Form.Item>
 

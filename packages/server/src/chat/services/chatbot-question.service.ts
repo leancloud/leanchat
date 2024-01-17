@@ -1,7 +1,8 @@
 import { InjectModel } from '@m8a/nestjs-typegoose';
 import { Injectable } from '@nestjs/common';
 import { ReturnModelType } from '@typegoose/typegoose';
-import { AnyKeys, FilterQuery } from 'mongoose';
+import { AnyKeys, FilterQuery, Types } from 'mongoose';
+import _ from 'lodash';
 
 import { objectId } from 'src/helpers';
 import { ChatbotQuestion, ChatbotQuestionBase } from '../models';
@@ -56,6 +57,7 @@ export class ChatbotQuestionService {
       question.nextQuestionBaseId = objectId(data.nextQuestionBaseId);
     }
     question.assignOperator = data.assignOperator;
+    question.position = Date.now();
     return question.save();
   }
 
@@ -85,11 +87,33 @@ export class ChatbotQuestionService {
     ).exec();
   }
 
-  getQuestions(filter: FilterQuery<ChatbotQuestion>) {
-    return this.Question.find(filter).exec();
+  getQuestions(questionBaseId: string | Types.ObjectId) {
+    return this.Question.find({ questionBaseId }).sort({ position: 1 }).exec();
   }
 
   deleteQuestion(filter: FilterQuery<ChatbotQuestion>) {
     return this.Question.findOneAndDelete(filter).exec();
+  }
+
+  async reorderQuestions(ids: string[]) {
+    if (ids.length === 0) {
+      return;
+    }
+    const indexById = ids.reduce<Record<string, number>>((map, id, index) => {
+      map[id] = index;
+      return map;
+    }, {});
+    const questions = await this.Question.find({
+      _id: {
+        $in: objectId(ids),
+      },
+    });
+    const groups = _.groupBy(questions, (q) => q.questionBaseId.toHexString());
+    for (const questions of Object.values(groups)) {
+      questions.forEach((q) => {
+        q.position = indexById[q.id];
+      });
+      await this.Question.bulkSave(questions);
+    }
   }
 }

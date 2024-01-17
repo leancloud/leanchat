@@ -3,7 +3,11 @@ import { Job } from 'bull';
 import { Types } from 'mongoose';
 import Handlebars from 'handlebars';
 
-import { ChatService, ChatbotService } from '../services';
+import {
+  ChatService,
+  ChatbotQuestionService,
+  ChatbotService,
+} from '../services';
 import { ChatbotMessageJobData } from '../interfaces';
 import { ChatbotQuestion } from '../models';
 import { UserType } from '../constants';
@@ -13,6 +17,7 @@ export class ChatbotMessageProcessor {
   constructor(
     private chatService: ChatService,
     private chatbotService: ChatbotService,
+    private chatbotQuestionService: ChatbotQuestionService,
   ) {}
 
   @Process()
@@ -69,7 +74,9 @@ export class ChatbotMessageProcessor {
     message: ChatbotMessageJobData['message'],
   ) {
     for (const questionBaseId of questionBaseIds) {
-      const questions = await this.chatbotService.getQuestions(questionBaseId);
+      const questions = await this.chatbotQuestionService.getQuestions(
+        questionBaseId,
+      );
       for (const question of questions) {
         const processed = await this.processQuestion(
           conversationId,
