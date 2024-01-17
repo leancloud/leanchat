@@ -54,8 +54,9 @@ export function ChatbotTester({ chatbot }: ChatbotTesterProps) {
   const { data: bases } = useChatbotQuestionBases();
 
   const currentBaseNames = useMemo(() => {
-    if (bases && context.questionBaseIds) {
-      return context.questionBaseIds
+    const baseIds = context.questionBaseIds || chatbot.initialQuestionBaseIds;
+    if (bases) {
+      return baseIds
         .map((id) => bases.find((base) => base.id === id))
         .map((base) => base?.name)
         .filter(Boolean);
