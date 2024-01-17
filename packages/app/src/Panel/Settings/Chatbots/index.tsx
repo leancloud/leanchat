@@ -122,7 +122,7 @@ export function Chatbots() {
         onCancel={() => setTestingChatbot(undefined)}
         footer={null}
       >
-        {testingChatbot && <ChatbotTester chatbotId={testingChatbot.id} />}
+        {testingChatbot && <ChatbotTester chatbot={testingChatbot} />}
       </Modal>
     </Container>
   );

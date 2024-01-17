@@ -3,9 +3,10 @@ import { useMutation } from '@tanstack/react-query';
 import { Input } from 'antd';
 import cx from 'classnames';
 
+import { Chatbot } from '@/Panel/types';
 import { TestChatbotData, testChatbot } from '@/Panel/api/chatbot';
-import { MdMessage } from '@/Panel/Conversations/components/MdMessage';
 import { useChatbotQuestionBases } from '@/Panel/hooks/chatbot';
+import { MdMessage } from '@/Panel/Conversations/components/MdMessage';
 
 interface TestMessage {
   isBot?: true;
@@ -13,13 +14,18 @@ interface TestMessage {
 }
 
 export interface ChatbotTesterProps {
-  chatbotId: string;
+  chatbot: Chatbot;
 }
 
-export function ChatbotTester({ chatbotId }: ChatbotTesterProps) {
+export function ChatbotTester({ chatbot }: ChatbotTesterProps) {
   const [context, setContext] = useState<TestChatbotData['context']>({});
   const [input, setInput] = useState('');
-  const [messages, setMessages] = useState<TestMessage[]>([]);
+  const [messages, setMessages] = useState<TestMessage[]>(() => [
+    {
+      isBot: true,
+      text: chatbot.greetingMessage.text,
+    },
+  ]);
 
   const messageBoxRef = useRef<HTMLDivElement>(null!);
 
@@ -37,7 +43,7 @@ export function ChatbotTester({ chatbotId }: ChatbotTesterProps) {
     if (trimedInput) {
       setInput('');
       setMessages((messages) => [...messages, { text: trimedInput }]);
-      test({ id: chatbotId, context, input: trimedInput });
+      test({ id: chatbot.id, context, input: trimedInput });
     }
   };
 
@@ -58,13 +64,13 @@ export function ChatbotTester({ chatbotId }: ChatbotTesterProps) {
 
   return (
     <div className="flex flex-col h-[70vh] overflow-auto">
-      <div ref={messageBoxRef} className="grow space-y-1 overflow-auto my-2">
+      <div ref={messageBoxRef} className="grow space-y-2 overflow-auto my-2">
         {messages.map(({ text, isBot }, index) => (
           <div
             key={index}
-            className={cx('clear-both px-2 py-1 rounded bg-gray-200', {
-              'float-left': isBot,
-              'float-right': !isBot,
+            className={cx('clear-both px-2 py-1 rounded max-w-[95%]', {
+              'float-left bg-gray-200': isBot,
+              'float-right bg-primary text-white': !isBot,
             })}
           >
             <MdMessage>{text}</MdMessage>
