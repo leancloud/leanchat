@@ -31,6 +31,7 @@ export class ChatbotMessageProcessor {
 
     const globalProcessed = await this.processQuestionBases(
       conversationId,
+      chatbot.id,
       chatbot.globalQuestionBaseIds,
       message,
     );
@@ -48,6 +49,7 @@ export class ChatbotMessageProcessor {
 
     const currentProcessed = await this.processQuestionBases(
       conversationId,
+      chatbot.id,
       ctx.questionBaseIds,
       message,
     );
@@ -70,6 +72,7 @@ export class ChatbotMessageProcessor {
 
   async processQuestionBases(
     conversationId: string,
+    chatbotId: string,
     questionBaseIds: string[] | Types.ObjectId[],
     message: ChatbotMessageJobData['message'],
   ) {
@@ -80,6 +83,7 @@ export class ChatbotMessageProcessor {
       for (const question of questions) {
         const processed = await this.processQuestion(
           conversationId,
+          chatbotId,
           question,
           message,
         );
@@ -93,6 +97,7 @@ export class ChatbotMessageProcessor {
 
   async processQuestion(
     conversationId: string,
+    chatbotId: string,
     question: ChatbotQuestion,
     message: ChatbotMessageJobData['message'],
   ) {
@@ -110,15 +115,19 @@ export class ChatbotMessageProcessor {
       queue: {
         position: queuePosition,
       },
-    });
+    }).trim();
 
-    await this.chatService.createMessage({
-      conversationId,
-      from: {
-        type: UserType.Chatbot,
-      },
-      data: { text },
-    });
+    if (text) {
+      await this.chatService.createMessage({
+        conversationId,
+        from: {
+          type: UserType.Chatbot,
+          id: chatbotId,
+        },
+        data: { text },
+      });
+    }
+
     if (question.nextQuestionBaseId) {
       context.questionBaseIds = [question.nextQuestionBaseId.toHexString()];
     }
