@@ -46,6 +46,7 @@ export class ChatbotService {
     }
     chatbot.globalQuestionBaseIds = objectId(data.globalQuestionBaseIds);
     chatbot.initialQuestionBaseIds = objectId(data.initialQuestionBaseIds);
+    chatbot.greetingMessage = data.greetingMessage;
     chatbot.noMatchMessage = data.noMatchMessage;
     return chatbot.save();
   }
