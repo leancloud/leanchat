@@ -2,14 +2,11 @@ import { BadRequestException, Injectable } from '@nestjs/common';
 import { EventEmitter2, OnEvent } from '@nestjs/event-emitter';
 import { InjectQueue } from '@nestjs/bull';
 import { Queue } from 'bull';
-import _ from 'lodash';
-import Handlebars from 'handlebars';
 import { differenceInDays } from 'date-fns';
 import { InjectModel } from '@m8a/nestjs-typegoose';
 import { ReturnModelType } from '@typegoose/typegoose';
 
 import { InjectRedis, Redis } from 'src/redis';
-import { ConfigService } from 'src/config';
 import {
   CloseConversationOptions,
   ConversationEvaluation,
@@ -55,7 +52,6 @@ export class ChatService {
     private messageService: MessageService,
     private operatorService: OperatorService,
     private visitorService: VisitorService,
-    private configService: ConfigService,
     private ppLogService: PostprocessingLogService,
 
     @InjectQueue('auto_assign_conversation')
@@ -83,15 +79,19 @@ export class ChatService {
     });
 
     const convData: UpdateConversationData = {};
-    if (from.type === UserType.Visitor) {
-      convData.visitorLastActivityAt = message.createdAt;
-      if (!conversation.visitorWaitingSince) {
-        convData.visitorWaitingSince = message.createdAt;
-      }
-    }
-    if (from.type === UserType.Operator) {
-      convData.operatorLastActivityAt = message.createdAt;
-      convData.visitorWaitingSince = null;
+
+    switch (from.type) {
+      case UserType.Visitor:
+        convData.visitorLastActivityAt = message.createdAt;
+        if (!conversation.visitorWaitingSince) {
+          convData.visitorWaitingSince = message.createdAt;
+        }
+        break;
+      case UserType.Operator:
+      case UserType.Chatbot:
+        convData.operatorLastActivityAt = message.createdAt;
+        convData.visitorWaitingSince = null;
+        break;
     }
 
     await this.conversationService.updateConversation(
@@ -263,22 +263,6 @@ export class ChatService {
     return !!operator;
   }
 
-  async getRandomReadyOperator() {
-    let readyOperators = await this.operatorService.getReadyOperators();
-
-    readyOperators = readyOperators.filter(
-      (operator) =>
-        operator.workload !== undefined &&
-        operator.workload < operator.concurrency,
-    );
-
-    if (readyOperators.length === 0) {
-      return;
-    }
-
-    return _.minBy(_.shuffle(readyOperators), (o) => o.workload);
-  }
-
   async assignConversation(
     conversation: Conversation | string,
     operator: Operator | string,
@@ -364,15 +348,15 @@ export class ChatService {
   }
 
   @OnEvent('conversation.created', { async: true })
-  async addAutoAssignJob({ conversation }: ConversationCreatedEvent) {
-    const queueSize = await this.getQueueLength();
-    if (queueSize === 0) {
-      await this.autoAssignQueue.add({
-        conversationId: conversation.id,
-      });
-    } else {
-      await this.enqueueConversation(conversation.id);
-    }
+  handleAutoAssign({ conversation }: ConversationCreatedEvent) {
+    this.autoAssignQueue.add({
+      conversationId: conversation.id,
+      chatbot: true,
+    });
+  }
+
+  async addAutoAssignJob(conversationId: string) {
+    await this.autoAssignQueue.add({ conversationId });
   }
 
   async enqueueConversation(conversationId: string) {
@@ -385,30 +369,12 @@ export class ChatService {
       conversationId,
     );
     if (!added) {
-      return;
+      return false;
     }
     await this.conversationService.updateConversation(conversationId, {
       queuedAt,
     });
-
-    const queueConfig = await this.configService.get('queue');
-    if (queueConfig) {
-      const queuePosition = await this.getQueuePosition(conversationId);
-      const template = Handlebars.compile(queueConfig.queuedMessage.text);
-      await this.createMessage({
-        conversationId,
-        from: {
-          type: UserType.System,
-        },
-        data: {
-          text: template({
-            queue: {
-              position: queuePosition,
-            },
-          }),
-        },
-      });
-    }
+    return true;
   }
 
   async dequeueConversation() {

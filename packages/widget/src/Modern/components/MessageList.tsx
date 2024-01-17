@@ -5,7 +5,8 @@ import remarkGfm from 'remark-gfm';
 import cx from 'classnames';
 
 import { Message, MessageType, UserType } from '../../types';
-import { bytesToSize } from '../helpers';
+import { useChat } from '../../chat';
+import { bytesToSize, safeParseURL } from '../helpers';
 
 interface MessageBubbleProps {
   children?: ReactNode;
@@ -74,7 +75,28 @@ function LogMessage({ content }: LogMessageProps) {
 }
 
 const markdownComponents: Components = {
-  a: (props) => <a {...props} target="_blank" rel="noopener noreferrer" />,
+  a: (props) => {
+    const { send } = useChat();
+    const url = props.href ? safeParseURL(props.href) : undefined;
+    if (url) {
+      if (url.protocol === 'chat:' && (url.host === 'send' || url.pathname === '//send')) {
+        const text = url.searchParams.get('text');
+        if (text) {
+          return (
+            <a
+              {...props}
+              href="#"
+              onClick={(e) => {
+                e.preventDefault();
+                send({ text });
+              }}
+            />
+          );
+        }
+      }
+    }
+    return <a {...props} target="_blank" rel="noopener noreferrer" />;
+  },
 };
 
 interface MessageItemProps {
@@ -88,9 +110,10 @@ const MessageItem = memo(({ message }: MessageItemProps) => {
         return (
           <MessageBubble isVisitor={message.from.type === UserType.Visitor}>
             <Markdown
-              className="text-sm whitespace-pre-line break-all"
+              className="text-sm markdown-body"
               remarkPlugins={[remarkGfm]}
               components={markdownComponents}
+              urlTransform={(url) => url}
             >
               {message.data.text}
             </Markdown>

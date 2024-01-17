@@ -4,7 +4,7 @@ import cx from 'classnames';
 
 import { useAppContext } from '../AppContext';
 import { useEffectEvent } from '../hooks/useEventEffect';
-import { useChat } from '../chat';
+import { useChat, useOnInviteEvaluation } from '../chat';
 import { ReplyInput } from './components/ReplyInput';
 import { MessageList } from './components/MessageList';
 import { useWindowSize } from './hooks/useWindowSize';
@@ -23,11 +23,11 @@ export default function Modern() {
   const [showEvaluationModal, setShowEvaluationModal] = useState(false);
 
   const { connected, reconnecting, conversation, messages, evaluationTag, send, evaluate, close } =
-    useChat({
-      onInviteEvaluation: () => {
-        setShowEvaluationModal(true);
-      },
-    });
+    useChat();
+
+  useOnInviteEvaluation(() => {
+    setShowEvaluationModal(true);
+  });
 
   const evaluable = Boolean(
     conversation && conversation.operatorJoined && !conversation.evaluation,
@@ -151,7 +151,12 @@ export default function Modern() {
             <ReplyInput
               ref={replyRef}
               disabled={!connected}
-              onReplyText={(text) => send({ text })}
+              onReplyText={(text) => {
+                if (text.length > 1000) {
+                  return alert('内容过长');
+                }
+                send({ text });
+              }}
               onReplyFile={(fileId) => send({ fileId })}
               evaluable={evaluable}
               onClickEvaluate={() => setShowEvaluationModal(true)}

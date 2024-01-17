@@ -38,8 +38,8 @@ export class ConfigService {
     this.cache.delete(key);
   }
 
-  async getConfig<T = any>(key: string) {
-    if (this.cache.has(key)) {
+  async getConfig<T = any>(key: string, cache = true) {
+    if (cache && this.cache.has(key)) {
       return this.cache.get(key) as T;
     }
 

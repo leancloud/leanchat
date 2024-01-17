@@ -8,6 +8,7 @@ export enum UserType {
   Visitor = 1,
   Operator = 2,
   System = 3,
+  Chatbot = 4,
 }
 
 export enum ConsultationResult {
@@ -38,4 +39,14 @@ export enum Channel {
 export enum ConversationStatus {
   Open = 1,
   Closed = 2,
+}
+
+export enum ChatbotQuestionMatcher {
+  Equal = 1,
+  Substring = 2,
+}
+
+export enum ChatbotAcceptRule {
+  New = 1,
+  Queued = 2,
 }

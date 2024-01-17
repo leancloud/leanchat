@@ -161,6 +161,7 @@ export class ConversationService {
 
     const $set: AnyKeys<Conversation> = {
       status: data.status,
+      chatbotId: data.chatbotId,
       operatorId: data.operatorId,
       categoryId: data.categoryId,
       evaluation: data.evaluation,

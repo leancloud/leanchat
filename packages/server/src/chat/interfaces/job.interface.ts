@@ -1,5 +1,6 @@
 export interface AutoAssignJobData {
   conversationId: string;
+  chatbot?: boolean;
 }
 
 export interface AssignQueuedJobData {

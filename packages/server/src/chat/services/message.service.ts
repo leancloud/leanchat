@@ -27,6 +27,7 @@ export class MessageService {
     await message.save();
 
     this.events.emit('message.created', {
+      conversation,
       message,
     } satisfies MessageCreatedEvent);
 

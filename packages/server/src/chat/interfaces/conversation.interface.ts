@@ -38,6 +38,7 @@ export interface ConversationEvaluation {
 
 export interface UpdateConversationData {
   status?: ConversationStatus;
+  chatbotId?: string;
   operatorId?: string;
   categoryId?: string;
   evaluation?: ConversationEvaluation;

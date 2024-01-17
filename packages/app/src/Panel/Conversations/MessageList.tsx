@@ -34,7 +34,13 @@ import { useOperatorName } from './hooks/useOperatorName';
 import { EvaluationStar } from './components/EvaluationStar';
 
 const markdownComponents: Components = {
-  a: (props) => <a {...props} target="_blank" rel="noopener noreferrer" />,
+  a: (props) => {
+    if (props.href) {
+      return <a {...props} target="_blank" rel="noopener noreferrer" />;
+    } else {
+      return <span {...props} />;
+    }
+  },
 };
 
 interface DateGroup {
@@ -131,6 +137,7 @@ function MessageGroup({ from, isLeft, messages, operatorMap }: MessageGroupProps
         }
         return `客服 ${from.id.slice(-6)}`;
       case UserType.System:
+      case UserType.Chatbot:
         return '机器人客服';
     }
   };
@@ -153,7 +160,7 @@ function MessageGroup({ from, isLeft, messages, operatorMap }: MessageGroupProps
           {message.data.text && (
             <Bubble isVisitor={isLeft}>
               <Markdown
-                className="min-w-[16px] whitespace-pre-line break-all"
+                className="min-w-[16px] markdown-body"
                 remarkPlugins={[remarkGfm]}
                 components={markdownComponents}
               >

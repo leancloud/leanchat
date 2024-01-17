@@ -1,5 +1,7 @@
 export * from './api.controller';
 export * from './category.controller';
+export * from './chatbot.controller';
+export * from './chatbot-question-base.controller';
 export * from './config.controller';
 export * from './conversation.controller';
 export * from './operator-group.controller';

@@ -3,6 +3,9 @@ import { Module } from '@nestjs/common';
 import { BullModule } from '@nestjs/bull';
 
 import {
+  Chatbot,
+  ChatbotQuestion,
+  ChatbotQuestionBase,
   Conversation,
   Message,
   Operator,
@@ -11,6 +14,8 @@ import {
 } from './models';
 import {
   ChatService,
+  ChatbotQuestionService,
+  ChatbotService,
   ConversationService,
   MessageService,
   OperatorService,
@@ -21,12 +26,16 @@ import {
 import {
   AssignQueuedProcessor,
   AutoAssignProcessor,
+  ChatbotMessageProcessor,
   ConversationStatsProcessor,
 } from './processors';
 
 @Module({
   imports: [
     TypegooseModule.forFeature([
+      Chatbot,
+      ChatbotQuestion,
+      ChatbotQuestionBase,
       Conversation,
       Message,
       Visitor,
@@ -43,6 +52,9 @@ import {
       {
         name: 'conversation_stats',
       },
+      {
+        name: 'chatbot_message',
+      },
     ),
   ],
   providers: [
@@ -56,9 +68,14 @@ import {
     ConversationStatsProcessor,
     StatsService,
     PostprocessingLogService,
+    ChatbotService,
+    ChatbotQuestionService,
+    ChatbotMessageProcessor,
   ],
   exports: [
     ChatService,
+    ChatbotService,
+    ChatbotQuestionService,
     ConversationService,
     MessageService,
     VisitorService,

@@ -49,7 +49,7 @@ export class ConfigController {
 
   @Get(':key')
   async getGreetingConfig(@Param('key') key: string, @Res() res: Response) {
-    const value = await this.configService.getConfig(key);
+    const value = await this.configService.getConfig(key, false);
     res.json(value || null);
   }
 }

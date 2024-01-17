@@ -1,3 +1,5 @@
+export * from './chatbot.interface';
+export * from './chatbot-question.interface';
 export * from './conversation.interface';
 export * from './job.interface';
 export * from './message.interface';
