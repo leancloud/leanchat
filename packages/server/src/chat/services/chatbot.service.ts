@@ -10,7 +10,7 @@ import { InjectRedis, Redis } from 'src/redis';
 import { objectId } from 'src/helpers';
 import { Chatbot, ChatbotQuestion } from '../models';
 import {
-  ChatbotConversationContext,
+  ChatbotContext,
   ChatbotMessageJobData,
   CreateChatbotData,
   UpdateChatbotData,
@@ -80,9 +80,7 @@ export class ChatbotService {
     return this.Chatbot.find().exec();
   }
 
-  async getContext(
-    conversationId: string,
-  ): Promise<ChatbotConversationContext> {
+  async getContext(conversationId: string): Promise<ChatbotContext> {
     const ctx = await this.redis.get(`bot_ctx:conv:${conversationId}`);
     if (ctx) {
       return JSON.parse(ctx);
@@ -90,7 +88,7 @@ export class ChatbotService {
     return {};
   }
 
-  async setContext(conversationId: string, data: ChatbotConversationContext) {
+  async setContext(conversationId: string, data: ChatbotContext) {
     await this.redis.set(
       `bot_ctx:conv:${conversationId}`,
       JSON.stringify(data),

@@ -55,6 +55,22 @@ export interface UpdateChatbotData {
   noMatchMessage?: ChatbotMessage;
 }
 
+interface ChatbotContext {
+  questionBaseIds?: string[];
+  operatorAssigned?: boolean;
+}
+
+export interface TestChatbotData {
+  id: string;
+  context: ChatbotContext;
+  input: string;
+}
+
+export interface TestChatbotResult {
+  context: ChatbotContext;
+  text: string;
+}
+
 export async function createQuestionBase(data: CreateQuestionBaseData) {
   const res = await client.post<ChatbotQuestionBase>('/chatbot-question-bases', data);
   return res.data;
@@ -118,5 +134,10 @@ export async function updateChatbot({ id, ...data }: UpdateChatbotData) {
 
 export async function getChatbots() {
   const res = await client.get<Chatbot[]>('/chatbots');
+  return res.data;
+}
+
+export async function testChatbot({ id, ...data }: TestChatbotData) {
+  const res = await client.post<TestChatbotResult>(`/chatbots/${id}/test`, data);
   return res.data;
 }

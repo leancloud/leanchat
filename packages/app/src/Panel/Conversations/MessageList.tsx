@@ -16,8 +16,6 @@ import {
 import { AiOutlineFile } from 'react-icons/ai';
 import { FiArrowDown } from 'react-icons/fi';
 import { Divider, Image, Tooltip } from 'antd';
-import Markdown, { Components } from 'react-markdown';
-import remarkGfm from 'remark-gfm';
 import useResizeObserver from 'use-resize-observer';
 import dayjs from 'dayjs';
 import cx from 'classnames';
@@ -32,16 +30,7 @@ import style from './MessageList.module.css';
 import { bytesToSize } from './utils';
 import { useOperatorName } from './hooks/useOperatorName';
 import { EvaluationStar } from './components/EvaluationStar';
-
-const markdownComponents: Components = {
-  a: (props) => {
-    if (props.href) {
-      return <a {...props} target="_blank" rel="noopener noreferrer" />;
-    } else {
-      return <span {...props} />;
-    }
-  },
-};
+import { MdMessage } from './components/MdMessage';
 
 interface DateGroup {
   date: dayjs.Dayjs;
@@ -159,13 +148,7 @@ function MessageGroup({ from, isLeft, messages, operatorMap }: MessageGroupProps
         >
           {message.data.text && (
             <Bubble isVisitor={isLeft}>
-              <Markdown
-                className="min-w-[16px] markdown-body"
-                remarkPlugins={[remarkGfm]}
-                components={markdownComponents}
-              >
-                {message.data.text}
-              </Markdown>
+              <MdMessage>{message.data.text}</MdMessage>
             </Bubble>
           )}
           {message.data.file && <FileMessage file={message.data.file} />}

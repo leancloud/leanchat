@@ -1,6 +1,6 @@
 import { ChatbotAcceptRule } from '../constants';
 
-export interface ChatbotConversationContext {
+export interface ChatbotContext {
   questionBaseIds?: string[];
   operatorAssigned?: boolean;
 }

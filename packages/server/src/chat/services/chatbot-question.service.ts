@@ -116,4 +116,18 @@ export class ChatbotQuestionService {
       await this.Question.bulkSave(questions);
     }
   }
+
+  async matchQuestion(
+    questionBaseIds: string[] | Types.ObjectId[],
+    input: string,
+  ) {
+    for (const questionBaseId of questionBaseIds) {
+      const questions = await this.getQuestions(questionBaseId);
+      for (const question of questions) {
+        if (question.match(input)) {
+          return question;
+        }
+      }
+    }
+  }
 }

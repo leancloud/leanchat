@@ -1,7 +1,7 @@
 import { useRef, useState } from 'react';
 import { AiFillRobot } from 'react-icons/ai';
 import { useMutation } from '@tanstack/react-query';
-import { Button, Table } from 'antd';
+import { Button, Modal, Table } from 'antd';
 
 import { Chatbot } from '@/Panel/types';
 import { createChatbot, updateChatbot } from '@/Panel/api/chatbot';
@@ -9,6 +9,7 @@ import { useChatbots } from '@/Panel/hooks/chatbot';
 import { Container } from '../components/Container';
 import { ChatbotFormModal, ChatbotFormModalRef } from './ChatbotFormModal';
 import { ChatbotFormData } from './ChatbotForm';
+import { ChatbotTester } from './ChatbotTester';
 
 export function Chatbots() {
   const { data: chatbots, refetch } = useChatbots();
@@ -61,6 +62,8 @@ export function Chatbots() {
     }
   };
 
+  const [testingChatbot, setTestingChatbot] = useState<Chatbot>();
+
   return (
     <Container
       header={{
@@ -102,10 +105,25 @@ export function Chatbots() {
           {
             key: 'actions',
             title: '操作',
-            render: (chatbot: Chatbot) => <a onClick={() => handleEdit(chatbot)}>编辑</a>,
+            render: (chatbot: Chatbot) => (
+              <div className="space-x-1">
+                <a onClick={() => handleEdit(chatbot)}>编辑</a>
+                <a onClick={() => setTestingChatbot(chatbot)}>测试</a>
+              </div>
+            ),
           },
         ]}
       />
+
+      <Modal
+        destroyOnClose
+        title={testingChatbot?.name}
+        open={!!testingChatbot}
+        onCancel={() => setTestingChatbot(undefined)}
+        footer={null}
+      >
+        {testingChatbot && <ChatbotTester chatbotId={testingChatbot.id} />}
+      </Modal>
     </Container>
   );
 }

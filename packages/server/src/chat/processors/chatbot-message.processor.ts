@@ -1,6 +1,5 @@
 import { Process, Processor } from '@nestjs/bull';
 import { Job } from 'bull';
-import { Types } from 'mongoose';
 import Handlebars from 'handlebars';
 
 import {
@@ -8,7 +7,7 @@ import {
   ChatbotQuestionService,
   ChatbotService,
 } from '../services';
-import { ChatbotMessageJobData } from '../interfaces';
+import { ChatbotContext, ChatbotMessageJobData } from '../interfaces';
 import { ChatbotQuestion } from '../models';
 import { UserType } from '../constants';
 
@@ -29,33 +28,50 @@ export class ChatbotMessageProcessor {
       return;
     }
 
-    const globalProcessed = await this.processQuestionBases(
-      conversationId,
-      chatbot.id,
-      chatbot.globalQuestionBaseIds,
-      message,
-    );
-    if (globalProcessed) {
-      return;
+    const context = await this.chatbotService.getContext(conversationId);
+
+    if (chatbot.globalQuestionBaseIds.length) {
+      const question = await this.chatbotQuestionService.matchQuestion(
+        chatbot.globalQuestionBaseIds,
+        message.text,
+      );
+      if (question) {
+        await this.processQuestion(
+          conversationId,
+          chatbot.id,
+          question,
+          context,
+          false,
+        );
+        await this.chatbotService.setContext(conversationId, context);
+        return;
+      }
     }
 
-    const ctx = await this.chatbotService.getContext(conversationId);
-    if (!ctx.questionBaseIds) {
-      ctx.questionBaseIds = chatbot.initialQuestionBaseIds.map((id) =>
-        id.toHexString(),
+    if (!context.questionBaseIds) {
+      context.questionBaseIds = chatbot.initialQuestionBaseIds.map((id) =>
+        id.toString(),
       );
     }
-    await this.chatbotService.setContext(conversationId, ctx);
 
-    const currentProcessed = await this.processQuestionBases(
-      conversationId,
-      chatbot.id,
-      ctx.questionBaseIds,
-      message,
-    );
-    if (currentProcessed) {
-      return;
+    if (context.questionBaseIds.length) {
+      const question = await this.chatbotQuestionService.matchQuestion(
+        context.questionBaseIds,
+        message.text,
+      );
+      if (question) {
+        await this.processQuestion(
+          conversationId,
+          chatbot.id,
+          question,
+          context,
+        );
+        await this.chatbotService.setContext(conversationId, context);
+        return;
+      }
     }
+
+    await this.chatbotService.setContext(conversationId, context);
 
     // no match
     await this.chatService.createMessage({
@@ -70,43 +86,14 @@ export class ChatbotMessageProcessor {
     });
   }
 
-  async processQuestionBases(
-    conversationId: string,
-    chatbotId: string,
-    questionBaseIds: string[] | Types.ObjectId[],
-    message: ChatbotMessageJobData['message'],
-  ) {
-    for (const questionBaseId of questionBaseIds) {
-      const questions = await this.chatbotQuestionService.getQuestions(
-        questionBaseId,
-      );
-      for (const question of questions) {
-        const processed = await this.processQuestion(
-          conversationId,
-          chatbotId,
-          question,
-          message,
-        );
-        if (processed) {
-          return true;
-        }
-      }
-    }
-    return false;
-  }
-
   async processQuestion(
     conversationId: string,
     chatbotId: string,
     question: ChatbotQuestion,
-    message: ChatbotMessageJobData['message'],
+    context: ChatbotContext,
+    switchBase = true,
   ) {
-    if (!question.match(message.text)) {
-      return false;
-    }
-
     const template = Handlebars.compile(question.answer.text);
-    const context = await this.chatbotService.getContext(conversationId);
     const queuePosition = await this.chatService.getQueuePosition(
       conversationId,
     );
@@ -128,14 +115,12 @@ export class ChatbotMessageProcessor {
       });
     }
 
-    if (question.nextQuestionBaseId) {
-      context.questionBaseIds = [question.nextQuestionBaseId.toHexString()];
+    if (switchBase && question.nextQuestionBaseId) {
+      context.questionBaseIds = [question.nextQuestionBaseId.toString()];
     }
     if (question.assignOperator && !context.operatorAssigned) {
       await this.chatService.addAutoAssignJob(conversationId);
       context.operatorAssigned = true;
     }
-    await this.chatbotService.setContext(conversationId, context);
-    return true;
   }
 }
