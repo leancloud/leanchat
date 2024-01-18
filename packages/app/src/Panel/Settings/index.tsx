@@ -14,17 +14,20 @@ import { HiUserGroup, HiTag } from 'react-icons/hi2';
 import { FaUserCheck, FaUserFriends } from 'react-icons/fa';
 import { IoFlashOutline } from 'react-icons/io5';
 import { BsFillChatLeftDotsFill } from 'react-icons/bs';
+import { AiFillRobot, AiFillBook } from 'react-icons/ai';
 import cx from 'classnames';
 
+import { OperatorRole } from '../types';
+import { useCurrentUser } from '../auth';
 import { NavButton, NavMenu } from '../components/NavMenu';
+import { RequireRole } from '../components/RequireRole';
 import { Operators, NewOperator, EditOperator } from './Team/Operators';
 import { OperatorGroups } from './Team/OperatorGroups';
 import { Categories } from './Categories';
 import { QuickReplies } from './QuickReplies';
 import { ChatConfig } from './ChatConfig';
-import { OperatorRole } from '../types';
-import { useCurrentUser } from '../auth';
-import { RequireRole } from '../components/RequireRole';
+import { QuestionBases, QuestionBase } from './QuestionBases';
+import { Chatbots } from './Chatbots';
 
 interface NavSection {
   name: string;
@@ -79,6 +82,18 @@ const navs: NavSection[] = [
         icon: IoFlashOutline,
         name: '快捷回复',
         path: 'quick-replies',
+      },
+      {
+        icon: AiFillBook,
+        name: '问题库',
+        path: 'question-bases',
+        roles: [OperatorRole.Admin],
+      },
+      {
+        icon: AiFillRobot,
+        name: '聊天机器人',
+        path: 'chatbots',
+        roles: [OperatorRole.Admin],
       },
     ],
   },
@@ -249,6 +264,32 @@ export default function Settings() {
           }
         />
         <Route path="quick-replies" element={<QuickReplies />} />
+        <Route path="question-bases">
+          <Route
+            index
+            element={
+              <RequireRole roles={[OperatorRole.Admin]}>
+                <QuestionBases />
+              </RequireRole>
+            }
+          />
+          <Route
+            path=":id"
+            element={
+              <RequireRole roles={[OperatorRole.Admin]}>
+                <QuestionBase />
+              </RequireRole>
+            }
+          />
+        </Route>
+        <Route
+          path="chatbots"
+          element={
+            <RequireRole roles={[OperatorRole.Admin]}>
+              <Chatbots />
+            </RequireRole>
+          }
+        />
       </Route>
       {defaultPath && <Route path="*" element={<Navigate to={defaultPath} replace />} />}
     </Routes>

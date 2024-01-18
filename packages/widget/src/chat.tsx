@@ -133,33 +133,18 @@ function useEffectEvent<T extends (...args: any[]) => any>(callback: T): T {
   return useCallback((...args: any[]) => ref.current(...args), []) as T;
 }
 
-interface UseChatOptions {
-  onInviteEvaluation?: () => void;
+export function useChat() {
+  const chatCtx = useContext(ChatContext);
+  return chatCtx;
 }
 
-export function useChat(options: UseChatOptions = {}) {
-  const { onInviteEvaluation } = options;
-
-  const chatCtx = useContext(ChatContext);
-
-  const { socket } = chatCtx;
-
-  const anyListener = useEffectEvent((event: string) => {
-    switch (event) {
-      case 'inviteEvaluation':
-        if (onInviteEvaluation && chatCtx.conversation) {
-          onInviteEvaluation();
-        }
-        break;
-    }
-  });
-
+export function useOnInviteEvaluation(listener: () => void) {
+  const { socket } = useChat();
+  const _listener = useEffectEvent(listener);
   useEffect(() => {
-    socket.onAny(anyListener);
+    socket.on('inviteEvaluation', _listener);
     return () => {
-      socket.offAny(anyListener);
+      socket.off('inviteEvaluation', _listener);
     };
   }, []);
-
-  return chatCtx;
 }

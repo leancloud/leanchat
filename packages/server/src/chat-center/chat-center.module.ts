@@ -22,6 +22,8 @@ import {
 import {
   APIController,
   CategoryController,
+  ChatbotController,
+  ChatbotQuestionBaseController,
   ConfigController,
   ConversationController,
   OperatorController,
@@ -64,6 +66,8 @@ import { MessageDto } from './dtos/message';
     ConfigController,
     StatisticsController,
     OperatorGroupController,
+    ChatbotController,
+    ChatbotQuestionBaseController,
   ],
 })
 export class ChatCenterModule implements OnModuleInit {

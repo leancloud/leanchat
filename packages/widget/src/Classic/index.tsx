@@ -13,7 +13,7 @@ import {
 } from 'react-icons/fa6';
 import cx from 'classnames';
 
-import { useChat } from '../chat';
+import { useChat, useOnInviteEvaluation } from '../chat';
 import { ConversationStatus, EvaluateData, Message, MessageType } from '../types';
 import { Modal } from './Modal';
 import { ProgressMessage, TextMessage } from './Message';
@@ -192,10 +192,9 @@ export function Classic() {
     setShowEvaluationModal(true);
   };
 
-  const { status, conversation, messages, send, evaluate, close } = useChat({
-    onInviteEvaluation: () => {
-      setShowEvaluationModal(true);
-    },
+  const { status, conversation, messages, send, evaluate, close } = useChat();
+  useOnInviteEvaluation(() => {
+    setShowEvaluationModal(true);
   });
 
   const isBusy = status === 'busy';

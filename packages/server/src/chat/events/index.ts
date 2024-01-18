@@ -12,6 +12,7 @@ export interface ConversationUpdatedEvent {
 }
 
 export interface MessageCreatedEvent {
+  conversation: Conversation;
   message: Message;
 }
 

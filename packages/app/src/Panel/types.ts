@@ -119,6 +119,7 @@ export enum UserType {
   Visitor = 1,
   Operator = 2,
   System = 3,
+  Chatbot = 4,
 }
 
 export enum ConsultationResult {
@@ -144,6 +145,39 @@ export interface OperatorGroup {
   id: string;
   name: string;
   operatorIds: string[];
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface ChatbotMessage {
+  text: string;
+}
+
+export interface Chatbot {
+  id: string;
+  name: string;
+  acceptRule: number;
+  globalQuestionBaseIds: string[];
+  initialQuestionBaseIds: string[];
+  greetingMessage: ChatbotMessage;
+  noMatchMessage: ChatbotMessage;
+}
+
+export interface ChatbotQuestionBase {
+  id: string;
+  name: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface ChatbotQuestion {
+  id: string;
+  matcher: number;
+  question: string;
+  similarQuestions?: string[];
+  answer: ChatbotMessage;
+  nextQuestionBaseId?: string;
+  assignOperator?: boolean;
   createdAt: string;
   updatedAt: string;
 }

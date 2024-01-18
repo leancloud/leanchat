@@ -128,6 +128,9 @@ export class Conversation {
   visitorId: Types.ObjectId;
 
   @Prop()
+  chatbotId?: Types.ObjectId;
+
+  @Prop()
   operatorId?: Types.ObjectId;
 
   @Prop()

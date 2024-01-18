@@ -1,0 +1,20 @@
+.markdown-body p {
+  white-space: pre-line;
+  word-break: break-all;
+}
+
+.markdown-body ul,
+.markdown-body ol {
+  list-style-type: decimal;
+  padding-left: 2em;
+}
+
+.markdown-body p,
+.markdown-body ul,
+.markdown-body ol {
+  margin-bottom: 0.5em;
+}
+
+.markdown-body>*:last-child {
+  margin-bottom: 0 !important;
+}
