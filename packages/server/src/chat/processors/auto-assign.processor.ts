@@ -59,6 +59,12 @@ export class AutoAssignProcessor {
           },
         });
       }
+      await this.chatService.closeConversation({
+        conversationId,
+        by: {
+          type: UserType.System,
+        },
+      });
       return;
     }
 
@@ -70,29 +76,13 @@ export class AutoAssignProcessor {
       return;
     }
 
-    const queueConfig = await this.configService.get('queue');
-    if (queueConfig?.capacity) {
-      const queueLength = await this.chatService.getQueueLength();
-      if (queueLength >= queueConfig.capacity) {
-        await this.chatService.createMessage({
-          conversationId,
-          from: {
-            type: UserType.System,
-          },
-          data: {
-            text: queueConfig.fullMessage.text,
-          },
-        });
-        return;
-      }
-    }
-
     const enqueued = await this.chatService.enqueueConversation(conversationId);
     if (!enqueued) {
       // already in queue
       return;
     }
 
+    const queueConfig = await this.configService.get('queue');
     if (queueConfig) {
       const queuePosition = await this.chatService.getQueuePosition(
         conversationId,
@@ -124,8 +114,6 @@ export class AutoAssignProcessor {
         operator.workload !== undefined &&
         operator.workload < operator.concurrency,
     );
-    if (availableOperators.length) {
-      return _.minBy(_.shuffle(availableOperators), (o) => o.workload);
-    }
+    return _.minBy(_.shuffle(availableOperators), (o) => o.workload);
   }
 }
