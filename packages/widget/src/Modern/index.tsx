@@ -52,12 +52,16 @@ export default function Modern() {
   const isMobile = isEmbedded ? windowSize.width <= 480 : true;
 
   const resize = useEffectEvent(() => {
-    const { innerHeight } = window.top || window;
+    const { innerHeight, document } = window.top || window;
     if (show) {
       if (isMobile) {
+        document.body.dataset.overflow = document.body.style.overflow;
+        document.body.style.overflow = 'hidden';
         iframe.style.width = '100vw';
         iframe.style.height = `${innerHeight}px`; // 100dvh !!!
       } else {
+        document.body.style.overflow = document.body.dataset.overflow ?? '';
+        delete document.body.dataset.overflow;
         iframe.style.width = '400px';
         iframe.style.height = `${Math.min(600, innerHeight)}px`;
       }
