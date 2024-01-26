@@ -15,7 +15,15 @@ import { EvaluateData } from '../types';
 const isEmbedded = !!(window.top && window.top !== window);
 
 export default function Modern() {
-  const { iframe, emitter } = useAppContext();
+  const { iframe, emitter, getDisplay } = useAppContext();
+
+  const [display, setDisplay] = useState(getDisplay);
+  useEffect(() => {
+    emitter.on('display', setDisplay);
+    return () => {
+      return emitter.off('display', setDisplay);
+    };
+  }, []);
 
   const windowSize = useWindowSize();
 
@@ -53,15 +61,17 @@ export default function Modern() {
 
   const resize = useEffectEvent(() => {
     const { innerHeight, document } = window.top || window;
+    if (!display) {
+      document.body.style.overflow = document.body.dataset.overflow ?? '';
+      return;
+    }
     if (show) {
       if (isMobile) {
-        document.body.dataset.overflow = document.body.style.overflow;
         document.body.style.overflow = 'hidden';
         iframe.style.width = '100vw';
         iframe.style.height = `${innerHeight}px`; // 100dvh !!!
       } else {
         document.body.style.overflow = document.body.dataset.overflow ?? '';
-        delete document.body.dataset.overflow;
         iframe.style.width = '400px';
         iframe.style.height = `${Math.min(600, innerHeight)}px`;
       }
@@ -78,7 +88,7 @@ export default function Modern() {
     }
   });
 
-  useEffect(resize, [windowSize, show]);
+  useEffect(resize, [windowSize, show, display]);
 
   const replyRef = useRef<HTMLTextAreaElement>(null);
 
@@ -99,12 +109,6 @@ export default function Modern() {
       return;
     }
     close();
-
-    // restore parent body overflow
-    const body = (window.top || window).document.body;
-    body.style.overflow = body.dataset.overflow ?? '';
-    delete body.dataset.overflow;
-
     emitter.emit('close');
   };
 

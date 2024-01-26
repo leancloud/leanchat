@@ -23,6 +23,7 @@ export class ChatManager {
   iframe?: HTMLIFrameElement;
   uri = '/';
   inited = false;
+  emitter = mitt();
 
   static getToken() {
     return localStorage.getItem('LeanChat/token') ?? undefined;
@@ -32,17 +33,27 @@ export class ChatManager {
     localStorage.setItem('LeanChat/token', token);
   }
 
+  async _setDisplay(display: boolean) {
+    if (!this.iframe) return;
+    if (display) {
+      this.iframe.style.display = 'block';
+    } else {
+      this.iframe.style.display = 'none';
+    }
+    this.emitter.emit('display', display);
+  }
+
   async open() {
     if (this.inited) {
-      if (this.iframe) {
-        this.iframe.style.display = 'block';
-      }
+      this._setDisplay(true);
       return;
     }
 
     this.inited = true;
 
     const topWindow = window.top || window;
+
+    topWindow.document.body.dataset.overflow = document.body.style.overflow;
 
     const iframeContainer = document.createElement('div');
     iframeContainer.id = 'leanchat-container';
@@ -72,8 +83,6 @@ export class ChatManager {
 
     const { render } = await import('./App');
 
-    const emitter = mitt();
-
     iframe.onload = () => {
       const style = document.createElement('style');
       style.textContent = css;
@@ -84,19 +93,20 @@ export class ChatManager {
       render(rootElement, {
         iframe,
         socket,
-        emitter,
+        emitter: this.emitter,
+        getDisplay: () => iframe.style.display !== 'none',
       });
 
       socket.connect();
     };
 
-    emitter.on('initialized', () => {
+    this.emitter.on('initialized', () => {
       iframeContainer.removeChild(loadingElement);
-      iframe.style.display = 'block';
+      this._setDisplay(true);
     });
 
-    emitter.on('close', () => {
-      iframe.style.display = 'none';
+    this.emitter.on('close', () => {
+      this._setDisplay(false);
     });
 
     iframeContainer.appendChild(iframe);

@@ -6,6 +6,7 @@ export interface AppContextValue {
   iframe: HTMLIFrameElement;
   socket: Socket;
   emitter: Emitter<any>;
+  getDisplay: () => boolean;
 }
 
 export const AppContext = createContext<AppContextValue>(undefined as any);
