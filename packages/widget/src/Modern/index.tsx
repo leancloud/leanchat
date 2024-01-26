@@ -44,17 +44,6 @@ export default function Modern() {
   useEffect(() => {
     iframe.style.position = 'fixed';
     iframe.style.inset = 'auto 0px 0px auto';
-    if (!isEmbedded && window.visualViewport) {
-      const vv = window.visualViewport;
-      const onResize = () => {
-        iframe.style.height = vv.height + 'px';
-        scrollToBottom();
-      };
-      vv.addEventListener('resize', onResize);
-      return () => {
-        vv.removeEventListener('resize', onResize);
-      };
-    }
   }, []);
 
   const isMobile = isEmbedded ? windowSize.width <= 480 : true;
