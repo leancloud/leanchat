@@ -99,6 +99,12 @@ export default function Modern() {
       return;
     }
     close();
+
+    // restore parent body overflow
+    const body = (window.top || window).document.body;
+    body.style.overflow = body.dataset.overflow ?? '';
+    delete body.dataset.overflow;
+
     emitter.emit('close');
   };
 
