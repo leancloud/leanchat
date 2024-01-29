@@ -75,7 +75,7 @@ export const ChatbotForm = forwardRef<FormInstance, ChatbotFormProps>(
           />
         </Form.Item>
 
-        <Form.Item label="工作时间" extra="仅在指定时间范围内接待用户，留空关闭该功能">
+        <Form.Item label="工作时间" extra="仅在指定时间范围内接待用户">
           <div className="flex items-center h-10 gap-2">
             <Checkbox
               checked={enableWorkingTime}
