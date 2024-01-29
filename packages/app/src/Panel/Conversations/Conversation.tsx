@@ -5,7 +5,7 @@ import { FiCheck } from 'react-icons/fi';
 import { HiDotsHorizontal } from 'react-icons/hi';
 import { FaUserEdit } from 'react-icons/fa';
 import { useToggle } from 'react-use';
-import { Button, Dropdown, Modal, Progress, Tooltip, message } from 'antd';
+import { Button, Divider, Dropdown, Modal, Progress, Tooltip, message } from 'antd';
 import cx from 'classnames';
 import _ from 'lodash';
 
@@ -309,10 +309,25 @@ export function Conversation({ conversationId, reopen, onReopen }: ConversationP
                   const { files } = e.clipboardData;
                   if (files.length) {
                     e.preventDefault();
+                    const file = files[0];
                     Modal.confirm({
                       title: '发送附件',
-                      content: `检测到您粘贴了一个文件，是否以附件的形式发送？\n文件名：${files[0].name}`,
-                      onOk: () => sendFileMessage(files[0]),
+                      content: (
+                        <>
+                          <p>检测到您粘贴了一个文件，是否以附件的形式发送？</p>
+                          <p>文件名：{file.name}</p>
+                          {file.type.startsWith('image/') && (
+                            <p className="text-center">
+                              <Divider style={{ fontSize: 14 }}>预览</Divider>
+                              <img
+                                className="inline-block outline max-w-full max-h-[400px] object-contain bg-black"
+                                src={URL.createObjectURL(file)}
+                              />
+                            </p>
+                          )}
+                        </>
+                      ),
+                      onOk: () => sendFileMessage(file),
                     });
                   }
                 }}
