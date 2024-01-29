@@ -9,9 +9,15 @@ export interface ChatbotMessage {
   text: string;
 }
 
+export interface ChatbotWorkingTime {
+  start: number;
+  end: number;
+}
+
 export interface CreateChatbotData {
   name: string;
   acceptRule?: ChatbotAcceptRule;
+  workingTime?: ChatbotWorkingTime;
   globalQuestionBaseIds: string[];
   initialQuestionBaseIds: string[];
   greetingMessage: ChatbotMessage;
@@ -21,6 +27,7 @@ export interface CreateChatbotData {
 export interface UpdateChatbotData {
   name?: string;
   acceptRule?: ChatbotAcceptRule | null;
+  workingTime?: ChatbotWorkingTime | null;
   globalQuestionBaseIds?: string[];
   initialQuestionBaseIds?: string[];
   greetingMessage?: ChatbotMessage;

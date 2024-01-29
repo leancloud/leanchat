@@ -1,8 +1,16 @@
 import { ModelOptions, Prop } from '@typegoose/typegoose';
 import { Types } from 'mongoose';
 
-import { ChatbotMessage } from './chatbot-message.model';
 import { ChatbotAcceptRule } from '../constants';
+import { ChatbotMessage } from './chatbot-message.model';
+
+class WorkingTime {
+  @Prop()
+  start: number;
+
+  @Prop()
+  end: number;
+}
 
 @ModelOptions({
   schemaOptions: {
@@ -19,7 +27,10 @@ export class Chatbot {
   name: string;
 
   @Prop({ enum: ChatbotAcceptRule })
-  acceptRule: ChatbotAcceptRule;
+  acceptRule?: ChatbotAcceptRule;
+
+  @Prop({ _id: false })
+  workingTime?: WorkingTime;
 
   @Prop({ type: Types.ObjectId })
   globalQuestionBaseIds: Types.ObjectId[];

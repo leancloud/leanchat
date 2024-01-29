@@ -156,7 +156,11 @@ export interface ChatbotMessage {
 export interface Chatbot {
   id: string;
   name: string;
-  acceptRule: number;
+  acceptRule?: number;
+  workingTime?: {
+    start: number;
+    end: number;
+  };
   globalQuestionBaseIds: string[];
   initialQuestionBaseIds: string[];
   greetingMessage: ChatbotMessage;

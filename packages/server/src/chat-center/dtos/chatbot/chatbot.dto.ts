@@ -1,4 +1,4 @@
-import { ChatbotMessage } from 'src/chat/interfaces';
+import { ChatbotWorkingTime, ChatbotMessage } from 'src/chat/interfaces';
 import type { Chatbot } from 'src/chat/models';
 
 export class ChatbotDto {
@@ -6,7 +6,9 @@ export class ChatbotDto {
 
   name: string;
 
-  acceptRule: number;
+  acceptRule?: number;
+
+  workingTime?: ChatbotWorkingTime;
 
   globalQuestionBaseIds: string[];
 
@@ -25,6 +27,7 @@ export class ChatbotDto {
     dto.id = chatbot.id || chatbot._id.toHexString();
     dto.name = chatbot.name;
     dto.acceptRule = chatbot.acceptRule;
+    dto.workingTime = chatbot.workingTime;
     dto.globalQuestionBaseIds = chatbot.globalQuestionBaseIds.map((id) =>
       id.toHexString(),
     );

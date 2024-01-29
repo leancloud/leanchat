@@ -5,10 +5,11 @@ import { ReturnModelType } from '@typegoose/typegoose';
 import { AnyKeys } from 'mongoose';
 import { InjectQueue } from '@nestjs/bull';
 import { Queue } from 'bull';
+import { startOfToday } from 'date-fns';
 
 import { InjectRedis, Redis } from 'src/redis';
 import { objectId } from 'src/helpers';
-import { Chatbot, ChatbotQuestion } from '../models';
+import { Chatbot } from '../models';
 import {
   ChatbotContext,
   ChatbotMessageJobData,
@@ -25,9 +26,6 @@ export class ChatbotService {
   @InjectModel(Chatbot)
   private Chatbot: ReturnModelType<typeof Chatbot>;
 
-  @InjectModel(ChatbotQuestion)
-  private ChatbotQuestion: ReturnModelType<typeof ChatbotQuestion>;
-
   @InjectRedis()
   private redis: Redis;
 
@@ -43,6 +41,9 @@ export class ChatbotService {
     chatbot.name = data.name;
     if (data.acceptRule) {
       chatbot.acceptRule = data.acceptRule;
+    }
+    if (data.workingTime) {
+      chatbot.workingTime = data.workingTime;
     }
     chatbot.globalQuestionBaseIds = objectId(data.globalQuestionBaseIds);
     chatbot.initialQuestionBaseIds = objectId(data.initialQuestionBaseIds);
@@ -64,6 +65,11 @@ export class ChatbotService {
       $set.acceptRule = data.acceptRule;
     } else if (data.acceptRule === null) {
       $unset.acceptRule = '';
+    }
+    if (data.workingTime) {
+      $set.workingTime = data.workingTime;
+    } else if (data.workingTime === null) {
+      $unset.workingTime = '';
     }
     return this.Chatbot.findByIdAndUpdate(
       id,
@@ -101,15 +107,32 @@ export class ChatbotService {
     await this.messageQueue.add(data);
   }
 
-  hasActiveChatbot() {
-    return this.Chatbot.findOne({ acceptRule: ChatbotAcceptRule.New }).exec();
+  async hasActiveChatbot() {
+    const chatbot = await this.selectChatbot(ChatbotAcceptRule.New);
+    return !!chatbot;
+  }
+
+  async selectChatbot(acceptRule: ChatbotAcceptRule) {
+    const chatbots = await this.Chatbot.find({ acceptRule });
+    const offset = Date.now() - startOfToday().getTime();
+    return chatbots.find((chatbot) => {
+      if (chatbot.workingTime) {
+        const { start, end } = chatbot.workingTime;
+        if (start <= end) {
+          return offset >= start && offset <= end;
+        } else {
+          return offset >= start || offset <= end;
+        }
+      }
+      return true;
+    });
   }
 
   async assignChatbotToConversation(
     conversationId: string,
     acceptRule: ChatbotAcceptRule,
   ) {
-    const chatbot = await this.Chatbot.findOne({ acceptRule });
+    const chatbot = await this.selectChatbot(acceptRule);
     if (!chatbot) {
       return;
     }

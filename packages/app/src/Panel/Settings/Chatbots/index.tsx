@@ -44,6 +44,7 @@ export function Chatbots() {
       initData: {
         name: chatbot.name,
         acceptRule: chatbot.acceptRule,
+        workingTime: chatbot.workingTime,
         globalQuestionBaseIds: chatbot.globalQuestionBaseIds,
         initialQuestionBaseIds: chatbot.initialQuestionBaseIds,
         greetingMessage: chatbot.greetingMessage,
@@ -58,6 +59,7 @@ export function Chatbots() {
         ...data,
         id: editingId,
         acceptRule: data.acceptRule ?? null,
+        workingTime: data.workingTime ?? null,
       });
     }
   };

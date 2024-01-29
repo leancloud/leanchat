@@ -39,6 +39,10 @@ export interface DeleteQuestionData {
 export interface CreateChatbotData {
   name: string;
   acceptRule?: number;
+  workingTime?: {
+    start: number;
+    end: number;
+  };
   globalQuestionBaseIds?: string[];
   initialQuestionBaseIds?: string[];
   greetingMessage: ChatbotMessage;
@@ -49,6 +53,10 @@ export interface UpdateChatbotData {
   id: string;
   name?: string;
   acceptRule?: number | null;
+  workingTime?: {
+    start: number;
+    end: number;
+  } | null;
   globalQuestionBaseIds?: string[];
   initialQuestionBaseIds?: string[];
   greetingMessage?: ChatbotMessage;
