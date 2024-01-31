@@ -5,17 +5,19 @@ import { Button, Table } from 'antd';
 import { ColumnType } from 'antd/es/table';
 import dayjs from 'dayjs';
 import _ from 'lodash';
-import { eq, find, get } from 'lodash/fp';
+import { eq, find, get, identity, join, map } from 'lodash/fp';
 
 import { SearchConversationOptions, searchConversation } from '@/Panel/api/conversation';
-import { flow, formatDate, toSeconds } from '@/Panel/Statistics/helpers';
+import { useCategories } from '@/Panel/hooks/category';
+import { useOperators } from '@/Panel/hooks/operator';
+import { useChatbots } from '@/Panel/hooks/chatbot';
+import { useSelector } from '@/Panel/hooks/useSelector';
+import { defaultTo, flow, formatDate, toSeconds } from '@/Panel/Statistics/helpers';
 import { SearchForm, SearchFormData } from './components/SearchForm';
 import { UserType, Conversation } from '../../types';
 import { ConversationInfo } from '../components/ConversationInfo';
 import * as render from '../render';
 import { ExportDataDialog, ExportDataColumn } from '../components/ExportDataDialog';
-import { useGetOperatorName } from '../hooks/useGetOperatorName';
-import { useGetCategoryName } from '../hooks/useGetCategoryName';
 
 export default function Quality() {
   const [options, setOptions] = useState<SearchConversationOptions>({
@@ -45,12 +47,17 @@ export default function Quality() {
     });
   };
 
-  const { getCategoryName, isLoading: categoryNameLoading } = useGetCategoryName();
-  const { getOperatorName, isLoading: operatorNameLoading } = useGetOperatorName();
+  const { data: categories, isLoading: isLoadingCategories } = useCategories();
+  const { data: operators, isLoading: isLoadingOperators } = useOperators();
+  const { data: chatbots, isLoading: isLoadingChatbots } = useChatbots();
+
+  const getCategoryName = useSelector(categories, 'id', 'name');
+  const getOperatorName = useSelector(operators, 'id', 'internalName');
+  const getChatbotName = useSelector(chatbots, 'id', 'name');
 
   const [exportModalOpen, toggleExportModal] = useToggle(false);
   const handleExportData = () => {
-    if (!data || categoryNameLoading || operatorNameLoading) {
+    if (!data || isLoadingCategories || isLoadingOperators || isLoadingChatbots) {
       return;
     }
     if (data.totalCount > 10000) {
@@ -91,15 +98,21 @@ export default function Quality() {
     {
       key: 'operatorId',
       title: '负责客服',
-      render: flow([render.operatorId, getOperatorName]),
+      render: render.operatorName(getOperatorName),
     },
     {
       key: 'joinedOperatorIds',
       title: '参与客服',
       render: flow([
         get('joinedOperatorIds'),
-        (ids: string[]) => ids.map(getOperatorName).join(','),
+        map(defaultTo(getOperatorName, identity)),
+        join(','),
       ]),
+    },
+    {
+      key: 'chatbotId',
+      title: '机器人',
+      render: flow([get('chatbotId'), getChatbotName]),
     },
     {
       key: 'messageCount',

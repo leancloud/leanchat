@@ -14,10 +14,12 @@ import { OperatorSelect } from '../components/OperatorSelect';
 import { CategoryCascader } from '../components/CategoryCascader';
 import { ConsultationResult, UserType } from '../types';
 import { SearchConversationOptions, searchConversation } from '../api/conversation';
+import { useChatbots } from '../hooks/chatbot';
+import { useSelector } from '../hooks/useSelector';
+import { useCategories } from '../hooks/category';
+import { useOperators } from '../hooks/operator';
 import { flow } from './helpers';
 import { ExportDataColumn, ExportDataDialog } from './components/ExportDataDialog';
-import { useGetOperatorName } from './hooks/useGetOperatorName';
-import { useGetCategoryName } from './hooks/useGetCategoryName';
 
 interface FilterGroupProps {
   label?: ReactNode;
@@ -318,8 +320,13 @@ export function ConversationRecord() {
     queryFn: () => searchConversation(options),
   });
 
-  const { getCategoryName } = useGetCategoryName();
-  const { getOperatorName } = useGetOperatorName();
+  const { data: categories } = useCategories();
+  const { data: operators } = useOperators();
+  const { data: chatbots } = useChatbots();
+
+  const getCategoryName = useSelector(categories, 'id', 'name');
+  const getOperatorName = useSelector(operators, 'id', 'internalName');
+  const getChatbotName = useSelector(chatbots, 'id', 'name');
 
   const columns: (ColumnType<any> & ExportDataColumn)[] = [
     {
@@ -371,6 +378,11 @@ export function ConversationRecord() {
       key: 'operatorName',
       title: '客服名称',
       render: render.operatorName(getOperatorName),
+    },
+    {
+      key: 'chatbotName',
+      title: '机器人',
+      render: flow([get('chatbotId'), getChatbotName]),
     },
     {
       key: 'consultationResult',

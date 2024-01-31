@@ -77,6 +77,12 @@ export function subtract(func1: FlowFunc, func2: FlowFunc): FlowFunc {
   };
 }
 
+export function defaultTo(func: FlowFunc, getDefaultValue: FlowFunc): FlowFunc {
+  return (value) => {
+    return func(value) ?? getDefaultValue(value);
+  };
+}
+
 export const toPercent: FlowFunc = (value) => {
   if (typeof value === 'number') {
     return Math.min(100, Math.floor(value * 100)).toFixed(2) + '%';

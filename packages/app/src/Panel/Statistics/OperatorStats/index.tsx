@@ -8,8 +8,9 @@ import { get, getOr, multiply } from 'lodash/fp';
 import Papa from 'papaparse';
 
 import { OperatorStats as OperatorStatsSchema, getOperatorStats } from '@/Panel/api/statistics';
+import { useOperators } from '@/Panel/hooks/operator';
+import { useSelector } from '@/Panel/hooks/useSelector';
 import { BasicFilterForm, BasicFilterFormData } from '../components/BasicFilterForm';
-import { useGetOperatorName } from '../hooks/useGetOperatorName';
 import { divide, sum, subtract, flow, toSeconds, toPercent, downloadCSV } from '../helpers';
 import { WorkingTime } from './WorkingTime';
 
@@ -33,7 +34,8 @@ export function OperatorStats() {
     queryFn: () => getOperatorStats(options),
   });
 
-  const { getOperatorName } = useGetOperatorName();
+  const { data: operators } = useOperators();
+  const getOperatorName = useSelector(operators, 'id', 'internalName');
 
   const columns: (ColumnType<OperatorStatsSchema> & {
     title: string;

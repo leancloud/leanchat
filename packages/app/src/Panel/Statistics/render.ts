@@ -14,7 +14,7 @@ export const visitorId = get('visitorId');
 
 export const operatorId = get('operatorId');
 
-export const operatorName = (getOperatorName: (id: string) => string) =>
+export const operatorName = (getOperatorName: (id: string) => string | undefined) =>
   flow([operatorId, getOperatorName]);
 
 export const evaluationStar = flow([

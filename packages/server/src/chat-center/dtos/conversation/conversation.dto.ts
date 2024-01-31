@@ -14,6 +14,8 @@ export class ConversationDto {
 
   visitorId: string;
 
+  chatbotId?: string;
+
   operatorId?: string;
 
   categoryId?: string;
@@ -56,6 +58,7 @@ export class ConversationDto {
     dto.source = conv.source;
     dto.status = conv.status;
     dto.visitorId = conv.visitorId.toString();
+    dto.chatbotId = conv.chatbotId?.toString();
     dto.operatorId = conv.operatorId?.toString();
     dto.categoryId = conv.categoryId?.toString();
     dto.evaluation = conv.evaluation;
@@ -67,7 +70,7 @@ export class ConversationDto {
     dto.closedAt = conv.closedAt?.toISOString();
     dto.closedBy = conv.closedBy && {
       type: conv.closedBy.type,
-      id: conv.closedBy.id?.toHexString(),
+      id: conv.closedBy.id?.toString(),
     };
     dto.stats = conv.stats;
     return dto;

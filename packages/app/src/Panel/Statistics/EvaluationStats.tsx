@@ -13,10 +13,11 @@ import {
   GetEvaluationStatsOptions,
   getEvaluationStats,
 } from '../api/statistics';
-import { useGetOperatorName } from './hooks/useGetOperatorName';
 import { evaluationStar } from './render';
 import { useExportData } from '../hooks/useExportData';
 import { downloadCSV, flow, formatDate, percent } from './helpers';
+import { useOperators } from '../hooks/operator';
+import { useSelector } from '../hooks/useSelector';
 
 export interface ExportDataColumn {
   key: string;
@@ -49,7 +50,8 @@ export function EvaluationStats() {
     queryFn: () => getEvaluationStats(options),
   });
 
-  const { getOperatorName } = useGetOperatorName();
+  const { data: operators } = useOperators();
+  const getOperatorName = useSelector(operators, 'id', 'internalName');
 
   const columns: (ColumnType<EvaluationStatsSchema> & ExportDataColumn)[] = [
     {
