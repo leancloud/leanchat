@@ -103,8 +103,8 @@ export class ChatbotService {
     );
   }
 
-  async addProcessMessageJob(data: ChatbotMessageJobData) {
-    await this.messageQueue.add(data);
+  async addProcessMessageJob(data: ChatbotMessageJobData, delay?: number) {
+    await this.messageQueue.add(data, { delay });
   }
 
   async hasActiveChatbot() {
@@ -167,10 +167,13 @@ export class ChatbotService {
     if (!conversation.chatbotId) {
       return;
     }
-    await this.addProcessMessageJob({
-      conversationId: conversation.id,
-      chatbotId: conversation.chatbotId.toHexString(),
-      message: message.data,
-    });
+    await this.addProcessMessageJob(
+      {
+        conversationId: conversation.id,
+        chatbotId: conversation.chatbotId.toHexString(),
+        message: message.data,
+      },
+      1000,
+    );
   }
 }
