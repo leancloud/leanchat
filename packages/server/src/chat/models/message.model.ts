@@ -39,8 +39,4 @@ export class Message {
   createdAt: Date;
 
   updatedAt: Date;
-
-  isTextMessage() {
-    return this.data.text !== undefined;
-  }
 }

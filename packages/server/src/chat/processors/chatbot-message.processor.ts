@@ -30,50 +30,52 @@ export class ChatbotMessageProcessor {
       return;
     }
 
-    const context = await this.chatbotService.getContext(conversationId);
+    if (message.text) {
+      const context = await this.chatbotService.getContext(conversationId);
 
-    if (chatbot.globalQuestionBaseIds.length) {
-      const question = await this.chatbotQuestionService.matchQuestion(
-        chatbot.globalQuestionBaseIds,
-        message.text,
-      );
-      if (question) {
-        await this.processQuestion(
-          conversationId,
-          chatbot.id,
-          question,
-          context,
-          false,
+      if (chatbot.globalQuestionBaseIds.length) {
+        const question = await this.chatbotQuestionService.matchQuestion(
+          chatbot.globalQuestionBaseIds,
+          message.text,
         );
-        await this.chatbotService.setContext(conversationId, context);
-        return;
+        if (question) {
+          await this.processQuestion(
+            conversationId,
+            chatbot.id,
+            question,
+            context,
+            false,
+          );
+          await this.chatbotService.setContext(conversationId, context);
+          return;
+        }
       }
-    }
 
-    if (!context.questionBaseIds) {
-      context.questionBaseIds = chatbot.initialQuestionBaseIds.map((id) =>
-        id.toString(),
-      );
-    }
-
-    if (context.questionBaseIds.length) {
-      const question = await this.chatbotQuestionService.matchQuestion(
-        context.questionBaseIds,
-        message.text,
-      );
-      if (question) {
-        await this.processQuestion(
-          conversationId,
-          chatbot.id,
-          question,
-          context,
+      if (!context.questionBaseIds) {
+        context.questionBaseIds = chatbot.initialQuestionBaseIds.map((id) =>
+          id.toString(),
         );
-        await this.chatbotService.setContext(conversationId, context);
-        return;
       }
-    }
 
-    await this.chatbotService.setContext(conversationId, context);
+      if (context.questionBaseIds.length) {
+        const question = await this.chatbotQuestionService.matchQuestion(
+          context.questionBaseIds,
+          message.text,
+        );
+        if (question) {
+          await this.processQuestion(
+            conversationId,
+            chatbot.id,
+            question,
+            context,
+          );
+          await this.chatbotService.setContext(conversationId, context);
+          return;
+        }
+      }
+
+      await this.chatbotService.setContext(conversationId, context);
+    }
 
     // no match
     await this.chatService.createMessage({

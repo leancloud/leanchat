@@ -158,19 +158,13 @@ export class ChatbotService {
     if (message.from.type !== UserType.Visitor) {
       return;
     }
-    if (!message.isTextMessage()) {
-      return;
-    }
-    if (conversation.operatorId) {
-      return;
-    }
-    if (!conversation.chatbotId) {
+    if (!conversation.chatbotId || conversation.operatorId) {
       return;
     }
     await this.addProcessMessageJob(
       {
         conversationId: conversation.id,
-        chatbotId: conversation.chatbotId.toHexString(),
+        chatbotId: conversation.chatbotId.toString(),
         message: message.data,
       },
       1000,

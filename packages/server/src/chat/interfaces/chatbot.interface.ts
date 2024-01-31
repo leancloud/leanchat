@@ -37,5 +37,7 @@ export interface UpdateChatbotData {
 export interface ChatbotMessageJobData {
   conversationId: string;
   chatbotId: string;
-  message: ChatbotMessage;
+  message: {
+    text?: string;
+  };
 }
