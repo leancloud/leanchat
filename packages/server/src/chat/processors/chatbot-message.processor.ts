@@ -2,6 +2,7 @@ import { Process, Processor } from '@nestjs/bull';
 import { Job } from 'bull';
 import Handlebars from 'handlebars';
 
+import { ConfigService } from 'src/config';
 import {
   ChatService,
   ChatbotQuestionService,
@@ -17,6 +18,7 @@ export class ChatbotMessageProcessor {
     private chatService: ChatService,
     private chatbotService: ChatbotService,
     private chatbotQuestionService: ChatbotQuestionService,
+    private configService: ConfigService,
   ) {}
 
   @Process()
@@ -97,12 +99,33 @@ export class ChatbotMessageProcessor {
     const queuePosition = await this.chatService.getQueuePosition(
       conversationId,
     );
-    const text = template({
+    let text = template({
       context,
       queue: {
         position: queuePosition,
       },
     }).trim();
+
+    if (switchBase && question.nextQuestionBaseId) {
+      context.questionBaseIds = [question.nextQuestionBaseId.toString()];
+    }
+    if (question.assignOperator && !context.operatorAssigned) {
+      let shouldAssign = true;
+
+      const queueConfig = await this.configService.get('queue');
+      if (queueConfig?.capacity) {
+        const queueLength = await this.chatService.getQueueLength();
+        if (queueLength >= queueConfig.capacity) {
+          shouldAssign = false;
+          text = queueConfig.fullMessage.text;
+        }
+      }
+
+      if (shouldAssign) {
+        await this.chatService.addAutoAssignJob(conversationId);
+        context.operatorAssigned = true;
+      }
+    }
 
     if (text) {
       await this.chatService.createMessage({
@@ -113,14 +136,6 @@ export class ChatbotMessageProcessor {
         },
         data: { text },
       });
-    }
-
-    if (switchBase && question.nextQuestionBaseId) {
-      context.questionBaseIds = [question.nextQuestionBaseId.toString()];
-    }
-    if (question.assignOperator && !context.operatorAssigned) {
-      await this.chatService.addAutoAssignJob(conversationId);
-      context.operatorAssigned = true;
     }
   }
 }
