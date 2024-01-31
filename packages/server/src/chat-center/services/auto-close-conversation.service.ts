@@ -47,6 +47,14 @@ export class AutoCloseConversationService {
       });
 
     for (const conversationId of conversationIds) {
+      const queuePosition = await this.chatService.getQueuePosition(
+        conversationId,
+      );
+      if (queuePosition) {
+        // Do not close enqueued conversation even if user is no response
+        continue;
+      }
+
       if (config.message.enabled) {
         await this.chatService.createMessage({
           conversationId,
