@@ -18,6 +18,7 @@ import { UserType, Conversation } from '../../types';
 import { ConversationInfo } from '../components/ConversationInfo';
 import * as render from '../render';
 import { ExportDataDialog, ExportDataColumn } from '../components/ExportDataDialog';
+import { useGetCategoryName } from '../hooks/useGetCategoryName';
 
 export default function Quality() {
   const [options, setOptions] = useState<SearchConversationOptions>({
@@ -51,7 +52,7 @@ export default function Quality() {
   const { data: operators, isLoading: isLoadingOperators } = useOperators();
   const { data: chatbots, isLoading: isLoadingChatbots } = useChatbots();
 
-  const getCategoryName = useSelector(categories, 'id', 'name');
+  const getCategoryName = useGetCategoryName(categories);
   const getOperatorName = useSelector(operators, 'id', 'internalName');
   const getChatbotName = useSelector(chatbots, 'id', 'name');
 

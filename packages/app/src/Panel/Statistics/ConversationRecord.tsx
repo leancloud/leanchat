@@ -20,6 +20,7 @@ import { useCategories } from '../hooks/category';
 import { useOperators } from '../hooks/operator';
 import { flow } from './helpers';
 import { ExportDataColumn, ExportDataDialog } from './components/ExportDataDialog';
+import { useGetCategoryName } from './hooks/useGetCategoryName';
 
 interface FilterGroupProps {
   label?: ReactNode;
@@ -324,7 +325,7 @@ export function ConversationRecord() {
   const { data: operators } = useOperators();
   const { data: chatbots } = useChatbots();
 
-  const getCategoryName = useSelector(categories, 'id', 'name');
+  const getCategoryName = useGetCategoryName(categories);
   const getOperatorName = useSelector(operators, 'id', 'internalName');
   const getChatbotName = useSelector(chatbots, 'id', 'name');
 
