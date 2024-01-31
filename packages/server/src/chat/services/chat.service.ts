@@ -291,10 +291,12 @@ export class ChatService {
 
     const previousOperatorId = conversation.operatorId;
 
+    const now = new Date();
     await this.conversationService.updateConversation(conversation.id, {
       operatorId: operator.id,
       // reset visitorWaitingSince on first assign
-      visitorWaitingSince: previousOperatorId ? undefined : new Date(),
+      visitorWaitingSince: previousOperatorId ? undefined : now,
+      operatorLastActivityAt: now,
     });
     await this.messageService.createMessage(conversation, {
       type: MessageType.Assign,
