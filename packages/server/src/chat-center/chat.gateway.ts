@@ -13,7 +13,7 @@ import { Namespace, Socket } from 'socket.io';
 import { OnEvent } from '@nestjs/event-emitter';
 import { ZodValidationPipe } from 'nestjs-zod';
 import { Cron } from '@nestjs/schedule';
-import { max } from 'date-fns';
+import { differenceInSeconds, max } from 'date-fns';
 import _ from 'lodash';
 
 import {
@@ -99,14 +99,22 @@ export class ChatGateway
   async handleDisconnect(socket: Socket) {
     const operator = await this.operatorService.getOperator(socket.data.id);
     if (!operator) return;
+
     const onlineTime = new Date(socket.data.onlineTime);
     const startTime = operator.statusUpdatedAt
       ? max([operator.statusUpdatedAt, onlineTime])
       : onlineTime;
+    const endTime = new Date();
+
+    if (differenceInSeconds(endTime, startTime) < 10) {
+      // Ignore refreshing page, network instability, etc.
+      return;
+    }
+
     await this.operatorWorkingTimeService.create({
       operatorId: socket.data.id,
       startTime,
-      endTime: new Date(),
+      endTime,
       status: operator.status ?? OperatorStatus.Leave,
       ip: this.getSocketIp(socket.handshake),
     });
