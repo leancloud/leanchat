@@ -358,7 +358,7 @@ export class ChatService {
   }
 
   async addAutoAssignJob(conversationId: string) {
-    await this.autoAssignQueue.add({ conversationId });
+    await this.autoAssignQueue.add({ conversationId }, { delay: 1000 });
   }
 
   async enqueueConversation(conversationId: string) {
