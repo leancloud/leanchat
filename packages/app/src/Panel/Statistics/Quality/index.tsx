@@ -61,7 +61,7 @@ export default function Quality() {
     if (!data || isLoadingCategories || isLoadingOperators || isLoadingChatbots) {
       return;
     }
-    if (data.totalCount > 10000) {
+    if (data.totalCount > 50000) {
       alert('导出数据量过大，请缩小检索范围');
       return;
     }

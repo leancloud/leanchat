@@ -147,7 +147,7 @@ export function EvaluationStats() {
     if (!data) {
       return;
     }
-    if (data.totalCount > 10000) {
+    if (data.totalCount > 50000) {
       return alert('导出数据量过大，请缩小检索范围');
     }
     setExportedCount(0);
