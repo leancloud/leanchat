@@ -25,6 +25,7 @@ import {
 import { Toast } from '@/Panel/components/Toast';
 import { useCurrentUser } from '../auth';
 import { useEffectEvent } from './useEffectEvent';
+import { useCurrentValue } from './useCurrentValue';
 
 type UseConversationsQueryKey = [
   'Conversations',
@@ -57,6 +58,26 @@ export function useConversations(options: SearchConversationOptions, live = true
     staleTime: live ? 1000 * 60 : 0,
     cacheTime: live ? undefined : 0,
   });
+
+  const getQueryClient = useCurrentValue(useQueryClient());
+
+  useEffect(() => {
+    return () => {
+      getQueryClient().setQueriesData<InfiniteData<Conversation> | undefined>(
+        ['Conversations', { options }],
+        (data) => {
+          if (data) {
+            // Keep the first 3 pages at most
+            return {
+              pages: data.pages.slice(0, 3),
+              pageParams: data.pageParams.slice(0, 3),
+            };
+          }
+        },
+      );
+    };
+  }, [options]);
+
   return { ...query, fetchedAt };
 }
 
