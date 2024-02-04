@@ -135,6 +135,7 @@ export function QuestionBase() {
         answer: q.answer,
         nextQuestionBaseId: q.nextQuestionBaseId,
         assignOperator: q.assignOperator,
+        code: q.code,
       },
     });
   };
@@ -146,6 +147,7 @@ export function QuestionBase() {
         nextQuestionBaseId: data.nextQuestionBaseId || null,
         questionBaseId: id!,
         questionId: editingQuestion.id,
+        code: data.code || null,
       });
     } else {
       create({ ...data, questionBaseId: id! });
@@ -206,7 +208,13 @@ export function QuestionBase() {
       <Table
         dataSource={questions}
         rowKey={(q) => q.id}
+        pagination={false}
         columns={[
+          {
+            key: 'no',
+            render: (_, __, index) => index + 1,
+            width: 100,
+          },
           {
             dataIndex: 'question',
             title: '标准问法',

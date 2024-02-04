@@ -1,5 +1,6 @@
-import { forwardRef } from 'react';
+import { forwardRef, useState } from 'react';
 import { Button, Checkbox, Form, FormInstance, Input, Select } from 'antd';
+import { Editor } from '@monaco-editor/react';
 import _ from 'lodash';
 
 import { useChatbotQuestionBases } from '@/Panel/hooks/chatbot';
@@ -13,6 +14,7 @@ export interface QuestionFormData {
   };
   nextQuestionBaseId?: string;
   assignOperator?: boolean;
+  code?: string;
 }
 
 export interface QuestionFormProps {
@@ -25,6 +27,8 @@ export const QuestionForm = forwardRef<FormInstance, QuestionFormProps>(
     const [form] = Form.useForm<QuestionFormData>();
 
     const { data: questionBases } = useChatbotQuestionBases();
+
+    const [enableCode, setEnableCode] = useState(!!initData?.code);
 
     return (
       <Form ref={ref} form={form} layout="vertical" initialValues={initData} onFinish={onSubmit}>
@@ -77,6 +81,18 @@ export const QuestionForm = forwardRef<FormInstance, QuestionFormProps>(
         <Form.Item name="assignOperator" valuePropName="checked">
           <Checkbox>分配人工客服</Checkbox>
         </Form.Item>
+
+        <div className="mb-4">
+          <Checkbox checked={enableCode} onChange={(e) => setEnableCode(e.target.checked)}>
+            执行代码
+          </Checkbox>
+        </div>
+
+        {enableCode && (
+          <Form.Item name="code" valuePropName="defaultValue">
+            <Editor className="border" height={400} defaultLanguage="javascript" />
+          </Form.Item>
+        )}
       </Form>
     );
   },

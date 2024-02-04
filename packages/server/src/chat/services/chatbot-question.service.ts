@@ -57,6 +57,7 @@ export class ChatbotQuestionService {
       question.nextQuestionBaseId = objectId(data.nextQuestionBaseId);
     }
     question.assignOperator = data.assignOperator;
+    question.code = data.code;
     question.position = Date.now();
     return question.save();
   }
@@ -78,6 +79,12 @@ export class ChatbotQuestionService {
       $set.nextQuestionBaseId = objectId(data.nextQuestionBaseId);
     } else if (data.nextQuestionBaseId === null) {
       $unset.nextQuestionBaseId = '';
+    }
+
+    if (data.code) {
+      $set.code = data.code;
+    } else if (data.code === null) {
+      $unset.code = '';
     }
 
     return this.Question.findOneAndUpdate(

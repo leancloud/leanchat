@@ -7,6 +7,7 @@ const TestChatbotSchema = z.object({
     .object({
       questionBaseIds: z.array(z.string()),
       operatorAssigned: z.boolean(),
+      data: z.record(z.any()),
     })
     .partial(),
 });

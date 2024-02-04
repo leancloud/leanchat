@@ -182,6 +182,7 @@ export interface ChatbotQuestion {
   answer: ChatbotMessage;
   nextQuestionBaseId?: string;
   assignOperator?: boolean;
+  code?: string;
   createdAt: string;
   updatedAt: string;
 }

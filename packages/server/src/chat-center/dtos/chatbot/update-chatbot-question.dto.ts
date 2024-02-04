@@ -6,6 +6,7 @@ const UpdateChatbotQuestionSchema =
   CreateChatbotQuestionSchema.partial().extend({
     nextQuestionBaseId:
       CreateChatbotQuestionSchema.shape.nextQuestionBaseId.nullable(),
+    code: CreateChatbotQuestionSchema.shape.code.nullable(),
   });
 
 export class UpdateChatbotQuestionDto extends createZodDto(

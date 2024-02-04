@@ -16,6 +16,8 @@ export class ChatbotQuestionDto {
 
   assignOperator?: boolean;
 
+  code?: string;
+
   createdAt: string;
 
   updatedAt: string;
@@ -29,6 +31,7 @@ export class ChatbotQuestionDto {
     dto.answer = question.answer;
     dto.nextQuestionBaseId = question.nextQuestionBaseId?.toHexString();
     dto.assignOperator = question.assignOperator;
+    dto.code = question.code;
     dto.createdAt = question.createdAt.toISOString();
     dto.updatedAt = question.updatedAt.toISOString();
     return dto;

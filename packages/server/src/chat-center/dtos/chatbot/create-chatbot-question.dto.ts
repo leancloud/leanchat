@@ -12,6 +12,7 @@ export const CreateChatbotQuestionSchema = z.object({
   answer: MessageSchema,
   nextQuestionBaseId: ObjectIdSchema.optional(),
   assignOperator: z.boolean().optional(),
+  code: z.string().optional(),
 });
 
 export class CreateChatbotQuestionDto extends createZodDto(

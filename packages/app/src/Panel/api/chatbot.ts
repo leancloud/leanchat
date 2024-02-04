@@ -18,6 +18,7 @@ export interface CreateQuestionData {
   answer: ChatbotMessage;
   nextQuestionBaseId?: string;
   assignOperator?: boolean;
+  code?: string;
 }
 
 export interface UpdateQuestionData {
@@ -29,6 +30,7 @@ export interface UpdateQuestionData {
   answer?: ChatbotMessage;
   nextQuestionBaseId?: string | null;
   assignOperator?: boolean;
+  code?: string | null;
 }
 
 export interface DeleteQuestionData {

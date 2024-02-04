@@ -38,6 +38,9 @@ export class ChatbotQuestion {
   assignOperator?: boolean;
 
   @Prop()
+  code?: string;
+
+  @Prop()
   position: number;
 
   createdAt: Date;

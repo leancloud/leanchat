@@ -10,12 +10,15 @@ import {
   UsePipes,
 } from '@nestjs/common';
 import { ZodValidationPipe } from 'nestjs-zod';
-import Handlebars from 'handlebars';
 
 import { OperatorRole } from 'src/chat/constants';
-import { ChatbotContext } from 'src/chat/interfaces';
-import { ChatbotQuestion } from 'src/chat/models';
-import { ChatbotQuestionService, ChatbotService } from 'src/chat/services';
+import {
+  ChatService,
+  ChatbotQuestionService,
+  ChatbotService,
+} from 'src/chat/services';
+import { ConfigService } from 'src/config';
+import { ChatbotRunner } from 'src/chat/chatbot/chatbot-runner';
 import { AuthGuard } from '../guards';
 import { Roles } from '../decorators';
 import {
@@ -31,8 +34,10 @@ import {
 @UsePipes(ZodValidationPipe)
 export class ChatbotController {
   constructor(
+    private chatService: ChatService,
     private chatbotService: ChatbotService,
     private chatbotQuestionService: ChatbotQuestionService,
+    private configService: ConfigService,
   ) {}
 
   @Post()
@@ -79,55 +84,22 @@ export class ChatbotController {
       throw new NotFoundException('机器人不存在');
     }
 
-    const processQuestion = (
-      question: ChatbotQuestion,
-      context: ChatbotContext,
-      switchBase = true,
-    ) => {
-      const template = Handlebars.compile(question.answer.text);
-      const text = template({ context }).trim();
-
-      if (switchBase && question.nextQuestionBaseId) {
-        context.questionBaseIds = [question.nextQuestionBaseId.toString()];
-      }
-      if (question.assignOperator) {
-        context.operatorAssigned = true;
-      }
-
-      return { context, text };
-    };
-
     const { context, input } = data;
 
-    if (chatbot.globalQuestionBaseIds.length) {
-      const question = await this.chatbotQuestionService.matchQuestion(
-        chatbot.globalQuestionBaseIds,
-        input,
-      );
-      if (question) {
-        return processQuestion(question, context);
-      }
-    }
+    const runner = new ChatbotRunner({
+      conversationId: 'fake',
+      chatbot,
+      context,
+      chatService: this.chatService,
+      questionService: this.chatbotQuestionService,
+      configService: this.configService,
+    });
 
-    if (!context.questionBaseIds) {
-      context.questionBaseIds = chatbot.initialQuestionBaseIds.map((id) =>
-        id.toString(),
-      );
-    }
-
-    if (context.questionBaseIds.length) {
-      const question = await this.chatbotQuestionService.matchQuestion(
-        context.questionBaseIds,
-        input,
-      );
-      if (question) {
-        return processQuestion(question, context, true);
-      }
-    }
+    await runner.run(input);
 
     return {
-      context,
-      text: chatbot.noMatchMessage.text,
+      context: runner.context,
+      text: runner.answer,
     };
   }
 }

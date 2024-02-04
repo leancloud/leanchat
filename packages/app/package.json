@@ -14,6 +14,7 @@
     "@ant-design/icons": "^5.1.4",
     "@ant-design/plots": "^2.0.4",
     "@headlessui/react": "^1.7.16",
+    "@monaco-editor/react": "^4.6.0",
     "@tanstack/react-query": "^4.33.0",
     "antd": "^5.7.3",
     "axios": "^1.4.0",
