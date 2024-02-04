@@ -7,6 +7,7 @@ import {
   useQuery,
   useQueryClient,
 } from '@tanstack/react-query';
+import { usePreviousDistinct } from 'react-use';
 import { useNavigate } from 'react-router-dom';
 import { Socket } from 'socket.io-client';
 import { produce } from 'immer';
@@ -56,23 +57,21 @@ export function useConversations(options: SearchConversationOptions, live = true
   });
 
   const getQueryClient = useCurrentValue(useQueryClient());
-
+  const prevOptions = usePreviousDistinct(options, _.isEqual);
   useEffect(() => {
-    return () => {
-      getQueryClient().setQueriesData<InfiniteData<Conversation> | undefined>(
-        ['Conversations', { options }],
-        (data) => {
-          if (data) {
-            // Keep the first 3 pages at most
-            return {
-              pages: data.pages.slice(0, 3),
-              pageParams: data.pageParams.slice(0, 3),
-            };
-          }
-        },
-      );
-    };
-  }, [options]);
+    getQueryClient().setQueriesData<InfiniteData<Conversation> | undefined>(
+      ['Conversations', { options: prevOptions }],
+      (data) => {
+        if (data) {
+          // Keep the first 3 pages at most
+          return {
+            pages: data.pages.slice(0, 3),
+            pageParams: data.pageParams.slice(0, 3),
+          };
+        }
+      },
+    );
+  }, [prevOptions]);
 
   return query;
 }
