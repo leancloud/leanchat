@@ -114,7 +114,12 @@ export function useAutoPushNewMessage(socket: Socket) {
                 for (const page of data.pages) {
                   for (const conversation of page) {
                     if (conversation.id === message.conversationId) {
-                      conversation.lastMessage = message;
+                      if (
+                        !conversation.lastMessage ||
+                        dayjs(conversation.lastMessage.createdAt).isBefore(message.createdAt)
+                      ) {
+                        conversation.lastMessage = message;
+                      }
                       break;
                     }
                   }
