@@ -405,6 +405,7 @@ export class ConversationService {
     limit = 10,
     desc,
     lastMessage,
+    count,
   }: SearchConversationOptions) {
     const $match: FilterQuery<Conversation> = {};
 
@@ -588,27 +589,37 @@ export class ConversationService {
       },
     );
 
-    pipeline.push({
-      $facet: {
-        data: dataPipeline,
-        totalCount: [{ $count: 'v' }],
-      },
-    });
+    type Data = Conversation & {
+      visitor?: Visitor;
+      joinedOperatorIds?: Types.ObjectId[];
+      lastMessage?: Message;
+    };
 
-    const [result] = await this.conversationModel.aggregate(pipeline, {
+    let getData: (result: any) => Data[];
+    let getTotalCount: (result: any) => number;
+
+    if (count) {
+      pipeline.push({
+        $facet: {
+          data: dataPipeline,
+          totalCount: [{ $count: 'v' }],
+        },
+      });
+      getData = (result) => result[0].data;
+      getTotalCount = (result) => result[0].totalCount[0]?.v ?? 0;
+    } else {
+      pipeline.push(...dataPipeline);
+      getData = _.identity;
+      getTotalCount = _.constant(0);
+    }
+
+    const result = await this.conversationModel.aggregate(pipeline, {
       maxTimeMS: 1000 * 10,
     });
 
     return {
-      data: result.data,
-      totalCount: result.totalCount[0]?.v ?? 0,
-    } as {
-      data: (Conversation & {
-        visitor?: Visitor;
-        joinedOperatorIds?: Types.ObjectId[];
-        lastMessage?: Message;
-      })[];
-      totalCount: number;
+      data: getData(result),
+      totalCount: getTotalCount(result),
     };
   }
 }

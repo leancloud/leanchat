@@ -113,4 +113,5 @@ export interface SearchConversationOptions {
   desc?: boolean;
 
   lastMessage?: boolean;
+  count?: boolean;
 }

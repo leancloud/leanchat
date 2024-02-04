@@ -55,6 +55,7 @@ const SearchConversationSchema = z
 
     desc: z.boolean(),
     lastMessage: z.boolean(),
+    count: z.boolean(),
   })
   .partial();
 

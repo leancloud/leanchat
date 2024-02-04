@@ -82,6 +82,7 @@ export interface SearchConversationOptions {
   pageSize?: number;
   desc?: boolean;
   lastMessage?: boolean;
+  count?: boolean;
 }
 
 export interface SearchConversationResult {

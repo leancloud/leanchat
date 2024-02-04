@@ -26,9 +26,10 @@ export default function Quality() {
     to: dayjs().endOf('day').toISOString(),
     page: 1,
     pageSize: 20,
+    count: true,
   });
 
-  const { data } = useQuery({
+  const { data, isFetching } = useQuery({
     queryKey: ['SearchConversationResult', options],
     queryFn: () => searchConversation(options),
   });
@@ -45,6 +46,7 @@ export default function Quality() {
       operatorId,
       closedBy,
       evaluation,
+      count: true,
     });
   };
 
@@ -255,6 +257,7 @@ export default function Quality() {
         </div>
         <div className="overflow-hidden">
           <Table
+            loading={isFetching}
             dataSource={data?.data}
             rowKey={(row) => row.id}
             scroll={{ x: 'max-content' }}

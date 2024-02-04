@@ -313,6 +313,7 @@ export function ConversationRecord() {
         : {}),
       page,
       pageSize,
+      count: true,
     };
   }, [formData, page, pageSize]);
 
