@@ -5,7 +5,8 @@ import { MessageType } from '../constants';
 import { UserInfo } from './user-info.model';
 
 @Index({ visitorId: 1 })
-@Index({ conversationId: 1 })
+// `createdAt: -1` for finding last message
+@Index({ conversationId: 1, createdAt: -1 })
 @Index({ createdAt: 1 })
 @ModelOptions({
   schemaOptions: {
