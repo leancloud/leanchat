@@ -33,6 +33,28 @@ export default function Modern() {
   const { connected, reconnecting, conversation, messages, evaluationTag, send, evaluate, close } =
     useChat();
 
+  const [sendHistory, setSendHistory] = useState<number[]>([]);
+  const handleSend = (data: any) => {
+    if (data.text && data.text.length > 1000) {
+      return alert('内容过长');
+    }
+    const now = Date.now();
+    const windows: [number, number][] = [
+      [1000, 1], // 1 秒内最多发送 1 次
+      [10000, 5], // 10 秒内最多发送 5 次
+    ];
+    for (const [i, [interval, maxCount]] of windows.entries()) {
+      const history = sendHistory.filter((ts) => ts >= now - interval);
+      if (history.length >= maxCount) {
+        return alert('您发送的太快了，休息一下吧~');
+      }
+      if (i === windows.length - 1) {
+        setSendHistory([...history, now]);
+      }
+    }
+    send(data);
+  };
+
   useOnInviteEvaluation(() => {
     setShowEvaluationModal(true);
   });
@@ -154,13 +176,8 @@ export default function Modern() {
             <ReplyInput
               ref={replyRef}
               disabled={!connected}
-              onReplyText={(text) => {
-                if (text.length > 1000) {
-                  return alert('内容过长');
-                }
-                send({ text });
-              }}
-              onReplyFile={(fileId) => send({ fileId })}
+              onReplyText={(text) => handleSend({ text })}
+              onReplyFile={(fileId) => handleSend({ fileId })}
               evaluable={evaluable}
               onClickEvaluate={() => setShowEvaluationModal(true)}
             />
