@@ -36,6 +36,7 @@ export function ExportDataDialog({ open, onClose, searchOptions, columns }: Expo
         page: 1,
         pageSize: 1000,
         from: cursor || searchOptions.from,
+        count: false,
       });
     },
     getNextCursor: (lastData) => {
