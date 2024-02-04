@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect } from 'react';
 import {
   InfiniteData,
   Query,
@@ -34,7 +34,6 @@ type UseConversationsQueryKey = [
 
 export function useConversations(options: SearchConversationOptions, live = true) {
   const pageSize = 10;
-  const [fetchedAt, setFetchedAt] = useState<number>();
   const query = useInfiniteQuery({
     queryKey: ['Conversations', { options, live }] satisfies UseConversationsQueryKey,
     queryFn: async ({ queryKey: [, { options }], pageParam }) => {
@@ -45,9 +44,6 @@ export function useConversations(options: SearchConversationOptions, live = true
         desc: true,
         lastMessage: true,
       });
-      if (!pageParam) {
-        setFetchedAt(Date.now());
-      }
       return data;
     },
     getNextPageParam: (lastPage) => {
@@ -78,7 +74,7 @@ export function useConversations(options: SearchConversationOptions, live = true
     };
   }, [options]);
 
-  return { ...query, fetchedAt };
+  return query;
 }
 
 export function useConversation(id: string) {
