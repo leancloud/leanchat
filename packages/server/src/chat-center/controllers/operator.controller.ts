@@ -18,6 +18,7 @@ import {
   ChatService,
   Operator,
   OperatorDeactivatedEvent,
+  OperatorRole,
   OperatorService,
 } from 'src/chat';
 import { AuthGuard } from '../guards/auth.guard';
@@ -28,6 +29,7 @@ import {
   UpdateOperatorDto,
   SetStatusDto,
 } from '../dtos/operator';
+import { Roles } from '../decorators';
 
 @Controller('operators')
 @UseGuards(AuthGuard)
@@ -40,6 +42,7 @@ export class OperatorController {
   ) {}
 
   @Post()
+  @Roles(OperatorRole.Admin)
   async createOperator(@Body() data: CreateOperatorDto) {
     const operator = await this.operatorService.createOperator(data);
     return OperatorDto.fromDocument(operator);
@@ -69,6 +72,7 @@ export class OperatorController {
   }
 
   @Patch(':id')
+  @Roles(OperatorRole.Admin)
   async updateOperator(
     @Param('id') id: string,
     @Body() data: UpdateOperatorDto,
