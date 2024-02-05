@@ -36,7 +36,7 @@ export function SocketProvider({ children, fallback, uri, auth }: SocketProvider
   const socketRef = useRef<Socket>();
   const [connected, setConnected] = useState(false);
   const reconnectToastId = useRef<string>();
-  const [evicted, setEvicted] = useState(false);
+  const [evicted, setEvicted] = useState<{ message: string }>();
 
   const queryClient = useQueryClient();
 
@@ -66,19 +66,16 @@ export function SocketProvider({ children, fallback, uri, auth }: SocketProvider
         reconnectToastId.current = toast.loading('与服务器失去连接, 正在重连...');
       }
     };
-    const onEvict = () => {
-      setEvicted(true);
-    };
 
     socket.on('connect', onConnect);
     socket.on('welcome', onWelcome);
-    socket.on('evict', onEvict);
+    socket.on('evict', setEvicted);
     socket.io.on('reconnect_attempt', onDisconnect);
     socket.io.on('reconnect', onReconnect);
   }, []);
 
   if (evicted) {
-    return '您已在其他设备登录';
+    return evicted.message;
   }
 
   if (!connected) {

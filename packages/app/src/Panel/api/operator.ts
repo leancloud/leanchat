@@ -1,13 +1,17 @@
 import { Operator } from '@/Panel/types';
 import { client } from './client';
 
+export interface GetOperatorsOptions {
+  inactive?: boolean;
+}
+
 export async function getOperator(id: string) {
   const res = await client.get<Operator>(`/operators/${id}`);
   return res.data;
 }
 
-export async function getOperators() {
-  const res = await client.get<Operator[]>('/operators');
+export async function getOperators(options?: GetOperatorsOptions) {
+  const res = await client.get<Operator[]>('/operators', { params: options });
   return res.data;
 }
 
@@ -31,6 +35,7 @@ interface UpdateOperatorData {
   externalName?: string;
   internalName?: string;
   concurrency?: number;
+  inactive?: boolean;
 }
 
 export async function updateOperator({ id, ...data }: UpdateOperatorData) {

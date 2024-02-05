@@ -3,7 +3,7 @@ import { UseQueryOptions, useQuery, useQueryClient } from '@tanstack/react-query
 import { Socket } from 'socket.io-client';
 import { produce } from 'immer';
 
-import { getOperator, getOperators } from '@/Panel/api/operator';
+import { GetOperatorsOptions, getOperator, getOperators } from '@/Panel/api/operator';
 import { Operator } from '@/Panel/types';
 import { useAuthContext } from '../auth';
 
@@ -12,12 +12,16 @@ interface OperatorStatusChangedEvent {
   status: number;
 }
 
-export function useOperators(options?: UseQueryOptions<Operator[]>) {
+export interface UseOperatorsOptions extends GetOperatorsOptions {
+  queryOptions?: UseQueryOptions<Operator[]>;
+}
+
+export function useOperators({ queryOptions, inactive = false }: UseOperatorsOptions = {}) {
   return useQuery({
-    queryKey: ['Operators'],
-    queryFn: getOperators,
+    queryKey: ['Operators', { inactive }],
+    queryFn: () => getOperators({ inactive }),
     staleTime: 1000 * 60 * 5,
-    ...options,
+    ...queryOptions,
   });
 }
 

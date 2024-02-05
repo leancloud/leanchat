@@ -88,6 +88,7 @@ export interface Operator {
   concurrency: number;
   status: OperatorStatus;
   workload: number;
+  inactive?: boolean;
 }
 
 export enum OperatorStatus {

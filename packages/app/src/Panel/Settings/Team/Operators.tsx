@@ -1,15 +1,50 @@
+import { useState } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { Link, useNavigate, useParams } from 'react-router-dom';
 import { MdGroup, MdPersonAddAlt1, MdPerson } from 'react-icons/md';
-import { Alert, Button, Form, Input, InputNumber, Select, Table, message } from 'antd';
+import {
+  Alert,
+  Button,
+  Form,
+  Input,
+  InputNumber,
+  Modal,
+  Radio,
+  Select,
+  Table,
+  message,
+} from 'antd';
 
 import { createOperator, getOperator, updateOperator } from '@/Panel/api/operator';
 import { useOperators } from '@/Panel/hooks/operator';
-import { OperatorRole } from '@/Panel/types';
+import { Operator, OperatorRole } from '@/Panel/types';
 import { Container } from '../components/Container';
 
 export function Operators() {
-  const { data, isLoading } = useOperators();
+  const [inactive, setInactive] = useState(false);
+  const { data, isLoading } = useOperators({ inactive });
+
+  const queryClient = useQueryClient();
+  const { mutateAsync } = useMutation({
+    mutationFn: updateOperator,
+    onSuccess: () => {
+      queryClient.invalidateQueries(['Operators']);
+    },
+  });
+
+  const handleChangeInactive = (operator: Operator) => {
+    if (operator.inactive) {
+      mutateAsync({ id: operator.id, inactive: false });
+    } else {
+      Modal.confirm({
+        title: `禁用客服 - ${operator.internalName}`,
+        content: '禁用后客服将被强制下线且无法继续登录，请确保该客服没有进行中的会话',
+        okText: '禁用',
+        okButtonProps: { danger: true },
+        onOk: () => mutateAsync({ id: operator.id, inactive: true }),
+      });
+    }
+  };
 
   return (
     <Container
@@ -23,6 +58,18 @@ export function Operators() {
         ),
       }}
     >
+      <div className="px-2 mb-5">
+        <Radio.Group
+          optionType="button"
+          options={[
+            { label: '启用中', value: false },
+            { label: '禁用中', value: true },
+          ]}
+          value={inactive}
+          onChange={(e) => setInactive(e.target.value)}
+        />
+      </div>
+
       <Table
         loading={isLoading}
         dataSource={data}
@@ -54,7 +101,18 @@ export function Operators() {
           {
             key: 'actions',
             width: 200,
-            render: (operator) => <Link to={operator.id}>编辑</Link>,
+            render: (operator: Operator) => (
+              <div className="space-x-2">
+                <Link to={operator.id}>编辑</Link>
+                {operator.inactive ? (
+                  <a onClick={() => handleChangeInactive(operator)}>启用</a>
+                ) : (
+                  <a className="!text-red-500" onClick={() => handleChangeInactive(operator)}>
+                    禁用
+                  </a>
+                )}
+              </div>
+            ),
           },
         ]}
       />

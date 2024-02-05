@@ -14,7 +14,9 @@ const statusColors = ['#34b857', '#ffaf3d', '#e81332'];
 
 function OperatorPie() {
   const { data: operators } = useOperators({
-    staleTime: 0,
+    queryOptions: {
+      staleTime: 0,
+    },
   });
 
   const operatorByStatus = useMemo(() => {
