@@ -6,7 +6,11 @@ import { AnyKeys } from 'mongoose';
 import { hash } from '@node-rs/argon2';
 
 import { Operator } from '../models';
-import { CreateOperatorData, UpdateOperatorData } from '../interfaces';
+import {
+  CreateOperatorData,
+  GetOperatorsOptions,
+  UpdateOperatorData,
+} from '../interfaces';
 import { OperatorRole, OperatorStatus } from '../constants';
 
 @Injectable()
@@ -68,17 +72,28 @@ export class OperatorService implements OnApplicationBootstrap {
     return this.operatorModel.findById(id).exec();
   }
 
-  getOperators(ids?: string[]) {
-    if (ids) {
-      return this.operatorModel.find({
-        _id: { $in: ids },
-      });
+  getOperators(options: GetOperatorsOptions = {}) {
+    const query = this.operatorModel.find();
+    if (options.ids) {
+      query.where('_id', { $in: options.ids });
     }
-    return this.operatorModel.find().exec();
+    if (options.inactive !== undefined) {
+      if (options.inactive) {
+        query.where('inactive', true);
+      } else {
+        query.where('inactive', { $exists: false });
+      }
+    }
+    return query.exec();
   }
 
   getReadyOperators() {
-    return this.operatorModel.find({ status: OperatorStatus.Ready }).exec();
+    return this.operatorModel
+      .find({
+        status: OperatorStatus.Ready,
+        inactive: { $exists: false },
+      })
+      .exec();
   }
 
   getOperatorByUsername(username: string, selectPassword?: boolean) {
@@ -119,6 +134,7 @@ export class OperatorService implements OnApplicationBootstrap {
       status: data.status,
       statusUpdatedAt: data.statusUpdatedAt,
     };
+    const $unset: AnyKeys<Operator> = {};
 
     if (data.password) {
       $set.password = await hash(data.password);
@@ -126,9 +142,16 @@ export class OperatorService implements OnApplicationBootstrap {
     if (data.status !== undefined && !data.statusUpdatedAt) {
       $set.statusUpdatedAt = new Date();
     }
+    if (data.inactive !== undefined) {
+      if (data.inactive) {
+        $set.inactive = true;
+      } else {
+        $unset.inactive = '';
+      }
+    }
 
     return this.operatorModel
-      .findOneAndUpdate({ _id: operatorId }, { $set }, { new: true })
+      .findOneAndUpdate({ _id: operatorId }, { $set, $unset }, { new: true })
       .exec();
   }
 

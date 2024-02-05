@@ -23,9 +23,9 @@ export class OperatorGroupService {
       operatorIds: [],
     });
     if (data.operatorIds?.length) {
-      const operators = await this.operatorService.getOperators(
-        data.operatorIds,
-      );
+      const operators = await this.operatorService.getOperators({
+        ids: data.operatorIds,
+      });
       group.operatorIds = operators.map((o) => o._id);
     }
     return group.save();
@@ -45,9 +45,9 @@ export class OperatorGroupService {
       $set.name = data.name;
     }
     if (data.operatorIds) {
-      const operators = await this.operatorService.getOperators(
-        data.operatorIds,
-      );
+      const operators = await this.operatorService.getOperators({
+        ids: data.operatorIds,
+      });
       $set.operatorIds = operators.map((o) => o._id);
     }
     return this.OperatorGroup.findByIdAndUpdate(

@@ -4,6 +4,7 @@ import {
   Body,
   Controller,
   Delete,
+  ForbiddenException,
   Post,
   Req,
   UsePipes,
@@ -38,6 +39,9 @@ export class SessionController {
 
     if (!operator) {
       throw new BadRequestException('登录失败');
+    }
+    if (operator.inactive) {
+      throw new ForbiddenException('当前账户已被禁用');
     }
 
     await promisify(req.session.regenerate).call(req.session);

@@ -42,6 +42,9 @@ export class Operator {
   @Prop()
   statusUpdatedAt?: Date;
 
+  @Prop()
+  inactive?: boolean;
+
   createdAt: Date;
 
   updatedAt: Date;

@@ -17,6 +17,8 @@ export class OperatorDto {
 
   workload: number;
 
+  inactive?: boolean;
+
   static fromDocument(operator: Operator) {
     const dto = new OperatorDto();
     dto.id = operator.id;
@@ -27,6 +29,7 @@ export class OperatorDto {
     dto.concurrency = operator.concurrency;
     dto.status = operator.status ?? OperatorStatus.Leave;
     dto.workload = operator.workload ?? 0;
+    dto.inactive = operator.inactive;
     return dto;
   }
 }

@@ -27,6 +27,7 @@ import {
   UserType,
   OperatorService,
   OperatorStatus,
+  OperatorDeactivatedEvent,
 } from 'src/chat';
 import { LeanCloudService } from 'src/leancloud';
 import { WsInterceptor } from 'src/common/interceptors';
@@ -76,7 +77,9 @@ export class ChatGateway
     try {
       const sockets = await this.server.in(operatorId).fetchSockets();
       for (const socket of sockets) {
-        socket.emit('evict');
+        socket.emit('evict', {
+          message: '当前账户已在其他设备登录',
+        });
         socket.disconnect(true);
       }
     } catch {} // ignore
@@ -227,6 +230,17 @@ export class ChatGateway
             ip: this.getSocketIp(socket.handshake),
           });
         });
+    }
+  }
+
+  @OnEvent('operator.deactivated', { async: true })
+  async onOperatorInactived(payload: OperatorDeactivatedEvent) {
+    const sockets = await this.server.in(payload.operatorId).fetchSockets();
+    for (const socket of sockets) {
+      socket.emit('evict', {
+        message: '当前账户已被禁用',
+      });
+      socket.disconnect(true);
     }
   }
 }

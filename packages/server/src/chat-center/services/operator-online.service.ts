@@ -15,7 +15,9 @@ export class OperatorOnlineService {
   constructor(private operatorService: OperatorService) {}
 
   async createOnlineRecord(operatorIds: string[]) {
-    const operators = await this.operatorService.getOperators(operatorIds);
+    const operators = await this.operatorService.getOperators({
+      ids: operatorIds,
+    });
 
     const time = startOfMinute(new Date());
     const docs = operators.map((operator) => ({

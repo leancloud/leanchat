@@ -1,6 +1,7 @@
 import {
   CanActivate,
   ExecutionContext,
+  ForbiddenException,
   Injectable,
   UnauthorizedException,
 } from '@nestjs/common';
@@ -21,6 +22,9 @@ export class AuthGuard implements CanActivate {
     const operator = await this.operatorService.getOperator(req.session.uid);
     if (!operator) {
       throw new UnauthorizedException();
+    }
+    if (operator.inactive) {
+      throw new ForbiddenException('当前账户已被禁用');
     }
     (req as any).operator = operator;
     return true;

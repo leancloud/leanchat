@@ -21,3 +21,7 @@ export interface OperatorStatusChangedEvent {
   status: OperatorStatus;
   previous?: PreviousStatus;
 }
+
+export interface OperatorDeactivatedEvent {
+  operatorId: string;
+}

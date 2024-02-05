@@ -18,10 +18,16 @@ export interface UpdateOperatorData {
   workload?: number;
   status?: OperatorStatus;
   statusUpdatedAt?: Date;
+  inactive?: boolean;
 }
 
 export interface PreviousStatus {
   status: OperatorStatus;
   from: Date;
   to: Date;
+}
+
+export interface GetOperatorsOptions {
+  ids?: string[];
+  inactive?: boolean;
 }

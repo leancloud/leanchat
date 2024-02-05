@@ -4,14 +4,22 @@ import {
   Get,
   NotFoundException,
   Param,
+  ParseBoolPipe,
   Patch,
   Post,
+  Query,
   UseGuards,
   UsePipes,
 } from '@nestjs/common';
+import { EventEmitter2 } from '@nestjs/event-emitter';
 import { ZodValidationPipe } from 'nestjs-zod';
 
-import { ChatService, Operator, OperatorService } from 'src/chat';
+import {
+  ChatService,
+  Operator,
+  OperatorDeactivatedEvent,
+  OperatorService,
+} from 'src/chat';
 import { AuthGuard } from '../guards/auth.guard';
 import { CurrentOperator } from '../decorators/current-operator.decorator';
 import {
@@ -26,6 +34,7 @@ import {
 @UsePipes(ZodValidationPipe)
 export class OperatorController {
   constructor(
+    private events: EventEmitter2,
     private operatorService: OperatorService,
     private chatService: ChatService,
   ) {}
@@ -37,8 +46,11 @@ export class OperatorController {
   }
 
   @Get()
-  async getOperators() {
-    const operators = await this.operatorService.getOperators();
+  async getOperators(
+    @Query('inactive', new ParseBoolPipe({ optional: true }))
+    inactive?: boolean,
+  ) {
+    const operators = await this.operatorService.getOperators({ inactive });
     return operators.map(OperatorDto.fromDocument);
   }
 
@@ -64,6 +76,11 @@ export class OperatorController {
     const operator = await this.operatorService.updateOperator(id, data);
     if (!operator) {
       throw new NotFoundException(`Operator ${id} does not exist`);
+    }
+    if (data.inactive) {
+      this.events.emit('operator.deactivated', {
+        operatorId: operator.id,
+      } satisfies OperatorDeactivatedEvent);
     }
     return OperatorDto.fromDocument(operator);
   }
