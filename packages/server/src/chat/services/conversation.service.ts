@@ -404,6 +404,7 @@ export class ConversationService {
     skip = 0,
     limit = 10,
     desc,
+    messages,
     lastMessage,
     count,
   }: SearchConversationOptions) {
@@ -504,12 +505,12 @@ export class ConversationService {
             from: 'message',
             let: { cid: '$_id' },
             pipeline: [{ $match }, { $limit: 1 }],
-            as: 'messages',
+            as: 'matchedMessages',
           },
         },
         {
           $match: {
-            $expr: { $ne: ['$messages', []] },
+            $expr: { $ne: ['$matchedMessages', []] },
           },
         },
       );
@@ -546,6 +547,28 @@ export class ConversationService {
       },
     });
 
+    if (messages) {
+      dataPipeline.push({
+        $lookup: {
+          from: 'message',
+          let: { cid: '$_id' },
+          pipeline: [
+            {
+              $match: {
+                $expr: { $eq: ['$conversationId', '$$cid'] },
+              },
+            },
+            {
+              $sort: { createdAt: messages > 0 ? 1 : -1 },
+            },
+            {
+              $limit: Math.abs(messages),
+            },
+          ],
+          as: 'messages',
+        },
+      });
+    }
     if (lastMessage) {
       dataPipeline.push({
         $lookup: {
@@ -583,7 +606,7 @@ export class ConversationService {
       {
         $project: {
           visitors: 0,
-          messages: 0,
+          matchedMessages: 0,
           transferMessages: 0,
         },
       },
@@ -592,6 +615,7 @@ export class ConversationService {
     type Data = Conversation & {
       visitor?: Visitor;
       joinedOperatorIds?: Types.ObjectId[];
+      messages?: Message[];
       lastMessage?: Message;
     };
 

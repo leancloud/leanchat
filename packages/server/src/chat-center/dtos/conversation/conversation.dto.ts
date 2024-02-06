@@ -1,5 +1,6 @@
 import type { Conversation } from 'src/chat';
 import type { VisitorDto } from '../visitor';
+import { MessageDto } from '../message';
 
 export class ConversationDto {
   id: string;
@@ -43,7 +44,9 @@ export class ConversationDto {
     id?: string;
   };
 
-  lastMessage?: any;
+  messages?: MessageDto[];
+
+  lastMessage?: MessageDto;
 
   visitor?: VisitorDto;
 

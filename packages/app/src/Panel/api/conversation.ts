@@ -81,6 +81,8 @@ export interface SearchConversationOptions {
   page?: number;
   pageSize?: number;
   desc?: boolean;
+
+  messages?: number;
   lastMessage?: boolean;
   count?: boolean;
 }

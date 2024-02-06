@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useMemo, useState } from 'react';
 import { Checkbox, Modal } from 'antd';
 import { CheckboxValueType } from 'antd/es/checkbox/Group';
 import dayjs from 'dayjs';
@@ -26,6 +26,7 @@ export function ExportDataDialog({ open, onClose, searchOptions, columns }: Expo
   const [checkedCols, setCheckedCols] = useState<CheckboxValueType[]>(
     columns.map((col) => col.key),
   );
+  const includeMessages = useMemo(() => checkedCols.includes('detail'), [checkedCols]);
 
   const [progress, setProgress] = useState(0);
 
@@ -37,6 +38,7 @@ export function ExportDataDialog({ open, onClose, searchOptions, columns }: Expo
         pageSize: 1000,
         from: cursor || searchOptions.from,
         count: false,
+        messages: includeMessages ? 50 : undefined,
       });
     },
     getNextCursor: (lastData) => {
@@ -60,7 +62,14 @@ export function ExportDataDialog({ open, onClose, searchOptions, columns }: Expo
         fields: cols.map((col) => col.title),
         data: rows,
       });
-      downloadCSV(content, '导出数据.csv');
+
+      let filename = '互动记录';
+      if (searchOptions.from && searchOptions.to) {
+        filename += [searchOptions.from, searchOptions.to]
+          .map((date) => dayjs(date).format('YYYY-MM-DD'))
+          .join('-');
+      }
+      downloadCSV(content, filename + '.csv');
     },
   });
 

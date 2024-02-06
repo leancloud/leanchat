@@ -36,7 +36,9 @@ export default function Quality() {
 
   const handleSearchFormSubmit = (data: SearchFormData) => {
     const { id, date, message, categoryId, visitorId, operatorId, closedBy, evaluation } = data;
-    setOptions({
+    setOptions((prev) => ({
+      ...prev,
+      page: 1,
       id,
       from: date?.[0].startOf('day').toISOString(),
       to: date?.[1].endOf('day').toISOString(),
@@ -46,8 +48,7 @@ export default function Quality() {
       operatorId,
       closedBy,
       evaluation,
-      count: true,
-    });
+    }));
   };
 
   const { data: categories, isLoading: isLoadingCategories } = useCategories();
@@ -286,7 +287,18 @@ export default function Quality() {
           open={exportModalOpen}
           onClose={toggleExportModal}
           searchOptions={options}
-          columns={columns}
+          columns={[
+            ...columns,
+            {
+              key: 'detail',
+              title: '详情',
+              render: flow([
+                get('messages'),
+                map(render.renderMessage(getOperatorName, getChatbotName)),
+                join('\n'),
+              ]),
+            },
+          ]}
         />
 
         <ConversationInfo

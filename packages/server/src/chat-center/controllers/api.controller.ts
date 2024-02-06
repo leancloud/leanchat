@@ -85,6 +85,9 @@ export class APIController {
       if (doc.visitor) {
         dto.visitor = VisitorDto.fromDocument(doc.visitor);
       }
+      if (doc.messages) {
+        dto.messages = doc.messages.map(MessageDto.fromDocument);
+      }
       if (doc.lastMessage) {
         dto.lastMessage = MessageDto.fromDocument(doc.lastMessage);
       }

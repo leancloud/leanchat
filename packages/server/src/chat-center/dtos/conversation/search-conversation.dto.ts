@@ -52,8 +52,9 @@ const SearchConversationSchema = z
     // pagination
     page: z.number().int().positive(),
     pageSize: z.number().int().min(1).max(1000),
-
     desc: z.boolean(),
+
+    messages: z.number().int(),
     lastMessage: z.boolean(),
     count: z.boolean(),
   })

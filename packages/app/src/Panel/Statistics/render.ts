@@ -2,7 +2,14 @@ import { cond, constant, defaultTo, eq, get, has, map, over, stubTrue, sum } fro
 import dayjs from 'dayjs';
 
 import { flow, formatDate, toSeconds } from '@/Panel/Statistics/helpers';
-import { Conversation, ConsultationResult, OperatorStatus } from '../types';
+import {
+  Conversation,
+  ConsultationResult,
+  OperatorStatus,
+  Message,
+  UserType,
+  MessageType,
+} from '../types';
 
 export const id = get('id');
 
@@ -136,4 +143,66 @@ export function status(value: number) {
     default:
       return '未知';
   }
+}
+
+export function renderMessage(
+  getOperatorName: (id: string) => string | undefined,
+  getChatbotName: (id: string) => string | undefined,
+) {
+  return (message: Message) => {
+    let text = '';
+
+    switch (message.from.type) {
+      case UserType.System:
+        text += '系统';
+        break;
+      case UserType.Visitor:
+        text += `用户(${message.from.id})`;
+        break;
+      case UserType.Operator:
+        const operatorName = getOperatorName(message.from.id);
+        if (operatorName) {
+          text += `客服(${operatorName})`;
+        } else {
+          text += '客服';
+        }
+        break;
+      case UserType.Chatbot:
+        const chatbotName = getChatbotName(message.from.id);
+        text += chatbotName ? `机器人(${chatbotName})` : '机器人';
+        break;
+      default:
+        text += '未知';
+    }
+
+    text += ' ' + dayjs(message.createdAt).format('YYYY-MM-DD HH:mm:ss');
+
+    text += '\n';
+    switch (message.type) {
+      case MessageType.Message:
+        if (message.data.text) {
+          text += message.data.text;
+        } else if (message.data.file) {
+          text += '[文件]';
+        } else {
+          text += '[未知消息]';
+        }
+        break;
+      case MessageType.Evaluate:
+        text += '[评价]';
+        break;
+      case MessageType.Assign:
+        text += '[分配客服]';
+        break;
+      case MessageType.Close:
+        text += '[关闭会话]';
+        break;
+      case MessageType.Reopen:
+        text += '[重新打开]';
+        break;
+      default:
+        text += '[未知消息类型]';
+    }
+    return text;
+  };
 }

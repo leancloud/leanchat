@@ -112,6 +112,7 @@ export interface SearchConversationOptions {
   limit?: number;
   desc?: boolean;
 
+  messages?: number;
   lastMessage?: boolean;
   count?: boolean;
 }
