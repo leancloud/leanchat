@@ -61,6 +61,7 @@ export function useUpload({ onUploaded }: UseUploadOptions) {
         })
         .catch((e) => {
           console.error(e);
+          alert(e.message);
           removeTask(task.id);
         });
     },
