@@ -89,7 +89,7 @@ interface TeamSectionProps {
 }
 
 function TeamSection({ activeOperatorId, onClick }: TeamSectionProps) {
-  const { data: operators } = useOperators();
+  const { data: operators } = useOperators({ inactive: false });
   const { data: groups } = useOperatorGroups();
 
   const operatorMap = useMemo(() => _.keyBy(operators, (o) => o.id), [operators]);

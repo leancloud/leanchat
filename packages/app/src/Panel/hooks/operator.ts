@@ -16,10 +16,10 @@ export interface UseOperatorsOptions extends GetOperatorsOptions {
   queryOptions?: UseQueryOptions<Operator[]>;
 }
 
-export function useOperators({ queryOptions, inactive = false }: UseOperatorsOptions = {}) {
+export function useOperators({ queryOptions, ...options }: UseOperatorsOptions = {}) {
   return useQuery({
-    queryKey: ['Operators', { inactive }],
-    queryFn: () => getOperators({ inactive }),
+    queryKey: ['Operators', options],
+    queryFn: () => getOperators(options),
     staleTime: 1000 * 60 * 5,
     ...queryOptions,
   });

@@ -17,6 +17,7 @@ function OperatorPie() {
     queryOptions: {
       staleTime: 0,
     },
+    inactive: false,
   });
 
   const operatorByStatus = useMemo(() => {

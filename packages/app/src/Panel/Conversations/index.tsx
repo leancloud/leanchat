@@ -67,7 +67,7 @@ export default function Conversations() {
   const [showSider, toggleSider] = useToggle(true);
   const [filtersModalOpen, toggleFiltersModal] = useToggle(false);
 
-  const { data: operators } = useOperators();
+  const { data: operators } = useOperators({ inactive: false });
 
   const streamLabel = useMemo(() => {
     switch (searchOptions.operatorId) {

@@ -16,7 +16,7 @@ export function ReassignModal({ open, onClose }: ReassignModalProps) {
   const { conversation } = useConversationContext();
   const [operatorId, setOperatorId] = useState(conversation.operatorId);
 
-  const { data: operators } = useOperators();
+  const { data: operators } = useOperators({ inactive: false });
 
   const operatorOptions = useMemo<SelectProps['options']>(() => {
     return operators?.map((o) => ({
