@@ -359,9 +359,10 @@ export class VisitorGateway implements OnModuleInit, OnGatewayConnection {
   @OnEvent('conversation.updated', { async: true })
   publishConversationUpdated(payload: ConversationUpdatedEvent) {
     if (
-      payload.data.evaluation ||
       payload.data.status ||
-      payload.data.operatorId
+      payload.data.operatorId ||
+      payload.data.evaluation ||
+      payload.data.queuedAt
     ) {
       this.server
         .to(payload.conversation.visitorId.toString())
