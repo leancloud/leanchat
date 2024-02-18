@@ -11,6 +11,7 @@ export interface Conversation {
     star: number;
     feedback: string;
   };
+  queuedAt?: string;
 }
 
 export enum MessageType {

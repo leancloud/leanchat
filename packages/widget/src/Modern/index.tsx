@@ -7,12 +7,25 @@ import { useEffectEvent } from '../hooks/useEventEffect';
 import { useChat, useOnInviteEvaluation } from '../chat';
 import { ReplyInput } from './components/ReplyInput';
 import { MessageList } from './components/MessageList';
-import { useWindowSize } from './hooks/useWindowSize';
 import { Modal } from './components/Modal';
+import { useWindowSize } from './hooks/useWindowSize';
+import { useSessionStorage } from './hooks/useSessionStorage';
 import { EvaluationDialog } from './components/EvaluationDialog';
-import { EvaluateData } from '../types';
+import { Conversation, EvaluateData } from '../types';
 
 const isEmbedded = !!(window.top && window.top !== window);
+
+function getSendInterval(conversation: Conversation | undefined) {
+  if (conversation) {
+    if (conversation.operatorJoined) {
+      return 2000;
+    }
+    if (conversation.queuedAt) {
+      return 30000;
+    }
+  }
+  return 2000;
+}
 
 export default function Modern() {
   const { iframe, emitter, getDisplay } = useAppContext();
@@ -33,26 +46,18 @@ export default function Modern() {
   const { connected, reconnecting, conversation, messages, evaluationTag, send, evaluate, close } =
     useChat();
 
-  const [sendHistory, setSendHistory] = useState<number[]>([]);
+  const [rawSendTime, setRawSendTime] = useSessionStorage('sendTime');
   const handleSend = (data: any) => {
     if (data.text && data.text.length > 1000) {
       return alert('内容过长');
     }
+    const sendTime = Number(rawSendTime ?? '0');
     const now = Date.now();
-    const windows: [number, number][] = [
-      [1000, 1], // 1 秒内最多发送 1 次
-      [10000, 5], // 10 秒内最多发送 5 次
-    ];
-    for (const [i, [interval, maxCount]] of windows.entries()) {
-      const history = sendHistory.filter((ts) => ts >= now - interval);
-      if (history.length >= maxCount) {
-        return alert('您发送的太快了，休息一下吧~');
-      }
-      if (i === windows.length - 1) {
-        setSendHistory([...history, now]);
-      }
+    if (now - sendTime < getSendInterval(conversation)) {
+      return alert('您发送的太快了，休息一下吧~');
     }
     send(data);
+    setRawSendTime(now.toString());
   };
 
   useOnInviteEvaluation(() => {
