@@ -8,7 +8,7 @@ import {
   WebSocketServer,
 } from '@nestjs/websockets';
 import { OnEvent } from '@nestjs/event-emitter';
-import { Server, Socket } from 'socket.io';
+import { Server, Socket as RawSocket } from 'socket.io';
 import { ZodValidationPipe } from 'nestjs-zod';
 import _ from 'lodash';
 
@@ -38,6 +38,17 @@ import { VisitorChannelService } from './visitor-channel.service';
 import { MessageDto } from './dtos/message.dto';
 import { ConversationDto } from './dtos/conversation.dto';
 import { WidgetInitialized } from './interfaces';
+
+interface SocketEvents {
+  [e: string]: (...args: any[]) => void;
+}
+
+interface SocketData {
+  id: string;
+  lastMessageCreateTime?: number;
+}
+
+type Socket = RawSocket<SocketEvents, SocketEvents, SocketEvents, SocketData>;
 
 const visitorMessageTypes = [
   MessageType.Message,
@@ -228,7 +239,13 @@ export class VisitorGateway implements OnModuleInit, OnGatewayConnection {
     @ConnectedSocket() socket: Socket,
     @MessageBody() data: CreateMessageDto,
   ) {
-    const visitorId = socket.data.id;
+    const { lastMessageCreateTime = 0, id: visitorId } = socket.data;
+    const now = Date.now();
+    if (now - lastMessageCreateTime < 1000) {
+      return;
+    }
+    socket.data.lastMessageCreateTime = now;
+
     const visitor = await this.visitorService.getVisitor(visitorId);
     if (!visitor) {
       // TODO: throw an error
