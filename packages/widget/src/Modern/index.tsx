@@ -43,7 +43,7 @@ export default function Modern() {
   const [show, setShow] = useState(true);
   const [showEvaluationModal, setShowEvaluationModal] = useState(false);
 
-  const { connected, reconnecting, conversation, messages, evaluationTag, send, evaluate, close } =
+  const { connected, reconnecting, conversation, messages, evaluationTag, send, evaluate } =
     useChat();
 
   const [rawSendTime, setRawSendTime] = useSessionStorage('sendTime');
@@ -124,7 +124,6 @@ export default function Modern() {
       setShowEvaluationModal(true);
       return;
     }
-    close();
     emitter.emit('close');
   };
 
