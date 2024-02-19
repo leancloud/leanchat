@@ -351,14 +351,14 @@ export class ChatService {
 
   @OnEvent('conversation.created', { async: true })
   handleAutoAssign({ conversation }: ConversationCreatedEvent) {
-    this.autoAssignQueue.add({
-      conversationId: conversation.id,
-      chatbot: true,
-    });
+    this.addAutoAssignJob(conversation.id, true);
   }
 
-  async addAutoAssignJob(conversationId: string) {
-    await this.autoAssignQueue.add({ conversationId }, { delay: 1000 });
+  async addAutoAssignJob(conversationId: string, chatbot?: boolean) {
+    await this.autoAssignQueue.add(
+      { conversationId, chatbot },
+      { delay: 1000 },
+    );
   }
 
   async enqueueConversation(conversationId: string) {
