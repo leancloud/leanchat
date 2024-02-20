@@ -58,10 +58,15 @@ export function ExportDataDialog({ open, onClose, searchOptions, columns }: Expo
     onSuccess: (data) => {
       const cols = columns.filter((col) => checkedCols.includes(col.key));
       const rows = data.flatMap((t) => t.data).map((data) => cols.map((col) => col.render(data)));
-      const content = Papa.unparse({
-        fields: cols.map((col) => col.title),
-        data: rows,
-      });
+      const content = Papa.unparse(
+        {
+          fields: cols.map((col) => col.title),
+          data: rows,
+        },
+        {
+          quotes: true,
+        },
+      );
 
       let filename = '互动记录';
       if (searchOptions.from && searchOptions.to) {
