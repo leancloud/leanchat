@@ -3,11 +3,11 @@ import { Checkbox, Modal } from 'antd';
 import { CheckboxValueType } from 'antd/es/checkbox/Group';
 import dayjs from 'dayjs';
 import _ from 'lodash';
-import Papa from 'papaparse';
+import writeXlsxFile from 'write-excel-file';
 
 import { SearchConversationOptions, searchConversation } from '@/Panel/api/conversation';
 import { useExportData } from '@/Panel/hooks/useExportData';
-import { downloadCSV, percent } from '@/Panel/Statistics/helpers';
+import { percent } from '@/Panel/Statistics/helpers';
 
 export interface ExportDataColumn {
   key: string;
@@ -56,25 +56,25 @@ export function ExportDataDialog({ open, onClose, searchOptions, columns }: Expo
       setProgress(percent(loaded, loaded + totalCount));
     },
     onSuccess: (data) => {
-      const cols = columns.filter((col) => checkedCols.includes(col.key));
-      const rows = data.flatMap((t) => t.data).map((data) => cols.map((col) => col.render(data)));
-      const content = Papa.unparse(
-        {
-          fields: cols.map((col) => col.title),
-          data: rows,
-        },
-        {
-          quotes: true,
-        },
-      );
-
       let filename = '互动记录';
       if (searchOptions.from && searchOptions.to) {
         filename += [searchOptions.from, searchOptions.to]
-          .map((date) => dayjs(date).format('YYYY-MM-DD'))
+          .map((date) => dayjs(date).format('YYYYMMDD'))
           .join('-');
       }
-      downloadCSV(content, filename + '.csv');
+
+      const cols = columns.filter((col) => checkedCols.includes(col.key));
+      const rows = data.flatMap((t) => t.data).map((data) => cols.map((col) => col.render(data)));
+
+      writeXlsxFile(
+        [
+          cols.map((col) => ({ value: col.title })),
+          ...rows.map((row) => row.map((cell) => ({ value: cell }))),
+        ],
+        {
+          fileName: filename + '.xlsx',
+        },
+      );
     },
   });
 
