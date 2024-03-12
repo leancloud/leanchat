@@ -99,7 +99,7 @@ export class ChatbotService {
       `bot_ctx:conv:${conversationId}`,
       JSON.stringify(data),
       'EX',
-      60 * 10, // 10 mins
+      60 * 60, // 1 hour
     );
   }
 

@@ -3,6 +3,7 @@ import { ChatbotAcceptRule } from '../constants';
 export interface ChatbotContext {
   questionBaseIds?: string[];
   operatorAssigned?: boolean;
+  data?: any;
 }
 
 export interface ChatbotMessage {
