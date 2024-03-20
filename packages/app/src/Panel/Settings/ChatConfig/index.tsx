@@ -131,7 +131,7 @@ function AutoCloseConversationForm() {
         rules={[{ required: true }]}
         extra="客服回复后，用户在指定时间内未进行操作，系统自动关闭会话。设为 0 关闭该功能"
       >
-        <InputNumber min={0} suffix="分钟" />
+        <InputNumber min={0} addonAfter="分钟" />
       </Form.Item>
       <Form.Item
         labelCol={{ span: 4 }}
@@ -252,6 +252,17 @@ function EvaluationConfigForm() {
           </Form.Item>
         </Fragment>
       ))}
+      <Form.Item
+        labelCol={{ span: 4 }}
+        wrapperCol={{ span: 22 }}
+        label="超时时间"
+        name="timeout"
+        extra="会话关闭后，用户仅可在指定时间内进行评价。设为 0 关闭该功能。"
+        getValueProps={(value = 0) => ({ value: Math.floor(value / 3600) })}
+        getValueFromEvent={(value) => (value ? value * 3600 : 0)}
+      >
+        <InputNumber min={0} addonAfter="小时" />
+      </Form.Item>
       <Form.Item wrapperCol={{ offset: 4 }}>
         <Button type="primary" htmlType="submit" loading={isUpdating}>
           保存

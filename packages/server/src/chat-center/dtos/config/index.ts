@@ -37,4 +37,5 @@ export const EvaluationConfigSchema = z.object({
     positive: EvaluationTagConfigSchema,
     negative: EvaluationTagConfigSchema,
   }),
+  timeout: z.number().int().min(0).optional(),
 });

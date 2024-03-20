@@ -36,6 +36,7 @@ export interface EvaluationConfig {
       required: boolean;
     };
   };
+  timeout?: number;
 }
 
 export interface ConfigKeys {

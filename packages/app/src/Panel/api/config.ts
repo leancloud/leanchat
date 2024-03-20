@@ -10,6 +10,9 @@ export interface NoReadyOperatorMessageConfig {
 }
 
 export interface AutoCloseConfig {
+  /**
+   * In seconds
+   */
   timeout: number;
   message: {
     enabled: boolean;
@@ -38,6 +41,10 @@ export interface EvaluationConfig {
       required: boolean;
     };
   };
+  /**
+   * In seconds
+   */
+  timeout?: number;
 }
 
 export async function getConfig<T>(key: string) {

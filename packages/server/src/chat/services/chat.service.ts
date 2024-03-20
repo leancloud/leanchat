@@ -2,11 +2,12 @@ import { BadRequestException, Injectable } from '@nestjs/common';
 import { EventEmitter2, OnEvent } from '@nestjs/event-emitter';
 import { InjectQueue } from '@nestjs/bull';
 import { Queue } from 'bull';
-import { differenceInDays } from 'date-fns';
+import { addSeconds, isAfter } from 'date-fns';
 import { InjectModel } from '@m8a/nestjs-typegoose';
 import { ReturnModelType } from '@typegoose/typegoose';
 
 import { InjectRedis, Redis } from 'src/redis';
+import { ConfigService } from 'src/config';
 import {
   CloseConversationOptions,
   ConversationEvaluation,
@@ -53,6 +54,7 @@ export class ChatService {
     private operatorService: OperatorService,
     private visitorService: VisitorService,
     private ppLogService: PostprocessingLogService,
+    private configService: ConfigService,
 
     @InjectQueue('auto_assign_conversation')
     private autoAssignQueue: Queue<AutoAssignJobData>,
@@ -112,12 +114,18 @@ export class ChatService {
     if (!conversation) {
       return;
     }
-    if (
-      conversation.closedAt &&
-      differenceInDays(new Date(), conversation.closedAt) >= 7
-    ) {
-      // 会话关闭超过 7 天后不允许评价
-      return;
+
+    if (conversation.closedAt) {
+      const evaluationConfig = await this.configService.get('evaluation');
+      if (
+        evaluationConfig?.timeout &&
+        isAfter(
+          new Date(),
+          addSeconds(conversation.closedAt, evaluationConfig.timeout),
+        )
+      ) {
+        return;
+      }
     }
 
     await this.conversationService.updateConversation(conversationId, {
