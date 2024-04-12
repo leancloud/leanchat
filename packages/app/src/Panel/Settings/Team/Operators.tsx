@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { ReactNode, forwardRef, useRef, useState } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { Link, useNavigate, useParams } from 'react-router-dom';
 import { MdGroup, MdPersonAddAlt1, MdPerson } from 'react-icons/md';
@@ -6,6 +6,7 @@ import {
   Alert,
   Button,
   Form,
+  FormInstance,
   Input,
   InputNumber,
   Modal,
@@ -14,6 +15,7 @@ import {
   Table,
   message,
 } from 'antd';
+import { useToggle } from 'react-use';
 
 import { createOperator, getOperator, updateOperator } from '@/Panel/api/operator';
 import { useOperators } from '@/Panel/hooks/operator';
@@ -132,21 +134,21 @@ interface OperatorFormData {
 interface OperatorFormProps {
   initData?: Partial<OperatorFormData>;
   usernameDisabled?: boolean;
-  passwordRequired?: boolean;
-  passwordPlaceholder?: string;
+  passwordField?: boolean;
   onSubmit: (data: OperatorFormData) => void;
   submitting?: boolean;
   submitButtonText?: string;
+  actions?: ReactNode;
 }
 
 function OperatorForm({
   initData,
   usernameDisabled,
-  passwordRequired = true,
-  passwordPlaceholder,
+  passwordField = true,
   onSubmit,
   submitting,
   submitButtonText = '保存',
+  actions,
 }: OperatorFormProps) {
   return (
     <Form
@@ -165,13 +167,11 @@ function OperatorForm({
         <Input disabled={usernameDisabled} />
       </Form.Item>
 
-      <Form.Item
-        label="密码"
-        name="password"
-        rules={[{ required: passwordRequired, min: 6, max: 64 }]}
-      >
-        <Input.Password placeholder={passwordPlaceholder} />
-      </Form.Item>
+      {passwordField && (
+        <Form.Item label="密码" name="password" rules={[{ required: true, min: 6, max: 64 }]}>
+          <Input.Password />
+        </Form.Item>
+      )}
 
       <Form.Item label="角色" name="role">
         <Select
@@ -200,11 +200,63 @@ function OperatorForm({
       </Form.Item>
 
       <Form.Item wrapperCol={{ offset: 8, span: 16 }}>
-        <Button type="primary" htmlType="submit" loading={submitting}>
-          {submitButtonText}
-        </Button>
+        <div className="flex flex-wrap gap-2">
+          <Button type="primary" htmlType="submit" loading={submitting}>
+            {submitButtonText}
+          </Button>
+          {actions}
+        </div>
       </Form.Item>
     </Form>
+  );
+}
+
+interface ChangePasswordFormData {
+  password: string;
+}
+
+interface ChangePasswordFormProps {
+  onSubmit?: (data: ChangePasswordFormData) => void;
+}
+
+const ChangePasswordForm = forwardRef<FormInstance, ChangePasswordFormProps>(
+  ({ onSubmit }, ref) => {
+    const [password, setPassword] = useState('');
+
+    return (
+      <Form ref={ref} onFinish={onSubmit}>
+        <Form.Item name="password" rules={[{ required: true }]}>
+          <Input
+            placeholder="新密码"
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
+          />
+        </Form.Item>
+      </Form>
+    );
+  },
+);
+
+interface ChangePasswordModalProps {
+  open?: boolean;
+  onCancel?: () => void;
+  onSubmit?: (data: ChangePasswordFormData) => void;
+  loading?: boolean;
+}
+
+function ChangePasswordModal({ open, onSubmit, onCancel, loading }: ChangePasswordModalProps) {
+  const formRef = useRef<FormInstance>(null!);
+
+  return (
+    <Modal
+      open={open}
+      title="修改密码"
+      onCancel={onCancel}
+      onOk={() => formRef.current.submit()}
+      confirmLoading={loading}
+    >
+      <ChangePasswordForm ref={formRef} onSubmit={onSubmit} />
+    </Modal>
   );
 }
 
@@ -263,6 +315,7 @@ export function EditOperator() {
 
   const {
     mutate,
+    mutateAsync,
     isLoading: isUpdating,
     error: updateError,
   } = useMutation({
@@ -273,6 +326,15 @@ export function EditOperator() {
       message.success('已保存');
     },
   });
+
+  const [changePasswordModalOpen, toggleChangePasswordModal] = useToggle(false);
+
+  const handleChangePassword = async (password: string) => {
+    if (id) {
+      await mutateAsync({ id, password });
+    }
+    toggleChangePasswordModal(false);
+  };
 
   return (
     <Container
@@ -293,8 +355,7 @@ export function EditOperator() {
       <OperatorForm
         initData={data}
         usernameDisabled
-        passwordRequired={false}
-        passwordPlaceholder="修改密码"
+        passwordField={false}
         submitting={isUpdating}
         onSubmit={(data) => {
           mutate({
@@ -306,6 +367,14 @@ export function EditOperator() {
             concurrency: data.concurrency,
           });
         }}
+        actions={<Button onClick={() => toggleChangePasswordModal()}>修改密码</Button>}
+      />
+
+      <ChangePasswordModal
+        open={changePasswordModalOpen}
+        onCancel={toggleChangePasswordModal}
+        onSubmit={({ password }) => handleChangePassword(password)}
+        loading={isUpdating}
       />
     </Container>
   );
