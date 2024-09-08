@@ -142,12 +142,21 @@ export class ChatService {
   }
 
   async closeConversation({ conversationId, by }: CloseConversationOptions) {
+    const startGetConversation = performance.now();
     const conversation = await this.conversationService.getConversation(
       conversationId,
     );
     if (!conversation || conversation.status === ConversationStatus.Closed) {
       return;
     }
+
+    const endGetConversation = performance.now();
+    console.log(
+      'closeConversation - getConversation',
+      conversationId,
+      new Date(),
+      endGetConversation - startGetConversation,
+    );
 
     await this.redis.zrem('conversation_queue', conversation.id);
 
@@ -156,10 +165,28 @@ export class ChatService {
       closedAt: new Date(),
       closedBy: by,
     });
+
+    const endUpdateConversation = performance.now();
+    console.log(
+      'closeConversation - updateConversation',
+      conversationId,
+      new Date(),
+      endUpdateConversation - endGetConversation,
+    );
+
     await this.messageService.createMessage(conversation, {
       type: MessageType.Close,
       from: by,
     });
+
+    const endCreateMessage = performance.now();
+    console.log(
+      'closeConversation - createMessage',
+      conversationId,
+      new Date(),
+      endCreateMessage - endUpdateConversation,
+    );
+
     await this.conversationStatsQueue.add({
       conversationId: conversation.id,
     });
@@ -169,6 +196,14 @@ export class ChatService {
       await this.operatorService.increaseOperatorWorkload(operatorId, -1);
       await this.assignQueuedConversationToOperator(operatorId);
     }
+
+    const endCloseConversation = performance.now();
+    console.log(
+      'closeConversation - end',
+      conversationId,
+      new Date(),
+      endCloseConversation - endCreateMessage,
+    );
   }
 
   async reopenConversation({ conversationId, by }: ReopenConversationOptions) {
