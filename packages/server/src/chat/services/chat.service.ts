@@ -187,14 +187,32 @@ export class ChatService {
       endCreateMessage - endUpdateConversation,
     );
 
-    await this.conversationStatsQueue.add({
-      conversationId: conversation.id,
-    });
+    try {
+      await this.conversationStatsQueue.add({
+        conversationId: conversation.id,
+      });
+    } catch (err) {
+      console.error(
+        'closeConversation - conversationStatsQueue.add - failed',
+        conversationId,
+        new Date(),
+        err,
+      );
+    }
 
-    if (conversation.operatorId) {
-      const operatorId = conversation.operatorId.toString();
-      await this.operatorService.increaseOperatorWorkload(operatorId, -1);
-      await this.assignQueuedConversationToOperator(operatorId);
+    try {
+      if (conversation.operatorId) {
+        const operatorId = conversation.operatorId.toString();
+        await this.operatorService.increaseOperatorWorkload(operatorId, -1);
+        await this.assignQueuedConversationToOperator(operatorId);
+      }
+    } catch (err) {
+      console.error(
+        'closeConversation - operatorService.increaseOperatorWorkload - failed',
+        conversationId,
+        new Date(),
+        err,
+      );
     }
 
     const endCloseConversation = performance.now();
